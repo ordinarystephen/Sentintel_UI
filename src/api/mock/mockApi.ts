@@ -603,10 +603,37 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     },
 
     searchDocuments: (query, filters: DocumentFilters) => {
-      const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
-      const stems = terms.map((t) => t.slice(0, Math.max(5, t.length - 2)))
-      const matches = (word: string) => stems.some((st) => word.startsWith(st))
-      const hits: DocumentHit[] = []
+      // Query syntax (the "Advanced search" help): bare words match by stem
+      // (any of them), "quoted phrases" must appear verbatim, -word excludes.
+      const phrases: string[] = []
+      const include: string[] = []
+      const exclude: string[] = []
+      for (const m of query.matchAll(/"([^"]+)"|(\S+)/g)) {
+        if (m[1]) phrases.push(m[1].toLowerCase())
+        else if (m[2]!.startsWith('-') && m[2]!.length > 1)
+          exclude.push(m[2]!.slice(1).toLowerCase())
+        else include.push(m[2]!.toLowerCase())
+      }
+      const stemOf = (t: string) => t.slice(0, Math.max(5, t.length - 2))
+      const stems = include.map(stemOf)
+      const exStems = exclude.map(stemOf)
+      const hasQuery = phrases.length + include.length > 0
+      const markWords = (html: string, test: (w: string) => boolean, onHit: () => void) =>
+        html
+          .split(/(<mark>.*?<\/mark>)/)
+          .map((seg) =>
+            seg.startsWith('<mark>')
+              ? seg
+              : seg.replace(/[A-Za-z][A-Za-z$%.,0-9-]*/g, (w) => {
+                  if (test(w.toLowerCase())) {
+                    onHit()
+                    return `<mark>${w}</mark>`
+                  }
+                  return w
+                }),
+          )
+          .join('')
+      const hits: Array<DocumentHit & { score?: number }> = []
       for (const p of PASSAGES) {
         if (filters.lob && filters.lob !== 'all' && p.lob !== filters.lob) continue
         if (
@@ -616,32 +643,35 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         )
           continue
         if (filters.docType && filters.docType !== 'all' && p.docType !== filters.docType) continue
-        let score = 0
-        const snippetHtml = escapeHtml(p.snippet).replace(/[A-Za-z][A-Za-z$%.,0-9-]*/g, (w) => {
-          if (terms.length && matches(w.toLowerCase())) {
-            score++
-            return `<mark>${w}</mark>`
-          }
-          return w
-        })
-        if (terms.length && score === 0) continue
-        const { snippet: _snippet, ...rest } = p
-        void _snippet
-        hits.push({ ...rest, snippetHtml, ...(terms.length ? { score } : {}) } as DocumentHit & {
-          score?: number
-        })
+        const lower = p.snippet.toLowerCase()
+        if (exStems.some((st) => lower.split(/[^a-z0-9$%.,-]+/).some((w) => w.startsWith(st))))
+          continue
+        if (phrases.some((ph) => !lower.includes(ph))) continue
+        let score = phrases.length
+        let html = escapeHtml(p.snippet)
+        for (const ph of phrases) {
+          html = html.replace(
+            new RegExp(ph.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+            (m) => `<mark>${m}</mark>`,
+          )
+        }
+        if (stems.length)
+          html = markWords(
+            html,
+            (w) => stems.some((st) => w.startsWith(st)),
+            () => score++,
+          )
+        if (hasQuery && score === 0) continue
+        hits.push({ ...p, snippetHtml: html, score })
       }
       // Relevance: matched terms, then passages that fed a review, then recency.
-      hits.sort((a, b) => {
-        const sa = (a as { score?: number }).score ?? 0
-        const sb = (b as { score?: number }).score ?? 0
-        return (
-          sb - sa ||
+      hits.sort(
+        (a, b) =>
+          (b.score ?? 0) - (a.score ?? 0) ||
           Number(!!b.usedInReviewId) - Number(!!a.usedInReviewId) ||
-          b.date.localeCompare(a.date)
-        )
-      })
-      for (const h of hits) delete (h as { score?: number }).score
+          b.date.localeCompare(a.date),
+      )
+      for (const h of hits) delete h.score
       const result: DocumentSearchResult = {
         hits,
         totalPassages: hits.length,

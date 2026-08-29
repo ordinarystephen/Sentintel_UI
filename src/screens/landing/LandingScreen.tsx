@@ -5,16 +5,15 @@
  * with exactly two interactions: drop, Begin.
  */
 import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useCreateReview, useMyReviews } from '@/api/hooks'
-import { DEFAULT_EXTRACTION, type ExtractionSettings, type ReviewSummary } from '@/api/types'
+import { DEFAULT_EXTRACTION, type ExtractionSettings } from '@/api/types'
 import { FileIcon } from '@/app/icons'
-import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
-import { Spinner } from '@/components/Spinner'
 import { cx } from '@/lib/cx'
-import { formatBytes, formatRelative } from '@/lib/format'
+import { formatBytes } from '@/lib/format'
 import { usePersistedState } from '@/lib/usePersistedState'
+import { ReviewRow } from '@/screens/reviews/ReviewRow'
 import { strings } from '@/strings'
 
 const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
@@ -238,7 +237,7 @@ export function LandingScreen() {
           <p className="text-ui-sm text-faint">{s.noRecents}</p>
         )}
         {recents.data?.slice(0, 6).map((r) => (
-          <RecentRow key={r.id} review={r} />
+          <ReviewRow key={r.id} review={r} variant="my" />
         ))}
       </div>
     </div>
@@ -273,35 +272,5 @@ function Setting({
         ))}
       </select>
     </label>
-  )
-}
-
-export function RecentRow({ review: r }: { review: ReviewSummary }) {
-  const s = strings.landing
-  const processing = r.status === 'processing'
-  return (
-    <Link
-      to={`/review/${r.id}`}
-      className="mb-2 flex w-full items-center gap-3 rounded-[10px] border border-rule bg-bg px-3.5 py-[11px] text-left hover:border-rule-strong hover:bg-bg-subtle"
-    >
-      <span
-        className={cx(
-          'min-w-0 flex-1 truncate text-ui font-semibold',
-          processing && !r.borrowerName && 'font-normal text-muted',
-        )}
-      >
-        {r.borrowerName ?? s.newReview}
-      </span>
-      <span className="flex flex-none items-center gap-[10px] text-dense text-faint">
-        {processing ? (
-          <Spinner label="Processing" />
-        ) : r.openItems > 0 ? (
-          <Badge tone="amber">{s.openBadge(r.openItems)}</Badge>
-        ) : (
-          <span>{s.sectionsComplete(r.sectionsPopulated)}</span>
-        )}
-        <span>{formatRelative(r.createdAt)}</span>
-      </span>
-    </Link>
   )
 }

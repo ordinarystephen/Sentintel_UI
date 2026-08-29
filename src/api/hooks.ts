@@ -3,7 +3,7 @@
  * mutations can invalidate precisely. Screens use these; nothing else calls
  * `api` directly.
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './index'
 import type { ClearReason, DocumentFilters, ExtractionSettings, ReviewFilters } from './types'
 
@@ -25,7 +25,11 @@ export const useMyReviews = () =>
   useQuery({ queryKey: queryKeys.myReviews, queryFn: () => api.listMyReviews() })
 
 export const useAllReviews = (filters: ReviewFilters) =>
-  useQuery({ queryKey: queryKeys.allReviews(filters), queryFn: () => api.listAllReviews(filters) })
+  useQuery({
+    queryKey: queryKeys.allReviews(filters),
+    queryFn: () => api.listAllReviews(filters),
+    placeholderData: keepPreviousData,
+  })
 
 /** Polls every second while the record is still processing, so `/review/:id` flips to the review on its own. */
 export const useReview = (id: string) =>
@@ -70,6 +74,7 @@ export const useDocumentSearch = (query: string, filters: DocumentFilters) =>
   useQuery({
     queryKey: queryKeys.documents(query, filters),
     queryFn: () => api.searchDocuments(query, filters),
+    placeholderData: keepPreviousData,
   })
 
 /** Every mutation on a review invalidates that review (and the lists, whose counts may change). */

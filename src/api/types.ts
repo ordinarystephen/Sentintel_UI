@@ -265,12 +265,18 @@ export interface DocumentHit {
   docType: string
   date: string
   extracted: boolean
-  /** Matched passage with `<mark>` around matched terms. Trusted markup from the API only. */
+  /** The matched passage, plain text. */
+  snippet: string
+  /** The same passage with `<mark>` around matched terms. Trusted markup from the API only. */
   snippetHtml: string
   sectionName: string
   page: number
+  /** Opaque image reference for the source modal; absent → neutral degradation. */
+  imageRef?: string
+  /** Set when this passage fed a review: the review, its borrower (short), and the section it landed in. */
   usedInReviewId?: string
   usedInBorrower?: string
+  usedInSectionN?: number
 }
 
 export interface ReviewFilters {

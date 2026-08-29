@@ -732,10 +732,8 @@ export function summaryOf(r: Review): ReviewSummary {
 // Documents
 // ---------------------------------------------------------------------------
 
-export interface DocumentPassage extends Omit<DocumentHit, 'snippetHtml'> {
-  /** Plain text; `<mark>` is added at search time. */
-  snippet: string
-}
+/** A passage as stored; `snippetHtml` is produced at search time. */
+export type DocumentPassage = Omit<DocumentHit, 'snippetHtml'>
 
 export const PASSAGES: DocumentPassage[] = [
   {
@@ -750,8 +748,10 @@ export const PASSAGES: DocumentPassage[] = [
       'The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit, leaving availability of approximately $144 million.',
     sectionName: 'Liquidity Summary',
     page: 14,
+    imageRef: 'img-meridian-q3-p14-liquidity',
     usedInReviewId: MERIDIAN_ID,
     usedInBorrower: 'Meridian',
+    usedInSectionN: 2,
   },
   {
     id: 'doc-meridian-annual-cov',
@@ -793,6 +793,7 @@ export const PASSAGES: DocumentPassage[] = [
     page: 12,
     usedInReviewId: MERIDIAN_ID,
     usedInBorrower: 'Meridian',
+    usedInSectionN: 2,
   },
   {
     id: 'doc-atlas-annual-lev',
@@ -808,6 +809,7 @@ export const PASSAGES: DocumentPassage[] = [
     page: 6,
     usedInReviewId: 'rev-atlas-2026-08',
     usedInBorrower: 'Atlas Foods',
+    usedInSectionN: 2,
   },
   {
     id: 'doc-verdant-cs',

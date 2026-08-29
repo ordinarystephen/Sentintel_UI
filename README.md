@@ -48,6 +48,8 @@ Routes: `/` landing · `/reviews` and `/reviews/all` (tab in the URL) · `/docum
 
 Inside a review the right context rail follows the selected work-paper item (click or Enter/Space on an item; the first flagged item is selected by default) with four tabs — Why (resolution chain + applied policies), Respond (send & re-run, mark verified, clear as not applicable / incorrect with undo), Debate (advocate / dissent), Prior (deltas vs the borrower's prior review; hidden when there is none). Attention rows can be marked reviewed with a note, edited, un-reviewed, or (flags only) dismissed. All of it records to the review record through the seam and is hidden on another owner's read-only review.
 
+Reviews (`/reviews` My, `/reviews/all` All) and Documents (`/documents`) run their search and filters through the seam — the UI never assumes it holds the full list — and keep them in the URL (`?q=&lob=&owner=&period=`, `?q=&lob=&cp=&type=`) so a refresh keeps them. Document hits carry provenance, a source modal, and a deep link into the review section a passage fed. The search box understands `"quoted phrases"` and `-exclusions` (the "Advanced search" link explains).
+
 The frame never scrolls — only the canvas (`<main id="canvas">`) does. The left rail collapses to a 58px icon strip and the right context rail (review route only) can be hidden from the borrower bar; both choices persist per user in `localStorage` (`sentinel.rail.collapsed`, `sentinel.ctx.collapsed`).
 
 Stack: Vite · React 18 · TypeScript (strict) · Tailwind CSS v4 · React Router · TanStack Query. No other state library, no component kit.

@@ -326,6 +326,20 @@ describe('documents', () => {
     expect(res.counterparties).toContain('Halcyon Marine Finance')
   })
 
+  it('advanced syntax: "quoted phrases" must appear verbatim; -word excludes', async () => {
+    const api = make()
+    const phrase = await api.searchDocuments('"letters of credit"', {})
+    expect(phrase.hits.map((h) => h.id).sort()).toEqual([
+      'doc-halcyon-fa-72',
+      'doc-meridian-q3-liq',
+    ])
+    expect(phrase.hits[0].snippetHtml).toMatch(/<mark>letters of credit<\/mark>/i)
+    const minus = await api.searchDocuments('revolver -letters', {})
+    expect(minus.hits.map((h) => h.id)).not.toContain('doc-meridian-q3-liq')
+    expect(minus.hits.map((h) => h.id)).toContain('doc-meridian-annual-cov')
+    expect(minus.hits[0].snippet).not.toContain('<mark>')
+  })
+
   it('filters hit the seam', async () => {
     const api = make()
     const wm = await api.searchDocuments('', { lob: 'Wealth Management' })
