@@ -1,0 +1,156 @@
+/* ============================================================
+   Sentinel design tokens — the ONE place color lives.
+   Lifted verbatim from design/sentinel-mvp-concept.html (build-spec §3.1).
+   Four blocks, one contract:
+     :root                    Stone light (default)
+     body.dark                Stone dark
+     body.theme-cobalt        Cobalt light  (navy rail on a light canvas)
+     body.theme-cobalt.dark   Cobalt dark
+   Adding a theme = adding a block. Components never read hex; they use
+   the semantic Tailwind classes bridged in base.css (bg-bg, text-ink, …).
+
+   Deviations from the mockup, deliberate:
+   - The mockup's :root had `--success-line:var(--success-line)` and
+     `--indigo-line:var(--indigo-line)` (self-references → invalid in CSS,
+     so its light-theme green/indigo badges were silently borderless).
+     Real values are set here; the contract requires both tokens.
+   - `--note`/`--note-bg` (pink design-note pins) are mockup-only crit
+     chrome and are not part of the product token contract.
+   ============================================================ */
+:root {
+  /* stone, not zinc — the neutral has temperature now */
+  --ink: #1c1917;
+  --ink-soft: #44403c;
+  --muted: #78716c;
+  --faint: #a8a29e;
+  --bg: #fdfdfc;
+  --bg-subtle: #f8f7f5;
+  --bg-hover: #f1efec;
+  --rule: #e9e6e2;
+  --rule-strong: #d8d4cf;
+  --on-ink: #fdfdfc;
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --success-line: #bbf7d0;
+  --warn: #a16207;
+  --warn-bg: #fdf9e7;
+  --warn-line: #eedc9e;
+  --error: #991b1b;
+  --error-bg: #fdf2f2;
+  --indigo: #4f46e5;
+  --indigo-bg: #eef0fd;
+  --indigo-line: #c7d2fe;
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.06);
+  --shadow-md: 0 4px 16px rgba(28, 25, 23, 0.1);
+  --primary: #1c1917;
+  --rail-bg: #f8f7f5;
+  --rail-fg: #44403c;
+  --rail-fg-muted: #a8a29e;
+  --rail-hover: #f1efec;
+  --rail-rule: #e9e6e2;
+  --rail-active-bg: #f1efec;
+  --rail-active-fg: #1c1917;
+  --rail-bar: #1c1917;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
+  --font-display: 'New York', ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+body.dark {
+  --ink: #f3f1ee;
+  --ink-soft: #d9d5d0;
+  --muted: #a49e97;
+  --faint: #7b746d;
+  --bg: #242120;
+  --bg-subtle: #1c1a19;
+  --bg-hover: #2d2a28;
+  --rule: #38342f;
+  --rule-strong: #4b453f;
+  --on-ink: #1c1a19;
+  --success: #66c188;
+  --success-bg: #17251b;
+  --success-line: #2c5138;
+  --warn: #d8ab52;
+  --warn-bg: #2a2314;
+  --warn-line: #5b491f;
+  --error: #e08585;
+  --error-bg: #2e1b1b;
+  --indigo: #9298f2;
+  --indigo-bg: #24264a;
+  --indigo-line: #41448f;
+  --primary: #f3f1ee;
+  --rail-bg: #1c1a19;
+  --rail-fg: #d9d5d0;
+  --rail-fg-muted: #7b746d;
+  --rail-hover: #2d2a28;
+  --rail-rule: #38342f;
+  --rail-active-bg: #2d2a28;
+  --rail-active-fg: #f3f1ee;
+  --rail-bar: #f3f1ee;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+/* Cobalt — Steve's navy palette, mapped onto the same token contract */
+body.theme-cobalt {
+  --ink: #0b0f1d;
+  --ink-soft: #39415a;
+  --muted: #5b6478;
+  --faint: #9aa3b8;
+  --bg: #ffffff;
+  --bg-subtle: #f3f5fb;
+  --bg-hover: #e9edf7;
+  --rule: #e2e6f0;
+  --rule-strong: #c9d1e4;
+  --on-ink: #f3f5f9;
+  --indigo: #19398d;
+  --indigo-bg: #e8edf9;
+  --indigo-line: #b9c7ec;
+  --warn-bg: #fdf7e4;
+  --warn-line: #ecd995;
+  --error: #9b0033;
+  --error-bg: #fdf0f4;
+  --primary: #19398d;
+  --rail-bg: #001b3c;
+  --rail-fg: #e6ebf5;
+  --rail-fg-muted: #7f93b5;
+  --rail-hover: #0e2c55;
+  --rail-rule: #16355e;
+  --rail-active-bg: #0e2c55;
+  --rail-active-fg: #ffffff;
+  --rail-bar: #e6ebf5;
+  --shadow-sm: 0 1px 2px rgba(26, 33, 55, 0.05);
+  --shadow-md: 0 4px 16px rgba(26, 33, 55, 0.12);
+}
+body.theme-cobalt.dark {
+  --ink: #fafafa;
+  --ink-soft: #d4d7de;
+  --muted: #a1a7b3;
+  --faint: #6d7484;
+  --bg: #121316;
+  --bg-subtle: #050505;
+  --bg-hover: #1d1f24;
+  --rule: #282a30;
+  --rule-strong: #3d4048;
+  --on-ink: #0a0a0a;
+  --indigo: #6a8dd8;
+  --indigo-bg: #1c2438;
+  --indigo-line: #374770;
+  --warn: #d8ab52;
+  --warn-bg: #2a2314;
+  --warn-line: #5b491f;
+  --success: #66c188;
+  --success-bg: #17251b;
+  --success-line: #2c5138;
+  --error: #cd6e7b;
+  --error-bg: #2e1b20;
+  --primary: #6a8dd8;
+  --rail-bg: #0a0b0d;
+  --rail-fg: #d4d7de;
+  --rail-fg-muted: #6d7484;
+  --rail-hover: #1a1c21;
+  --rail-rule: #282a30;
+  --rail-active-bg: #1a1c21;
+  --rail-active-fg: #fafafa;
+  --rail-bar: #6a8dd8;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+}

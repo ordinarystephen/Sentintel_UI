@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sentinel</title>
+  </head>
+  <body>
+    <script>
+      // Pre-paint theme apply. Mirrors src/app/theme.ts (same storage key, same classes)
+      // so a persisted dark/Cobalt choice never flashes Stone-light on load.
+      try {
+        var pref = JSON.parse(localStorage.getItem('sentinel.theme') || 'null')
+        if (pref) {
+          if (pref.family === 'cobalt') document.body.classList.add('theme-cobalt')
+          if (pref.dark) document.body.classList.add('dark')
+        }
+      } catch (_) {
+        /* storage unavailable: fall through to Stone light */
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+/* ============================================================
+   Global stylesheet: Tailwind + the token → utility bridge + base rules.
+
+   Tailwind v4 is configured here in CSS (no tailwind.config.js).
+   `@theme inline` maps every token in tokens.css onto a semantic utility
+   namespace — bg-bg, text-ink, border-rule, text-warn, bg-rail-bg… — and
+   wipes Tailwind's stock palette so `text-red-500` does not exist to reach for.
+   Fonts and shadows are exposed as explicit @utility rules (font-display,
+   font-mono, shadow-sm, shadow-md) so their names can equal the token names
+   without a var() cycle.
+   ============================================================ */
+@import 'tailwindcss';
+@import './tokens.css';
+
+@theme inline {
+  /* Remove Tailwind's stock colors, fonts and shadows — only tokens exist. */
+  --color-*: initial;
+  --font-*: initial;
+  --shadow-*: initial;
+
+  /* text / ink */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-on-ink: var(--on-ink);
+  /* surfaces + rules */
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-hover: var(--bg-hover);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  /* action */
+  --color-primary: var(--primary);
+  /* status */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-line: var(--success-line);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-line: var(--warn-line);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-indigo: var(--indigo);
+  --color-indigo-bg: var(--indigo-bg);
+  --color-indigo-line: var(--indigo-line);
+  /* left rail (themes independently of the canvas) */
+  --color-rail-bg: var(--rail-bg);
+  --color-rail-fg: var(--rail-fg);
+  --color-rail-fg-muted: var(--rail-fg-muted);
+  --color-rail-hover: var(--rail-hover);
+  --color-rail-rule: var(--rail-rule);
+  --color-rail-active-bg: var(--rail-active-bg);
+  --color-rail-active-fg: var(--rail-active-fg);
+  --color-rail-bar: var(--rail-bar);
+
+  /* Type scale from build-spec §3.2 (text-<role>) */
+  --text-micro: 11px;
+  --text-dense: 11.5px;
+  --text-ui: 13px;
+  --text-ui-sm: 12.5px;
+  --text-section-title: 16px;
+  --text-borrower: 19px;
+  --text-screen-title: 25px;
+  --tracking-micro: 0.12em;
+  --tracking-display: -0.01em;
+}
+
+/* Font roles (build-spec §3.2) */
+@utility font-body {
+  font-family: var(--font-body);
+}
+@utility font-display {
+  font-family: var(--font-display);
+}
+@utility font-mono {
+  font-family: var(--font-mono);
+}
+/* Shadows */
+@utility shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+@utility shadow-md {
+  box-shadow: var(--shadow-md);
+}
+/* Micro-label: 11px, .12em tracking, uppercase, 600 */
+@utility micro {
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    /* theme change transitions background/color ~200ms (§3.3) */
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* All motion dies under reduced motion (§3.3) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
