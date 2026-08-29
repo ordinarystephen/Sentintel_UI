@@ -14,6 +14,7 @@ import type {
   DocumentFilters,
   DocumentSearchResult,
   ExportResult,
+  ExtractionSettings,
   Policy,
   PriorComparison,
   ProcessingReview,
@@ -62,9 +63,15 @@ export interface SentinelApi {
    * durable from this call: it appears in listMyReviews immediately with
    * `borrowerName: null` and renames itself when the borrower is detected.
    * `contextText` lines ride into the run and surface as `question` attention
-   * items. Resolves as soon as the record exists — never waits for the run.
+   * items. `settings` are the demoted extraction controls (parser, section
+   * preset, concurrency); omitted = platform defaults. Resolves as soon as the
+   * record exists — never waits for the run.
    */
-  createReview(files: File[], contextText: string): Promise<{ id: string }>
+  createReview(
+    files: File[],
+    contextText: string,
+    settings?: ExtractionSettings,
+  ): Promise<{ id: string }>
 
   /** Cheap poll while processing: phase + status line, or the failure message. */
   getReviewStatus(id: string): Promise<ProcessingReview | { status: 'ready' }>

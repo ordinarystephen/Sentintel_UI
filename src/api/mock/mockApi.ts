@@ -29,6 +29,7 @@ import type {
   DocumentHit,
   DocumentSearchResult,
   ExportResult,
+  ExtractionSettings,
   Policy,
   PriorComparison,
   ProcessingPhase,
@@ -79,6 +80,7 @@ interface ProcessingSeed {
   startedAt: number
   files: Array<{ name: string; size: number }>
   contextText: string
+  settings?: ExtractionSettings
   cancelledAt?: number
 }
 
@@ -445,7 +447,7 @@ export function createMockApi(options: MockOptions = {}): SentinelApi {
       return rec ? delay(rec) : fail(`No review with id ${id}.`)
     },
 
-    createReview: (files, contextText) => {
+    createReview: (files, contextText, settings) => {
       if (files.length === 0) return fail('Add at least one PDF to begin a review.')
       const startedAt = now()
       const id = `rev-new-${startedAt.toString(36)}`
@@ -454,6 +456,7 @@ export function createMockApi(options: MockOptions = {}): SentinelApi {
         startedAt,
         files: files.map((f) => ({ name: f.name, size: f.size })),
         contextText,
+        settings,
       }
       save()
       return delay({ id })

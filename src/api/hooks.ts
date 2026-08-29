@@ -5,7 +5,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './index'
-import type { ClearReason, DocumentFilters, ReviewFilters } from './types'
+import type { ClearReason, DocumentFilters, ExtractionSettings, ReviewFilters } from './types'
 
 export const queryKeys = {
   me: ['me'] as const,
@@ -27,8 +27,14 @@ export const useMyReviews = () =>
 export const useAllReviews = (filters: ReviewFilters) =>
   useQuery({ queryKey: queryKeys.allReviews(filters), queryFn: () => api.listAllReviews(filters) })
 
+/** Polls every second while the record is still processing, so `/review/:id` flips to the review on its own. */
 export const useReview = (id: string) =>
-  useQuery({ queryKey: queryKeys.review(id), queryFn: () => api.getReview(id), enabled: !!id })
+  useQuery({
+    queryKey: queryKeys.review(id),
+    queryFn: () => api.getReview(id),
+    enabled: !!id,
+    refetchInterval: (q) => (q.state.data?.status === 'processing' ? 1000 : false),
+  })
 
 /** Polls while the review is processing; the caller flips `enabled` off once ready. */
 export const useReviewStatus = (id: string, enabled: boolean, intervalMs = 1000) =>
@@ -103,8 +109,8 @@ export function useReviewMutations(reviewId: string) {
 export function useCreateReview() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: { files: File[]; contextText: string }) =>
-      api.createReview(v.files, v.contextText),
+    mutationFn: (v: { files: File[]; contextText: string; settings?: ExtractionSettings }) =>
+      api.createReview(v.files, v.contextText, v.settings),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['reviews'] }),
   })
 }

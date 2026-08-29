@@ -16,6 +16,8 @@
      Real values are set here; the contract requires both tokens.
    - `--note`/`--note-bg` (pink design-note pins) are mockup-only crit
      chrome and are not part of the product token contract.
+   - `--overlay` (modal scrim) is added: the mockup hard-coded
+     rgba(24,24,27,.45) on `.overlay`; components may not carry raw color.
    ============================================================ */
 :root {
   /* stone, not zinc — the neutral has temperature now */
@@ -42,6 +44,7 @@
   --indigo-line: #c7d2fe;
   --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.06);
   --shadow-md: 0 4px 16px rgba(28, 25, 23, 0.1);
+  --overlay: rgba(28, 25, 23, 0.45);
   --primary: #1c1917;
   --rail-bg: #f8f7f5;
   --rail-fg: #44403c;
@@ -88,6 +91,7 @@ body.dark {
   --rail-bar: #f3f1ee;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --overlay: rgba(0, 0, 0, 0.6);
 }
 /* Cobalt — Steve's navy palette, mapped onto the same token contract */
 body.theme-cobalt {
@@ -119,6 +123,7 @@ body.theme-cobalt {
   --rail-bar: #e6ebf5;
   --shadow-sm: 0 1px 2px rgba(26, 33, 55, 0.05);
   --shadow-md: 0 4px 16px rgba(26, 33, 55, 0.12);
+  --overlay: rgba(11, 15, 29, 0.45);
 }
 body.theme-cobalt.dark {
   --ink: #fafafa;
@@ -153,4 +158,5 @@ body.theme-cobalt.dark {
   --rail-bar: #6a8dd8;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --overlay: rgba(0, 0, 0, 0.65);
 }

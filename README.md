@@ -37,7 +37,8 @@ src/
 │                       #   router, ThemeProvider, ShellProvider (rail/ctx collapse, current review)
 ├── screens/            # one folder per screen: landing, reviews, documents, review, policy
 │                       #   (styleguide/ is a dev-only type reference at /styleguide)
-├── components/         # shared atoms (Badge, …) hand-built to the mockup, no component kit
+├── components/         # shared atoms hand-built to the mockup (Badge, Button, Pill, ViaBadge,
+│                       #   ConfChip, Chip, Collapsible, Modal, Toast, Banner, Spinner) — no component kit
 ├── api/                # the typed API seam + mock implementation (Phase 2)
 ├── strings.ts          # ALL user-facing nav/tab names — placeholders pending rename
 └── lib/                # hooks (usePersistedState, useHashTarget), sections, cx, formatters

@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useRoutes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { ToastProvider } from '@/components/Toast'
 import { routes } from './router'
 import { ShellProvider } from './ShellProvider'
 import { ThemeProvider } from './ThemeProvider'
@@ -11,17 +13,24 @@ import { ThemeProvider } from './ThemeProvider'
 // trips the data router's internal Request on navigation).
 const AppRoutes = () => useRoutes(routes)
 
-function renderAt(path: string) {
+export function renderAt(path: string) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <ThemeProvider>
-      <ShellProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
-      </ShellProvider>
+      <QueryClientProvider client={qc}>
+        <ShellProvider>
+          <ToastProvider>
+            <MemoryRouter initialEntries={[path]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </ToastProvider>
+        </ShellProvider>
+      </QueryClientProvider>
     </ThemeProvider>,
   )
 }
+
+const MERIDIAN = 'rev-meridian-2026-08'
 
 const nav = () => screen.getByRole('navigation', { name: 'App navigation' })
 const h1 = () => screen.getByRole('heading', { level: 1 })
@@ -65,16 +74,18 @@ describe('routes', () => {
     expect(screen.queryByRole('complementary', { name: 'Context' })).toBeNull()
   })
 
-  it('/review/:id shows the contextual zone, section deep links and the context rail', () => {
-    renderAt('/review/CL6430#sec-2')
-    expect(h1()).toHaveTextContent('Meridian US Holdco LLC')
+  it('/review/:id shows the contextual zone, section deep links and the context rail', async () => {
+    renderAt(`/review/${MERIDIAN}#sec-2`)
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Meridian US Holdco LLC' }),
+    ).toBeInTheDocument()
     const zone = within(nav()).getByRole('region', { name: 'Meridian US Holdco LLC' })
     expect(within(zone).getByRole('link', { name: 'Overview' })).toHaveAttribute(
       'href',
-      '/review/CL6430',
+      `/review/${MERIDIAN}`,
     )
     const sec2 = within(zone).getByRole('link', { name: '2 · Financials' })
-    expect(sec2).toHaveAttribute('href', '/review/CL6430#sec-2')
+    expect(sec2).toHaveAttribute('href', `/review/${MERIDIAN}#sec-2`)
     expect(sec2).toHaveAttribute('aria-current', 'true')
     expect(within(zone).getByRole('link', { name: '6 · Recommendation' })).not.toHaveAttribute(
       'aria-current',
@@ -90,8 +101,8 @@ describe('routes', () => {
 
   it('leaving the review clears the contextual zone', async () => {
     const user = userEvent.setup()
-    renderAt('/review/CL6430')
-    expect(within(nav()).getByRole('link', { name: 'Overview' })).toBeInTheDocument()
+    renderAt(`/review/${MERIDIAN}`)
+    expect(await within(nav()).findByRole('link', { name: 'Overview' })).toBeInTheDocument()
     await user.click(within(nav()).getByRole('link', { name: 'Documents' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Documents' })).toBeInTheDocument()
     expect(within(nav()).queryByRole('link', { name: 'Overview' })).toBeNull()
@@ -124,7 +135,8 @@ describe('rail collapse', () => {
 
   it('collapsed rail still shows section numbers inside a review', async () => {
     const user = userEvent.setup()
-    renderAt('/review/CL6430')
+    renderAt(`/review/${MERIDIAN}`)
+    await within(nav()).findByRole('region', { name: 'Meridian US Holdco LLC' })
     await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     const zone = within(nav()).getByRole('region', { name: 'Meridian US Holdco LLC' })
     expect(within(zone).getByRole('link', { name: '2 · Financials' })).toHaveTextContent('2')
@@ -135,16 +147,20 @@ describe('rail collapse', () => {
 describe('context rail collapse', () => {
   it('toggles from the sticky bar and persists', async () => {
     const user = userEvent.setup()
-    const first = renderAt('/review/CL6430')
+    const first = renderAt(`/review/${MERIDIAN}`)
     const toggle = () => screen.getByRole('button', { name: 'Toggle context rail' })
-    expect(toggle()).toHaveAttribute('aria-pressed', 'true')
+    expect(await screen.findByRole('button', { name: 'Toggle context rail' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await user.click(toggle())
     expect(screen.queryByRole('complementary', { name: 'Context' })).toBeNull()
     expect(toggle()).toHaveAttribute('aria-pressed', 'false')
     expect(localStorage.getItem('sentinel.ctx.collapsed')).toBe('true')
 
     first.unmount()
-    renderAt('/review/CL6430')
+    renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('button', { name: 'Toggle context rail' })
     expect(screen.queryByRole('complementary', { name: 'Context' })).toBeNull()
   })
 })

@@ -32,6 +32,7 @@
   --color-rule-strong: var(--rule-strong);
   /* action */
   --color-primary: var(--primary);
+  --color-overlay: var(--overlay);
   /* status */
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);

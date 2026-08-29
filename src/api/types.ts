@@ -303,6 +303,18 @@ export interface DocumentSearchResult {
   docTypes: string[]
 }
 
+/** The demoted "Advanced extraction settings" (§5.1). Defaults are the platform's. */
+export interface ExtractionSettings {
+  parser: 'pdfplumber' | 'pymupdf' | 'docling'
+  preset: 'ib_lending' | 'generic'
+  concurrency: 2 | 4 | 8
+}
+export const DEFAULT_EXTRACTION: ExtractionSettings = {
+  parser: 'pdfplumber',
+  preset: 'ib_lending',
+  concurrency: 4,
+}
+
 export interface ExportResult {
   fileName: string
   blob: Blob

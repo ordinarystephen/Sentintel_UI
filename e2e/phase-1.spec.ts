@@ -18,7 +18,7 @@ const ROUTES: ReadonlyArray<[string, string]> = [
   ['/reviews/all', 'Reviews'],
   ['/documents', 'Documents'],
   ['/policy', 'Policy library'],
-  ['/review/CL6430', 'Meridian US Holdco LLC'],
+  ['/review/rev-meridian-2026-08', 'Meridian US Holdco LLC'],
 ]
 
 async function setTheme(page: Page, family: string, dark: boolean) {
@@ -64,7 +64,7 @@ test.describe('screenshots', () => {
       test(`review page · ${theme.name} · ${width}px`, async ({ page }) => {
         await setTheme(page, theme.family, theme.dark)
         await page.setViewportSize({ width, height: 900 })
-        await page.goto('/review/CL6430#sec-2')
+        await page.goto('/review/rev-meridian-2026-08#sec-2')
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
         await page.waitForTimeout(400)
         await page.screenshot({ path: `e2e/screenshots/phase-1/review-${theme.name}-${width}.png` })
@@ -84,7 +84,7 @@ test.describe('screenshots', () => {
     await setTheme(page, 'cobalt', false)
     await page.addInitScript(() => localStorage.setItem('sentinel.rail.collapsed', 'true'))
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/review/CL6430')
+    await page.goto('/review/rev-meridian-2026-08')
     await page.waitForTimeout(300)
     await page.screenshot({
       path: 'e2e/screenshots/phase-1/review-collapsed-cobalt-light-1440.png',
@@ -94,7 +94,8 @@ test.describe('screenshots', () => {
 
 test('only the canvas scrolls', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
-  await page.goto('/review/CL6430')
+  await page.goto('/review/rev-meridian-2026-08')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
   const m = await page.evaluate(() => {
     const doc = document.documentElement
     const canvas = document.getElementById('canvas')!
@@ -126,7 +127,7 @@ test('only the canvas scrolls', async ({ page }) => {
 
 test('deep links land expanded + scrolled with the neutral flash', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
-  await page.goto('/review/CL6430')
+  await page.goto('/review/rev-meridian-2026-08')
   await page.getByRole('link', { name: '5 · Covenants & Monitoring' }).click()
   await expect(page).toHaveURL(/#sec-5$/)
   await expect
@@ -139,7 +140,7 @@ test('deep links land expanded + scrolled with the neutral flash', async ({ page
     'true',
   )
   // direct load of a hash URL also lands
-  await page.goto('/review/CL6430#sec-6')
+  await page.goto('/review/rev-meridian-2026-08#sec-6')
   await expect
     .poll(() => page.evaluate(() => document.getElementById('canvas')!.scrollTop))
     .toBeGreaterThan(200)
@@ -148,7 +149,7 @@ test('deep links land expanded + scrolled with the neutral flash', async ({ page
 test('rail and context-rail collapse persist across reload and are keyboard-reachable', async ({
   page,
 }) => {
-  await page.goto('/review/CL6430')
+  await page.goto('/review/rev-meridian-2026-08')
   const collapse = page.getByRole('button', { name: 'Collapse sidebar' })
   await collapse.focus()
   await page.keyboard.press('Enter')
@@ -177,7 +178,8 @@ test('rail and context-rail collapse persist across reload and are keyboard-reac
 
 test('reduced motion: rail width and deep-link flash have no animation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/review/CL6430#sec-3')
+  await page.goto('/review/rev-meridian-2026-08#sec-3')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
   const durations = await page.evaluate(() => {
     const nav = document.querySelector('nav[aria-label="App navigation"]')!
     const sec = document.getElementById('sec-3')!
