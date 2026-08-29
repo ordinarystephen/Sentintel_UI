@@ -1,0 +1,1073 @@
+<title>Sentinel MVP Concept</title>
+<style>
+/* ============================================================
+   Sentinel MVP concept — interactive mockup
+   Basis: the POC recreation's token layer (web/src/styles/tokens.css).
+   Deliberately light-only: the product's token file is light-only,
+   and this concept commits to it (the dead dark-mode affordance is gone).
+   Pink pins = design rationale, mapped to Steve's decisions. Fictional data.
+   ============================================================ */
+:root{
+  /* stone, not zinc — the neutral has temperature now */
+  --ink:#1c1917; --ink-soft:#44403c; --muted:#78716c; --faint:#a8a29e;
+  --bg:#fdfdfc; --bg-subtle:#f8f7f5; --bg-hover:#f1efec;
+  --rule:#e9e6e2; --rule-strong:#d8d4cf;
+  --on-ink:#fdfdfc;
+  --success:#15803d; --success-bg:#f0fdf4; --success-line:var(--success-line);
+  --warn:#a16207; --warn-bg:#fdf9e7; --warn-line:#eedc9e;
+  --error:#991b1b; --error-bg:#fdf2f2;
+  --indigo:#4f46e5; --indigo-bg:#eef0fd; --indigo-line:var(--indigo-line);
+  --note:#db2777; --note-bg:#fdf2f8;
+  --shadow-sm:0 1px 2px rgba(28,25,23,.06);
+  --shadow-md:0 4px 16px rgba(28,25,23,.10);
+  --primary:#1c1917;
+  --rail-bg:#f8f7f5; --rail-fg:#44403c; --rail-fg-muted:#a8a29e; --rail-hover:#f1efec;
+  --rail-rule:#e9e6e2; --rail-active-bg:#f1efec; --rail-active-fg:#1c1917; --rail-bar:#1c1917;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
+  --font-display:"New York",ui-serif,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+body.dark{
+  --ink:#f3f1ee; --ink-soft:#d9d5d0; --muted:#a49e97; --faint:#7b746d;
+  --bg:#242120; --bg-subtle:#1c1a19; --bg-hover:#2d2a28;
+  --rule:#38342f; --rule-strong:#4b453f;
+  --on-ink:#1c1a19;
+  --success:#66c188; --success-bg:#17251b; --success-line:#2c5138;
+  --warn:#d8ab52; --warn-bg:#2a2314; --warn-line:#5b491f;
+  --error:#e08585; --error-bg:#2e1b1b;
+  --indigo:#9298f2; --indigo-bg:#24264a; --indigo-line:#41448f;
+  --note:#e77fb0; --note-bg:#3a1c2b;
+  --primary:#f3f1ee;
+  --rail-bg:#1c1a19; --rail-fg:#d9d5d0; --rail-fg-muted:#7b746d; --rail-hover:#2d2a28;
+  --rail-rule:#38342f; --rail-active-bg:#2d2a28; --rail-active-fg:#f3f1ee; --rail-bar:#f3f1ee;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow-md:0 4px 16px rgba(0,0,0,.55);
+}
+/* Cobalt — Steve's navy palette, mapped onto the same token contract */
+body.theme-cobalt{
+  --ink:#0b0f1d; --ink-soft:#39415a; --muted:#5b6478; --faint:#9aa3b8;
+  --bg:#ffffff; --bg-subtle:#f3f5fb; --bg-hover:#e9edf7;
+  --rule:#e2e6f0; --rule-strong:#c9d1e4;
+  --on-ink:#f3f5f9;
+  --indigo:#19398d; --indigo-bg:#e8edf9; --indigo-line:#b9c7ec;
+  --warn-bg:#fdf7e4; --warn-line:#ecd995;
+  --error:#9b0033; --error-bg:#fdf0f4;
+  --note:#db2777; --note-bg:#fdf2f8;
+  --primary:#19398d;
+  --rail-bg:#001b3c; --rail-fg:#e6ebf5; --rail-fg-muted:#7f93b5; --rail-hover:#0e2c55;
+  --rail-rule:#16355e; --rail-active-bg:#0e2c55; --rail-active-fg:#ffffff; --rail-bar:#e6ebf5;
+  --shadow-sm:0 1px 2px rgba(26,33,55,.05);
+  --shadow-md:0 4px 16px rgba(26,33,55,.12);
+}
+body.theme-cobalt.dark{
+  --ink:#fafafa; --ink-soft:#d4d7de; --muted:#a1a7b3; --faint:#6d7484;
+  --bg:#121316; --bg-subtle:#050505; --bg-hover:#1d1f24;
+  --rule:#282a30; --rule-strong:#3d4048;
+  --on-ink:#0a0a0a;
+  --indigo:#6a8dd8; --indigo-bg:#1c2438; --indigo-line:#374770;
+  --warn:#d8ab52; --warn-bg:#2a2314; --warn-line:#5b491f;
+  --success:#66c188; --success-bg:#17251b; --success-line:#2c5138;
+  --error:#cd6e7b; --error-bg:#2e1b20;
+  --note:#e77fb0; --note-bg:#3a1c2b;
+  --primary:#6a8dd8;
+  --rail-bg:#0a0b0d; --rail-fg:#d4d7de; --rail-fg-muted:#6d7484; --rail-hover:#1a1c21;
+  --rail-rule:#282a30; --rail-active-bg:#1a1c21; --rail-active-fg:#fafafa; --rail-bar:#6a8dd8;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.5);
+  --shadow-md:0 4px 16px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{font-family:var(--font-body);color:var(--ink);background:var(--bg-subtle);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .2s ease,color .2s ease}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ============ crit chrome (mockup layer, not product language) ============ */
+.crit-banner{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;max-width:1360px;margin:0 auto;padding:14px 20px 0;color:var(--note);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.crit-banner .sub{color:var(--muted);letter-spacing:.02em;text-transform:none;font-weight:400;font-size:12px}
+.crit-nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:60;display:flex;gap:4px;align-items:center;background:var(--ink);border-radius:999px;padding:5px 6px;box-shadow:var(--shadow-md)}
+.crit-nav button{color:#d4d4d8;font-size:12px;padding:6px 13px;border-radius:999px;white-space:nowrap}
+.crit-nav button[aria-selected="true"]{background:#3f3f46;color:#fff}
+.crit-nav .sep{width:1px;height:18px;background:#3f3f46;margin:0 3px}
+.crit-nav .notes-toggle{color:#f9a8d4}
+.crit-nav .notes-toggle[aria-pressed="true"]{background:var(--note);color:#fff}
+
+.pin-anchor{position:relative}
+.pin{position:absolute;z-index:40;width:20px;height:20px;border-radius:50%;background:var(--note);color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;box-shadow:0 0 0 3px var(--note-bg),var(--shadow-sm);display:none;font-family:var(--font-body);letter-spacing:0;text-transform:none;font-style:normal}
+body.notes-on .pin{display:block}
+.pin-pop{display:none;position:absolute;z-index:50;top:26px;right:-6px;width:280px;background:var(--bg);border:1px solid var(--note);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:400;line-height:1.5;color:var(--ink-soft);text-align:left;box-shadow:var(--shadow-md);text-transform:none;letter-spacing:0;font-style:normal;white-space:normal}
+.pin-pop .eyebrow{display:block;color:var(--note);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.pin.open .pin-pop{display:block}
+.pin.pin-left .pin-pop{right:auto;left:-6px}
+.pin.good{background:var(--success);box-shadow:0 0 0 3px var(--success-bg),var(--shadow-sm)}
+.pin.good .pin-pop{border-color:var(--success)}
+.pin.good .pin-pop .eyebrow{color:var(--success)}
+
+/* ============ shell ============ */
+.frame{max-width:1360px;height:calc(100vh - 62px);min-height:520px;margin:10px auto 0;background:var(--bg);border:1px solid var(--rule);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.masthead{display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;border-bottom:1px solid var(--rule);background:var(--bg);flex:none}
+.masthead .brand{font-weight:600;font-size:15px;letter-spacing:-.01em}
+.masthead .spacer{flex:1}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:hover{background:var(--bg-hover)}
+.icon-btn svg{width:15px;height:15px}
+.shell-row{display:flex;flex:1;min-height:0;align-items:stretch}
+
+/* rail — GitHub-modeled app nav */
+.rail-nav{width:236px;flex:none;border-right:1px solid var(--rail-rule);background:var(--rail-bg);padding:14px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;transition:width .15s ease,background .2s ease}
+.nav-item{position:relative;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:7px;padding:7px 10px;font-size:13px;color:var(--rail-fg)}
+.nav-item:hover{background:var(--rail-hover)}
+.nav-item svg{width:16px;height:16px;flex:none;color:var(--rail-fg-muted)}
+.nav-item.active{background:var(--rail-active-bg);font-weight:600;color:var(--rail-active-fg)}
+.nav-item.active svg{color:var(--rail-active-fg)}
+.nav-item.active::before{content:"";position:absolute;left:-12px;top:7px;bottom:7px;width:3px;border-radius:0 2px 2px 0;background:var(--rail-bar)}
+.nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-divider{border-top:1px solid var(--rail-rule);margin:10px 2px;flex:none}
+.rail-ctx h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--rail-fg-muted);font-weight:600;margin:2px 8px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-ctx .nav-item{padding:5px 10px;font-size:12.5px;font-weight:400}
+.rail-ctx .nav-item[aria-current="true"]{background:var(--rail-active-bg);color:var(--rail-active-fg);font-weight:600}
+.rail-ctx .n{font-family:var(--font-mono);font-size:11px;color:var(--rail-fg-muted);width:16px;flex:none;text-align:center}
+.rail-ctx .nav-item[aria-current="true"] .n{color:var(--rail-active-fg)}
+.rail-ctx .st{width:7px;height:7px;border-radius:50%;flex:none}
+.st.pop{background:var(--success)}
+.st.todo{background:transparent;border:1.5px solid var(--rail-fg-muted)}
+.st.att{background:var(--warn)}
+.cnt{font-size:10px;border-radius:999px;padding:0 6px;border:1px solid var(--warn-line);color:var(--warn);background:var(--warn-bg);font-weight:600}
+.rail-spacer{flex:1;min-height:14px}
+body.rail-collapsed .rail-nav{width:58px;padding:14px 9px}
+body.rail-collapsed .nav-label,body.rail-collapsed .rail-ctx h4,body.rail-collapsed .cnt,body.rail-collapsed .rail-ctx .st{display:none}
+body.rail-collapsed .nav-item{justify-content:center;padding:8px 0;gap:0}
+body.rail-collapsed .nav-item.active::before{left:-9px}
+body.rail-collapsed .rail-ctx .nav-item{padding:5px 0}
+
+/* reviews screen */
+.list-head{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.tabs{display:inline-flex;background:var(--bg-subtle);border-radius:8px;padding:2px;gap:2px}
+.tabs button{padding:5px 13px;border-radius:6px;font-size:12px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:500}
+.recent-row .own{font-size:11.5px;color:var(--muted);flex:none}
+.ro-note{font-size:11.5px;color:var(--faint);margin:2px 0 12px}
+
+/* documents screen */
+.doc-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.searchbar{position:relative;flex:1;min-width:220px}
+.searchbar input{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:8px 11px 8px 30px;font-size:13px;background:var(--bg)}
+.searchbar svg{position:absolute;left:10px;top:10px;width:13px;height:13px;color:var(--faint)}
+select.ctl{border:1px solid var(--rule-strong);border-radius:7px;padding:7px 9px;font-size:12px;background:var(--bg);color:var(--ink-soft)}
+.hit-count{font-size:11.5px;color:var(--faint);margin:10px 0 12px}
+.hit{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:12px 14px;margin-bottom:10px}
+.hit .fname{font-family:var(--font-mono);font-size:12.5px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hit .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.attr-pill{font-size:10px;border:1px solid var(--rule);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg-subtle)}
+.hit .snip{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink-soft);border-left:2px solid var(--rule-strong);padding-left:12px;margin-top:9px;line-height:1.55}
+.hit .snip mark{background:var(--warn-bg);color:inherit;padding:0 2px;border-radius:2px;font-style:normal}
+.hit .src{font-size:11px;color:var(--faint);margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* canvas */
+main.canvas{flex:1;min-width:0;overflow-y:auto;padding:26px 36px 90px;background:var(--bg)}
+.canvas-inner{max-width:820px;margin:0 auto}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ============ shared atoms ============ */
+.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rule-strong);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--ink-soft);background:var(--bg)}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.badge.green{border-color:var(--success-line);color:var(--success);background:var(--success-bg)}
+.badge.amber{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+.badge.slate{border-color:var(--rule-strong);color:var(--muted);background:var(--bg-subtle)}
+.badge.indigo{border-color:var(--indigo-line);color:var(--indigo);background:var(--indigo-bg)}
+.micro{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mono{font-family:var(--font-mono);font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;border:1px solid transparent}
+.btn.primary{background:var(--primary);color:var(--on-ink)}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.outline{border-color:var(--rule-strong);background:var(--bg)}
+.btn.outline:hover{background:var(--bg-hover)}
+.btn.small{padding:5px 11px;font-size:12px;border-radius:6px}
+.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:12px;background:none;border:none;cursor:pointer}
+.link.quiet{color:var(--muted)}
+.card{border:1px solid var(--rule);border-radius:12px;background:var(--bg)}
+.pill{font-size:10px;border-radius:999px;padding:2px 9px;font-weight:600;letter-spacing:.04em}
+.pill.pop{background:var(--success-bg);color:var(--success);border:1px solid var(--success-line)}
+.pill.todo{background:var(--bg);color:var(--muted);border:1px solid var(--rule-strong)}
+.via{font-size:10px;border-radius:4px;padding:1px 7px;border:1px solid var(--rule-strong);color:var(--muted);background:var(--bg-subtle)}
+.via.t2{border-color:var(--indigo-line);color:var(--indigo);background:var(--indigo-bg)}
+.via.unres{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+.chip{font-size:10px;border-radius:4px;padding:1px 7px;border:1px solid}
+.chip.warn{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+.disclaimer{font-size:11px;color:var(--faint);margin-top:30px;border-top:1px solid var(--rule);padding-top:12px}
+textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:9px 11px;font-size:13px;resize:vertical;min-height:64px;background:var(--bg)}
+
+/* ============ screen 1 · landing ============ */
+.landing-hero{max-width:600px;margin:26px auto 0}
+.landing-hero .micro{color:var(--faint)}
+.landing-hero h1{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:4px 0 4px;text-wrap:balance}
+.landing-hero .sub{font-size:13px;color:var(--muted);margin-bottom:20px;max-width:52ch}
+.dropzone{border:1.5px dashed var(--rule-strong);border-radius:12px;background:var(--bg-subtle);padding:38px 24px;text-align:center;transition:border-color .12s,background .12s;cursor:pointer}
+.dropzone:hover{border-color:var(--faint);background:var(--bg-hover)}
+.dropzone svg{width:26px;height:26px;color:var(--faint);margin-bottom:10px}
+.dropzone .big{font-size:15px;font-weight:600}
+.dropzone .or{font-size:12.5px;color:var(--muted);margin-top:3px}
+.dropzone .hint{font-size:11px;color:var(--faint);margin-top:12px;letter-spacing:.04em}
+.filechips{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.filechip{display:flex;align-items:center;gap:9px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:7px 11px;font-size:12.5px}
+.filechip svg{width:13px;height:13px;color:var(--faint);flex:none}
+.filechip .nm{font-family:var(--font-mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filechip .sz{color:var(--faint);font-size:11px;flex:none}
+.filechip .rm{margin-left:auto;color:var(--faint);flex:none}
+.filechip .rm:hover{color:var(--ink)}
+.ctx-label{display:flex;align-items:baseline;gap:8px;margin:20px 0 6px}
+.ctx-label .micro{color:var(--muted)}
+.ctx-label .opt{font-size:11px;color:var(--faint)}
+.begin-row{display:flex;align-items:center;gap:14px;margin-top:16px}
+.begin-row .adv{margin-left:auto}
+.recents{max-width:600px;margin:40px auto 0}
+.recents h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:10px}
+.recent-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:11px 14px;margin-bottom:8px}
+.recent-row:hover{border-color:var(--rule-strong);background:var(--bg-subtle)}
+.recent-row .who{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-row .meta{font-size:11.5px;color:var(--faint);display:flex;gap:10px;align-items:center;flex:none}
+.recent-row .meta .mono{font-size:11px}
+
+/* ============ screen 2 · processing ============ */
+.proc-wrap{max-width:460px;margin:90px auto 0;text-align:center}
+.proc-wrap .docline{font-size:12px;color:var(--faint);font-family:var(--font-mono);margin-bottom:26px}
+.proc-wrap h2{font-family:var(--font-display);font-style:italic;font-weight:400;font-size:19px;color:var(--ink-soft);letter-spacing:.01em;margin-bottom:22px}
+.proc-bar{height:3px;border-radius:2px;background:var(--rule);overflow:hidden;margin-bottom:14px}
+.proc-bar .fill{height:100%;width:18%;background:var(--ink);border-radius:2px;animation:crawl 4.5s ease-in-out forwards}
+@keyframes crawl{0%{width:4%}30%{width:31%}60%{width:58%}85%{width:79%}100%{width:96%}}
+.proc-status{font-size:12.5px;color:var(--muted)}
+.proc-away{font-size:12px;color:var(--faint);margin-top:34px;line-height:1.6}
+.proc-cancel{margin-top:18px}
+
+/* ============ screen 3 · overview ============ */
+.ov-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.ov-head .idw{flex:1;min-width:260px}
+.ov-head .micro{color:var(--faint)}
+.ov-head h1{font-size:21px;font-weight:600;letter-spacing:-.02em;margin:2px 0 3px;text-wrap:balance}
+.ov-head .sub{font-size:12.5px;color:var(--muted)}
+.ov-head .sub b{font-weight:600;color:var(--ink-soft)}
+.ov-actions{display:flex;gap:8px;align-items:center;flex:none;padding-top:6px}
+.ov-meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--faint);margin:10px 0 24px}
+.ov-meta .mono{font-size:11px}
+.att-block{border:1px solid var(--rule);border-left:2px solid var(--indigo);border-radius:10px;background:var(--bg);margin-bottom:28px}
+.att-block .hd{display:flex;align-items:baseline;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule)}
+.att-block .hd h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--indigo);font-weight:600}
+.att-block .hd .tally{font-size:11.5px;color:var(--faint)}
+.att-row{display:flex;align-items:flex-start;gap:11px;padding:11px 16px;border-bottom:1px solid var(--rule);text-align:left;width:100%}
+.att-row:last-child{border-bottom:none}
+.att-row:hover{background:var(--bg-subtle)}
+.att-row .tag{flex:none;margin-top:1px}
+.att-row .body{flex:1;min-width:0;display:block}
+.att-row .t{display:block;font-size:13px;font-weight:500;line-height:1.45}
+.att-row .d{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+.att-row .go{flex:none;font-size:11.5px;color:var(--indigo);white-space:nowrap;margin-top:2px}
+.att-row .dismiss{flex:none;color:var(--faint);font-size:11px;margin-top:2px}
+.att-row .dismiss:hover{color:var(--ink)}
+.att-row.done{background:var(--bg-subtle)}
+.att-row.done .t{color:var(--muted);font-weight:400}
+.att-row.done .d{color:var(--success)}
+.sec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+@media(max-width:900px){.sec-grid{grid-template-columns:1fr 1fr}}
+.sec-card{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:12px 13px;text-align:left;display:flex;flex-direction:column;gap:7px;cursor:pointer}
+.sec-card:hover{border-color:var(--rule-strong);background:var(--bg-subtle)}
+.sec-card.todo{border-style:dashed;background:var(--bg-subtle)}
+.sec-card .top{display:flex;align-items:baseline;gap:7px}
+.sec-card .n{font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.sec-card .nm{font-size:12.5px;font-weight:600;line-height:1.3;flex:1}
+.sec-card.todo .nm{color:var(--muted);font-weight:500}
+.sec-card .foot{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.sec-card .meta{font-size:11px;color:var(--faint)}
+.zone-h{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
+.zone-h h3{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.zone-h .aside{font-size:12px;color:var(--faint);font-weight:400}
+.story{background:var(--bg-subtle);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
+.story p.narr{font-size:13px;color:var(--ink-soft);line-height:1.6}
+.story .docs{font-size:11px;color:var(--faint);margin-bottom:10px}
+.timeline{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.tl-row{border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:9px 12px;font-size:12px}
+.tl-row .head{display:flex;gap:8px;align-items:center;margin-bottom:3px}
+.tl-row .date{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.tl-row .delta{color:var(--muted);margin-top:2px}
+.tl-row .snip{font-family:var(--font-display);font-style:italic;color:var(--muted);margin-top:3px}
+
+/* ============ screen 4 · section ============ */
+.crumb{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12px;color:var(--muted)}
+.crumb .sep{color:var(--rule-strong)}
+.crumb .pos{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.sec-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.sec-head h1{font-size:18px;font-weight:600;letter-spacing:-.015em}
+.sec-head .n{font-family:var(--font-mono);font-size:13px;color:var(--faint)}
+.sec-head .meta{font-size:12px;color:var(--faint)}
+.sec-sub{font-size:12.5px;color:var(--muted);margin-bottom:20px}
+.sub-card{border:1px solid var(--rule);border-radius:10px;background:var(--bg);margin-bottom:12px}
+.sub-card .bd{padding:12px 14px}
+.sub-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.sub-h .name{font-size:12.5px;font-weight:600}
+.sub-h .pg{font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+.sub-card p{font-size:12.5px;color:var(--ink-soft);line-height:1.55}
+.kv{font-size:12.5px;color:var(--ink-soft)}
+.kv b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.sub-card.flagged{border-color:var(--warn-line)}
+.sub-card.flagged .bd{border-left:2px solid var(--warn);border-radius:0 0 0 0}
+.flag-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--warn)}
+ul.ev{list-style:none;border-left:2px solid var(--rule-strong);padding-left:12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+ul.ev .quote{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink-soft)}
+ul.ev .src{font-size:11px;color:var(--faint);margin-top:2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.af{border:1px solid var(--rule);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--bg)}
+.af .h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:5px}
+.af .name{font-size:13px;font-weight:600;font-family:var(--font-mono)}
+.af .q{font-size:12px;color:var(--muted);margin-bottom:4px}
+.af .verdict{font-size:12.5px;margin-bottom:6px}
+details.snips summary{font-size:11.5px;color:var(--indigo);cursor:pointer;list-style:none;display:inline-flex;gap:5px;align-items:center}
+details.snips summary::before{content:"▸";font-size:9px;transition:transform .12s}
+details.snips[open] summary::before{transform:rotate(90deg)}
+details.snips ol{margin:8px 0 2px 18px;max-height:180px;overflow:auto;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);display:flex;flex-direction:column;gap:6px;white-space:pre-wrap;word-break:break-word}
+.sec-footnav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;border-top:1px solid var(--rule);padding-top:16px}
+
+/* ============ modal ============ */
+.overlay{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:70;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:12px;max-width:760px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow-md)}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.modal-h h3{font-size:14px;font-weight:600;flex:1}
+.modal-b{padding:16px 18px}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:11.5px;color:var(--muted);margin-bottom:12px}
+.modal blockquote{font-family:var(--font-display);font-style:italic;font-size:14px;color:var(--ink-soft);border-left:2px solid var(--rule-strong);padding-left:12px;margin-bottom:14px;max-height:120px;overflow:auto}
+.modal .img-area{border:1px solid var(--rule);border-radius:8px;background:var(--bg-subtle);padding:14px;display:flex;justify-content:center}
+.modal .img-area svg{max-width:100%;height:auto}
+
+/* ============ warmth pass ============ */
+/* serif, promoted: the document world gets the document voice */
+.landing-hero h1,.ov-head h1{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em}
+.landing-hero h1{font-size:25px}
+.ov-head h1{font-size:27px;margin:6px 0 4px}
+/* quiet motion: content settles in with a soft stagger */
+@keyframes settle{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.screen.active > *{animation:settle .3s ease both}
+.screen.active > *:nth-child(2){animation-delay:.08s}
+.screen.active > *:nth-child(3){animation-delay:.16s}
+.screen.active > *:nth-child(4){animation-delay:.24s}
+.screen.active > *:nth-child(5){animation-delay:.32s}
+.screen.active > *:nth-child(6){animation-delay:.4s}
+.screen.active > *:nth-child(n+7){animation-delay:.48s}
+
+/* sticky borrower bar — you always know whose file you're in */
+.ov-sticky{position:sticky;top:-26px;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--bg);margin:-26px -36px 0;padding:38px 36px 10px;border-bottom:1px solid var(--rule)}
+.ov-sticky h1{font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:-.01em;margin:0}
+.ov-sticky .micro{color:var(--faint)}
+.ov-sticky .acts{margin-left:auto;display:flex;gap:8px}
+.ov-sub{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin:14px 0 20px}
+.ov-sub b{font-weight:600;color:var(--ink-soft)}
+/* collapsible attention */
+.att-head{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px 16px}
+.att-head h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--indigo);font-weight:600}
+.att-head .tally{font-size:11.5px;color:var(--faint)}
+.att-head .chev{width:13px;height:13px;color:var(--faint);margin-left:auto;flex:none;transition:transform .2s ease}
+.att-block.open .att-head{border-bottom:1px solid var(--rule)}
+.att-block.open .att-head .chev{transform:rotate(90deg)}
+.att-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.att-block.open .att-body{grid-template-rows:1fr}
+.att-inner{overflow:hidden;min-height:0}
+
+/* ============ inline collapsible workpaper ============ */
+.wp-doc{border-top:1px solid var(--rule);margin-bottom:28px}
+.wp-row{border-bottom:1px solid var(--rule);scroll-margin-top:64px}
+.wp-head-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px 2px}
+.wp-head-row:hover{background:var(--bg-subtle)}
+.wp-head-row .n{font-family:var(--font-mono);font-size:12px;color:var(--faint);width:18px;flex:none;text-align:center}
+.wp-head-row .t{font-family:var(--font-display);font-size:16px;font-weight:600;flex:1;color:var(--ink)}
+.wp-row.todo .wp-head-row .t{color:var(--muted);font-weight:400}
+.wp-head-row .chev{width:13px;height:13px;color:var(--faint);flex:none;transition:transform .2s ease}
+.wp-row.open .wp-head-row .chev{transform:rotate(90deg)}
+.wp-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.wp-row.open .wp-body{grid-template-rows:1fr}
+.wp-inner{overflow:hidden;min-height:0}
+.wp-row.open.settled .wp-inner{overflow:visible}
+.wp-pad{padding:2px 0 18px 31px}
+.wp-item{padding:11px 0}
+.wp-item + .wp-item{border-top:1px solid var(--rule)}
+.wp-item p{font-size:12.5px;color:var(--ink-soft);line-height:1.6;max-width:64ch}
+.wp-item.flagged{box-shadow:inset 2px 0 0 var(--warn);padding-left:13px}
+.wp-row .feeder{font-size:11.5px;color:var(--faint);padding:0 0 16px 31px}
+@keyframes hl{from{background:var(--bg-hover)}to{background:transparent}}
+.wp-row.hl > .wp-head-row{animation:hl 1.4s ease both}
+
+/* ============ right context rail ============ */
+.rail-right{width:312px;flex:none;border-left:1px solid var(--rule);background:var(--bg-subtle);display:flex;flex-direction:column;min-height:0}
+body.ctx-collapsed .rail-right{display:none}
+.ctx-head{padding:14px 16px 10px;border-bottom:1px solid var(--rule)}
+.ctx-head .micro{color:var(--faint)}
+.ctx-sel{font-size:13px;font-weight:600;margin-top:3px;line-height:1.35}
+.ctx-sel .sec{color:var(--faint);font-weight:400;font-family:var(--font-mono);font-size:11px;margin-right:6px}
+.ctx-tabs{display:flex;gap:2px;padding:10px 12px;border-bottom:1px solid var(--rule);background:var(--bg-subtle)}
+.ctx-tabs button{flex:1;padding:5px 4px;border-radius:6px;font-size:11.5px;color:var(--muted);text-align:center}
+.ctx-tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:600}
+.ctx-tabs button .b{display:inline-block;min-width:15px;border-radius:999px;font-size:9.5px;padding:0 4px;border:1px solid var(--rule-strong);color:var(--muted);margin-left:3px}
+.ctx-body{flex:1;overflow-y:auto;padding:14px 16px 20px}
+.ctx-pane{display:none}
+.ctx-pane.active{display:block;animation:settle .25s ease both}
+.ctx-h{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:14px 0 8px}
+.ctx-h:first-child{margin-top:0}
+.why-step{display:flex;gap:9px;font-size:12px;color:var(--ink-soft);line-height:1.5;padding:5px 0}
+.why-step .dot{width:6px;height:6px;border-radius:50%;background:var(--rule-strong);margin-top:6px;flex:none}
+.why-step.warn .dot{background:var(--warn)}
+.pol{border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:9px 11px;margin-bottom:8px}
+.pol .id{font-family:var(--font-mono);font-size:10.5px;color:var(--indigo)}
+.pol p{font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin-top:2px}
+.pol .lnk{font-size:11px;margin-top:4px}
+.ctx-note{font-size:11px;color:var(--faint);line-height:1.55;margin-top:10px}
+.resp-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.debate-card{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:11px 12px;margin-bottom:10px}
+.debate-card .who{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.debate-card.adv .who{color:var(--success)}
+.debate-card.dis .who{color:var(--error)}
+.debate-card p{font-size:12px;color:var(--ink-soft);line-height:1.55}
+.debate-card .cite{font-family:var(--font-mono);font-size:10.5px;color:var(--faint);margin-top:6px}
+.delta-row{border-top:1px solid var(--rule);padding:8px 0;font-size:12px}
+.delta-row:first-of-type{border-top:none}
+.delta-row .k{color:var(--muted);font-size:11px}
+.delta-row .v{font-family:var(--font-mono);font-size:12px;margin-top:1px}
+.delta-row .v .up{color:var(--warn)}
+.wp-item.sel{background:var(--bg-subtle);box-shadow:inset 2px 0 0 var(--indigo);padding-left:13px;border-radius:0 8px 8px 0}
+.wp-item.sel.flagged{box-shadow:inset 2px 0 0 var(--warn)}
+.wp-item.struck{opacity:.45}
+.wp-item.struck .kv,.wp-item.struck p{text-decoration:line-through}
+.cleared-chip{display:inline-flex;gap:6px;align-items:center;font-size:10.5px;border:1px solid var(--rule-strong);border-radius:999px;padding:1px 8px;color:var(--muted);background:var(--bg)}
+/* confidence chips */
+.confc{font-family:var(--font-mono);font-size:10px;border:1px solid var(--rule-strong);border-radius:4px;padding:1px 6px;color:var(--muted);background:var(--bg)}
+.confc.low{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+/* reviews toolbar */
+.rev-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+@media(max-width:1120px){.rail-right{display:none}}
+@media(max-width:760px){.rail-nav{display:none}main.canvas{padding:22px 18px 40px}}
+</style>
+<div class="crit-banner">
+  <span>Sentinel · MVP concept</span>
+  <span class="sub">The interviewed direction made concrete, on the existing token layer. Pink pins = design rationale (toggle below). Fictional data.</span>
+</div>
+
+<div class="frame">
+  <header class="masthead pin-anchor">
+    <span class="brand">Sentinel</span>
+    <span class="badge"><span class="dot"></span> ready</span>
+    <span class="spacer"></span>
+    <select class="ctl" id="theme-select" aria-label="Theme" style="padding:4px 8px;font-size:11.5px"><option value="">Stone</option><option value="theme-cobalt">Cobalt</option></select>
+    <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <span class="pin" style="top:14px;right:44px" data-pin>1<span class="pin-pop"><span class="eyebrow">Note 1 · pick your theme</span>Themes are now a choice, not a toggle: pick a palette family (Stone is the default; Cobalt maps Steve's navy palette — deep-navy rail, #19398d primary — onto the same token contract) and the moon flips its dark variant. Four looks, one token layer, zero component changes. That's the whole argument for tokens.</span></span>
+  </header>
+
+  <div class="shell-row">
+    <!-- ============ RAIL · GitHub-modeled app nav ============ -->
+    <nav class="rail-nav" id="rail" aria-label="App navigation">
+      <div class="pin-anchor" style="height:0">
+        <span class="pin pin-left" style="top:2px;left:190px" data-pin>2<span class="pin-pop"><span class="eyebrow">Note 2 · the rail grows up</span>Modeled on GitHub's sidebar: app destinations, not just a history list. Active item gets the left bar; color stays reserved for status. Naming is placeholder by Steve's own note — "My reviews / All reviews" to be workshopped.</span></span>
+      </div>
+      <button class="nav-item active" data-goto="screen-landing" data-nav="home" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" data-goto="screen-reviews" data-nav="reviews" data-tab="my" title="My reviews">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg><span class="nav-label">My reviews</span>
+      </button>
+      <button class="nav-item" data-goto="screen-reviews" data-nav="allreviews" data-tab="all" title="All reviews">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">All reviews</span>
+      </button>
+      <button class="nav-item" data-goto="screen-documents" data-nav="docs" title="Documents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><span class="nav-label">Documents</span>
+      </button>
+      <button class="nav-item pin-anchor" data-nav="policy" title="Policy library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg><span class="nav-label">Policy library</span>
+        <span class="pin" style="top:-4px;right:-6px" data-pin>18<span class="pin-pop"><span class="eyebrow">Note 18 · the open slots</span>Policy library sketches one candidate for Steve's "1–2 more": the corpus the checks run against, browsable so an analyst can see <em>why</em> a check fired. Other candidates for the remaining slot: a QC queue (the RIC's worklist, stage 2) or Templates (the ib_lending seam, surfaced honestly).</span></span>
+      </button>
+
+      <div class="rail-divider" id="ctx-divider" hidden></div>
+      <div class="rail-ctx pin-anchor" id="zone-current" hidden>
+        <h4>Meridian US Holdco</h4>
+        <button class="nav-item" data-goto="screen-overview" id="rail-overview" title="Overview"><span class="n">◎</span><span class="nav-label">Overview</span><span class="cnt">4</span></button>
+        <button class="nav-item" data-target="wp-sec1" title="1 · Transaction &amp; Company Overview"><span class="n">1</span><span class="nav-label">Transaction &amp; Company</span><span class="st att"></span></button>
+        <button class="nav-item" data-target="wp-sec2" title="2 · Financials"><span class="n">2</span><span class="nav-label">Financials</span><span class="st att"></span></button>
+        <button class="nav-item" data-target="wp-sec3" title="3 · Capital Structure &amp; Terms"><span class="n">3</span><span class="nav-label">Capital Structure &amp; Terms</span><span class="st todo"></span></button>
+        <button class="nav-item" data-target="wp-sec4" title="4 · Risk Rating Rationale"><span class="n">4</span><span class="nav-label">Risk Rating Rationale</span><span class="st todo"></span></button>
+        <button class="nav-item" data-target="wp-sec5" title="5 · Covenants &amp; Monitoring"><span class="n">5</span><span class="nav-label">Covenants &amp; Monitoring</span><span class="st todo"></span></button>
+        <button class="nav-item" data-target="wp-sec6" title="6 · Recommendation"><span class="n">6</span><span class="nav-label">Recommendation</span><span class="st todo"></span></button>
+        <span class="pin pin-left" style="top:-6px;left:158px" data-pin>19<span class="pin-pop"><span class="eyebrow">Note 19 · context, GitHub-style</span>The open review appears as a contextual zone under the app nav — the way GitHub shows the repo you're in. Section numbers double as the icons when the rail collapses, so even the icon strip can jump straight to Financials.</span></span>
+      </div>
+
+      <div class="rail-spacer"></div>
+      <button class="nav-item pin-anchor" id="collapse-btn" title="Collapse sidebar" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/><polyline points="14 9 11 12 14 15"/></svg><span class="nav-label">Collapse sidebar</span>
+        <span class="pin" style="top:-8px;right:-6px" data-pin>20<span class="pin-pop"><span class="eyebrow">Note 20 · collapse at the foot</span>Steve's call, straight from GitHub: the collapse control lives at the bottom of the rail, and collapsing leaves an icon strip — every destination still one click, active state still visible, tooltips carry the names.</span></span>
+      </button>
+    </nav>
+
+    <!-- ============ CANVAS ============ -->
+    <main class="canvas">
+      <div class="canvas-inner">
+
+      <!-- ============ SCREEN 1 · LANDING ============ -->
+      <section class="screen active" id="screen-landing" aria-label="Start a review">
+        <div class="landing-hero">
+          <div class="micro pin-anchor" style="display:inline-block">Credit analysis<span class="pin pin-left" style="top:-8px;left:110px" data-pin>14<span class="pin-pop"><span class="eyebrow">Note 14 · stone, not zinc</span>The warmth pass Steve asked for, done at the token layer: the neutral shifts from pure zinc grey to stone — ink #1c1917 on a faintly warm ground, warm rules. Nothing else changed; the page stops reading like lab glass and starts reading like paper. One token block did all of it.</span></span></div>
+          <h1>Start a review</h1>
+          <p class="sub">Drop the documents for one borrower. Sentinel reads them, runs the policy checks, and assembles the work paper.</p>
+
+          <div class="dropzone pin-anchor" role="button" tabindex="0" aria-label="Upload documents">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="big">Drag documents here</div>
+            <div class="or">or <span class="link">browse files</span></div>
+            <div class="hint">PDF · one borrower per review</div>
+            <span class="pin" style="top:-9px;right:-9px" data-pin>4<span class="pin-pop"><span class="eyebrow">Note 4 · files only</span>Starting a review asks for nothing but the documents — no form, no template picker, no extraction config. Borrower, review type and CL number are detected while reading, so the review names itself. The POC's three-step wizard is gone from the analyst path entirely.</span></span>
+          </div>
+
+          <div class="filechips">
+            <div class="filechip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="nm">Meridian_Holdco_Annual_Review_FY25.pdf</span><span class="sz">21 pp · 2.4 MB</span><button class="rm" aria-label="Remove file">✕</button></div>
+            <div class="filechip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="nm">Meridian_Holdco_Q3_Update.pdf</span><span class="sz">12 pp · 1.1 MB</span><button class="rm" aria-label="Remove file">✕</button></div>
+          </div>
+
+          <div class="ctx-label pin-anchor">
+            <label class="micro" for="ctx">Anything Sentinel should know?</label><span class="opt">optional</span>
+            <span class="pin" style="top:-8px;right:-4px" data-pin>5<span class="pin-pop"><span class="eyebrow">Note 5 · the one input</span>The single field the analyst keeps: free-text context and questions that ride into the run — replacing the "Additional questions" box that was buried on the POC's pre-run screen. Questions asked here surface later as attention items with evidence.</span></span>
+          </div>
+          <textarea id="ctx" class="qbox" placeholder="Context or questions, one per line — e.g. Focus on covenant headroom. What is revolver availability at close?"></textarea>
+
+          <div class="begin-row pin-anchor">
+            <button class="btn primary" id="begin-btn">Begin review</button>
+            <span style="font-size:12px;color:var(--faint)">2 documents</span>
+            <button class="link quiet adv">Advanced extraction settings</button>
+            <span class="pin" style="top:-9px;right:-4px" data-pin>6<span class="pin-pop"><span class="eyebrow">Note 6 · defaults, demoted</span>Parser, section preset and concurrency become defaults behind this quiet link — present for the power user, invisible to everyone else. The other five modes leave the analyst path altogether; Sentinel's front door is the review.</span></span>
+          </div>
+        </div>
+
+        <div class="recents pin-anchor">
+          <h3>Recent</h3>
+          <button class="recent-row" data-goto="screen-overview"><span class="who">Meridian US Holdco</span><span class="meta"><span class="badge amber" style="font-size:10px;padding:0 7px">4 open</span><span>today</span></span></button>
+          <button class="recent-row" data-goto="screen-overview"><span class="who">Atlas Foods Group</span><span class="meta"><span>6/6 sections</span><span>Aug 21</span></span></button>
+          <button class="recent-row" data-goto="screen-overview"><span class="who">Halcyon Marine Finance</span><span class="meta"><span>6/6 sections</span><span>Aug 12</span></span></button>
+          <span class="pin" style="top:-9px;right:-6px" data-pin>7<span class="pin-pop"><span class="eyebrow">Note 7 · hero + recents</span>Steve's landing call: upload is the invitation, but the last reviews sit one glance below — because a reviewer resumes at least as often as they start. Open-item counts make the row worth clicking.</span></span>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 2 · PROCESSING ============ -->
+      <section class="screen" id="screen-processing" aria-label="Processing">
+        <div class="proc-wrap">
+          <div class="docline">Meridian_Holdco_Annual_Review_FY25.pdf · Meridian_Holdco_Q3_Update.pdf</div>
+          <h2 class="pin-anchor">Reading the documents<span class="pin" style="top:-10px;right:-26px" data-pin>8<span class="pin-pop"><span class="eyebrow">Note 8 · calm by choice</span>One serif line, one thin bar, one quiet status — no pipeline anatomy. The calm is for the happy path only: a failure still interrupts loudly with the red banner and the specific backend message. And Cancel finally exists on the longest-running job in the app.</span></span></h2>
+          <div class="proc-bar"><div class="fill"></div></div>
+          <div class="proc-status" id="proc-status">Indexing 33 pages…</div>
+          <p class="proc-away pin-anchor">This usually takes a few minutes. You can leave —<br>the review will be waiting in your recents.<span class="pin" style="top:-6px;right:-8px" data-pin>9<span class="pin-pop"><span class="eyebrow">Note 9 · the persistence promise</span>Said out loud because it's the POC's sharpest broken expectation: today a refresh loses everything. Here the review is durable from the moment it's born — it appears in My reviews as "New review — reading…" and renames itself when the borrower is detected.</span></span></p>
+          <div class="proc-cancel"><button class="link quiet">Cancel this review</button></div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 3 · OVERVIEW ============ -->
+      <section class="screen" id="screen-overview" aria-label="Review overview">
+        <div class="ov-sticky pin-anchor">
+          <h1>Meridian US Holdco LLC</h1>
+          <span class="micro"><span class="mono" style="text-transform:none;letter-spacing:0">CL6430</span></span>
+          <div class="acts">
+            <button class="btn primary small">Export Review</button>
+            <button class="icon-btn" id="ctx-toggle" aria-label="Toggle context rail" aria-pressed="true" title="Context rail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="15" y1="4" x2="15" y2="20"/></svg></button>
+          </div>
+          <span class="pin" style="top:34px;right:150px" data-pin>10<span class="pin-pop"><span class="eyebrow">Note 10 · one exit</span>Steve's call: there is exactly one deliverable, so there is exactly one export — "Export Review", the rendered Word document, riding the pinned bar with real error handling. The Excel export is cut, and the ledger records it.</span></span>
+          <span class="pin pin-left" style="top:58px;left:10px" data-pin>22<span class="pin-pop"><span class="eyebrow">Note 22 · the fixed frame</span>Steve's call: the rail is fixed, the borrower bar is pinned, and only the working area scrolls — like an instrument panel around a moving chart. Deep in Section 5 you still know whose file you're in and how to leave with the document.</span></span>
+          <span class="pin pin-left" style="top:58px;left:300px" data-pin>23<span class="pin-pop"><span class="eyebrow">Note 23 · the serif, promoted</span>New York/Georgia carries the names of things — borrower, screen titles, workpaper sections — while UI labels stay sans. The tool that reads documents speaks in a documentary voice. (Kept from the warmth pass; the stamp did not survive Steve's review, and the ledger records the cut.)</span></span>
+        </div>
+        <div class="ov-sub">
+          <span>Software (application hosting) · sponsor-owned · <b>Moody's B1</b> /Neg · <b>S&amp;P B+</b> /Stable</span>
+          <span class="badge indigo">term loan B</span><span class="badge indigo">sponsor-owned</span>
+          <span style="color:var(--faint)">Run completed 09:42 · 2 documents</span>
+        </div>
+        <div class="zone-h"><h3>The story</h3><span class="aside">what the documents say is going on</span></div>
+        <div class="story pin-anchor">
+          <div class="docs">Meridian_Holdco_Annual_Review_FY25.pdf — annual review, 2026-03-31 · Meridian_Holdco_Q3_Update.pdf — quarterly update, 2026-07-15</div>
+          <p class="narr">Meridian is a sponsor-owned application-hosting platform carrying a $1,240mm Term Loan B and an undrawn $150mm revolver. FY25 revenue grew 9% with EBITDA margins holding near 31%; leverage improved modestly on debt paydown but remains above the sector median. The Q3 update flags a delayed enterprise renewal cycle and revises the expected case downward.</p>
+          <div class="timeline">
+            <div class="tl-row"><div class="head"><span class="date">2026-07-15</span><span class="badge slate">expected case</span></div><div>Expected-case revenue growth revised down on slower enterprise renewals.</div><div class="delta">prior 9.0% → current 6.5%</div><div class="snip">"Management now guides to mid-single-digit growth for FY26…"</div></div>
+            <div class="tl-row"><div class="head"><span class="date">2026-07-15</span><span class="badge slate">leverage</span></div><div>Gross leverage tightened against the 6.5x covenant.</div><div class="delta">prior 5.6x → current 5.9x</div><div class="snip">"Covenant headroom narrows to 0.6x at the revised EBITDA…"</div></div>
+          </div>
+          <span class="pin" style="top:-9px;right:-6px" data-pin>13<span class="pin-pop"><span class="eyebrow">Note 13 · story, promoted</span>Steve reversed the order: the review now opens on the summary — what is going on with this borrower — before anything asks for action. Worklist second, workpaper third. The narrative and "what changed" timeline are unchanged; only their rank moved.</span>
+        </div>
+        <div class="att-block open pin-anchor" id="att">
+          <button class="att-head" aria-expanded="true"><h3>Needs your attention</h3><span class="badge amber" style="font-size:10px;padding:0 8px">4 open</span><span class="tally">1 reviewed</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+          <div class="att-body"><div class="att-inner">
+          <button class="att-row" data-target="wp-sec2">
+            <span class="tag chip warn">review required</span>
+            <span class="body"><span class="t">Expected Case WACC 9.8% was read below the OCR confidence floor</span><span class="d">The Word export will flag this value — verify it against p. 12 before finalizing.</span></span>
+            <span class="go">Section 2 →</span>
+          </button>
+          <button class="att-row" data-target="wp-sec2">
+            <span class="tag badge amber" style="font-size:10px">⚑ 0.78</span>
+            <span class="body"><span class="t">Covenant headroom tightening</span><span class="d">Gross leverage 5.9x against the 6.5x springing covenant — headroom narrows to 0.6x at revised EBITDA.</span></span>
+            <span class="go">Section 2 →</span>
+            <span class="dismiss" role="button" aria-label="Dismiss flag">dismiss</span>
+          </button>
+          <button class="att-row" data-target="wp-sec1">
+            <span class="tag badge amber" style="font-size:10px">⚑ 0.64</span>
+            <span class="body"><span class="t">Customer concentration</span><span class="d">Top-10 customers ~34% of ARR per the annual review; no updated figure in Q3.</span></span>
+            <span class="go">Section 1 →</span>
+            <span class="dismiss" role="button" aria-label="Dismiss flag">dismiss</span>
+          </button>
+          <button class="att-row" data-target="wp-sec1">
+            <span class="tag via unres">unresolved</span>
+            <span class="body"><span class="t">Ownership &amp; Sponsor — no content extracted</span><span class="d">Nothing matched this concept in either document. Check the annual review's sponsor section or re-upload a complete copy.</span></span>
+            <span class="go">Section 1 →</span>
+          </button>
+          <div class="att-row done">
+            <span class="tag" style="color:var(--success);font-size:12px">✓</span>
+            <span class="body"><span class="t">Confirm the springing covenant test threshold</span><span class="d">Reviewed — "confirmed at 35% utilization"</span></span>
+            <button class="link quiet" style="flex:none;margin-top:2px">edit</button>
+          </div>
+          </div></div>
+          <span class="pin" style="top:-9px;right:-6px" data-pin>11<span class="pin-pop"><span class="eyebrow">Note 11 · attention-led</span>Now collapsible, with the open-item count on the header so a folded worklist still tells you what it owes you. Steve's call: the review leads with the story, but the worklist stays one click tall. The tool leads with what it owes the analyst — flags with confidence shown inline (not hidden in a tooltip), the OCR warning the DOCX prints (finally visible on screen), unresolved gaps — and every row deep-links to its section. Flags are actionable now: dismiss, or follow to source. Review is two-way — un-review and note editing exist.</span></span>
+        </div>
+
+        <div class="zone-h pin-anchor"><h3>Work paper</h3><span class="aside">6 sections · 2 populated</span>
+          <span class="pin" style="top:-8px;right:-4px" data-pin>12<span class="pin-pop"><span class="eyebrow">Note 12 · cards retired</span>Steve's call: the card grid and the separate drill-in screen are gone. The work paper reads as one inline document — serif section titles, hairline rules, collapsible sections — because the thing being assembled <em>is</em> a document. Attention items and the rail expand and scroll to the section they name. Sections settle in with the quiet stagger.</span></span>
+          <span class="pin" style="top:-8px;right:34px" data-pin>24<span class="pin-pop"><span class="eyebrow">Note 24 · quiet motion</span>The 150ms-stagger settle Steve picked: screen content rises in softly, accordions ease open over ~280ms, deep-links flash the target row once in neutral. Calm, never bouncy — and all of it dies under prefers-reduced-motion.</span></span>
+        </div>
+        <div class="wp-doc">
+          <div class="wp-row" id="wp-sec1">
+            <button class="wp-head-row" aria-expanded="false"><span class="n">1</span><span class="t">Transaction &amp; Company Overview</span><span class="pill pop">populated</span><span class="via unres">1 unresolved</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="wp-pad">
+              <div class="wp-item"><div class="sub-h"><span class="name">Company Overview</span><span class="via">Tier 1 · section</span><span class="pg">p. 3</span><span class="confc">conf 95%</span></div><p>Meridian US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bellwether Capital in 2023 in a $2.1bn LBO…</p></div>
+              <div class="wp-item"><div class="sub-h"><span class="name">Recent Developments</span><span class="via t2">Tier 2 · vector</span><span class="pg">p. 7</span><span class="confc">conf 88%</span></div><p>The Q3 update reports two enterprise renewals slipping into Q4 and a completed $35mm voluntary TLB prepayment funded from excess cash…</p></div>
+              <div class="wp-item"><div class="sub-h"><span class="name">External Ratings</span><span class="via">static data · direct</span></div><div class="kv"><b>Moody's:</b> B1 / Negative (11-Apr-2026) &nbsp;·&nbsp; <b>S&amp;P:</b> B+ / Stable (02-Feb-2026)</div></div>
+              <div class="wp-item"><div class="sub-h"><span class="name">Ownership &amp; Sponsor</span><span class="via unres">unresolved</span></div><p style="color:var(--warn)">No content extracted for this concept.</p></div>
+            </div></div></div>
+          </div>
+
+          <div class="wp-row open settled" id="wp-sec2">
+            <button class="wp-head-row" aria-expanded="true"><span class="n">2</span><span class="t">Financials</span><span class="pill pop">populated</span><span class="chip warn">1 review req.</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="wp-pad">
+              <div class="wp-item pin-anchor"><span class="pin" style="top:6px;right:-6px" data-pin>29<span class="pin-pop"><span class="eyebrow">Note 29 · confidence, everywhere</span>Steve's call: every extracted or input item carries its confidence score inline, in the same quiet mono as the page refs. High confidence stays neutral; below the floor it goes amber and pairs with the review-required flag — the same threshold the export enforces.</span></span><div class="sub-h"><span class="name">Enterprise Value / LTM EBITDA</span><span class="via t2">image value · OCR</span><span class="pg">p. 12</span><span class="confc">conf 94%</span></div><div class="kv"><b>8.6x</b> — expected case, per EV/DCF summary table</div></div>
+              <div class="wp-item flagged sel pin-anchor" id="item-wacc" data-sel="wacc"><div class="sub-h"><span class="name">Expected Case WACC</span><span class="via t2">image value · OCR</span><span class="pg">p. 12</span><span class="confc low">conf 41%</span><span class="chip warn">⚠ review required</span></div><div class="kv"><b>9.8%</b></div>
+                <div class="flag-line">Read below the OCR confidence floor — the Word export flags this value. <button class="link" data-modal>View source</button> <button class="link quiet">Mark verified</button></div>
+                <span class="pin" style="top:-6px;right:-6px" data-pin>15<span class="pin-pop"><span class="eyebrow">Note 15 · screen = deliverable</span>The rule this concept adopts everywhere: whatever the exported DOCX will flag, the screen shows in place. The amber stripe is the same warning the Word bundle prints — an analyst reading on screen and a RIC reading the export see the same review.</span></span>
+              </div>
+              <div class="wp-item"><div class="sub-h"><span class="name">Total Debt</span><span class="via t2">image value · OCR</span><span class="pg">p. 12</span><span class="confc">conf 97%</span></div><div class="kv"><b>$1,240mm</b></div></div>
+              <div class="wp-item pin-anchor" id="item-liq" data-sel="liq"><div class="sub-h"><span class="name">Liquidity</span><span class="via">Tier 1 · section</span><span class="pg">p. 14</span><span class="confc">conf 92%</span></div>
+                <p>The $150mm revolving facility is undrawn as of the Q3 update; availability is reduced by $6mm of outstanding letters of credit, leaving ~$144mm.</p>
+                <ul class="ev">
+                  <li class="pin-anchor">
+                    <div class="quote">"The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit."</div>
+                    <div class="src"><span>Liquidity Summary · <span class="mono" style="font-size:11px">p. 14</span></span><button class="link" data-modal>View source</button></div>
+                    <span class="pin pin-left" style="top:-6px;left:-30px" data-pin>16<span class="pin-pop"><span class="eyebrow">Note 16 · cite on the line</span>The page number sits on the quote line itself — the POC held it but only revealed it inside the modal. The modal stays, per Steve's call: evidence is one click away and the section stays clean.</span></span>
+                  </li>
+                </ul>
+              </div>
+              <div class="wp-item pin-anchor"><div class="sub-h"><span class="name mono" style="font-weight:600">leverage_flag</span><span class="pill todo">reasoning stubbed</span></div>
+                <p style="color:var(--muted)">Is gross leverage above the policy threshold for this deal type?</p>
+                <div class="kv" style="margin:4px 0 6px">Verdict: —</div>
+                <details class="snips"><summary>6 retrieved snippet(s)</summary><ol>
+                  <li>POLICY[ib-lending/leverage]: Sponsor-owned software TLB — gross leverage above 6.0x requires second-line sign-off…</li>
+                  <li>Gross leverage of 5.9x as of Q3-26, up from 5.6x at FY25 close…</li>
+                  <li>Total debt outstanding $1,240mm; LTM EBITDA $210mm…</li>
+                  <li>Springing first-lien net leverage covenant of 6.5x, tested at 35% revolver utilization…</li>
+                  <li>$35mm voluntary prepayment applied to the TLB in June 2026…</li>
+                  <li>Sector median gross leverage for rated peers: 5.2x…</li>
+                </ol></details>
+                <span class="pin" style="top:-6px;right:-6px" data-pin>17<span class="pin-pop"><span class="eyebrow">Note 17 · factors live with their section</span>Assessment factors sit inside the section they assess instead of an everything-zone at the bottom. The honest seam is preserved: the stub is labeled, not faked, and the snippets disclosure shows exactly what the model saw.</span></span>
+              </div>
+            </div></div></div>
+          </div>
+
+          <div class="wp-row todo" id="wp-sec3">
+            <button class="wp-head-row" aria-expanded="false"><span class="n">3</span><span class="t">Capital Structure &amp; Terms</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: Financials, Capitalization.</div></div></div>
+          </div>
+          <div class="wp-row todo" id="wp-sec4">
+            <button class="wp-head-row" aria-expanded="false"><span class="n">4</span><span class="t">Risk Rating Rationale</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: coverage ratios, Financials.</div></div></div>
+          </div>
+          <div class="wp-row todo" id="wp-sec5">
+            <button class="wp-head-row" aria-expanded="false"><span class="n">5</span><span class="t">Covenants &amp; Monitoring</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: covenant schedule.</div></div></div>
+          </div>
+          <div class="wp-row todo" id="wp-sec6">
+            <button class="wp-head-row" aria-expanded="false"><span class="n">6</span><span class="t">Recommendation</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: Sections 2–5.</div></div></div>
+          </div>
+        </div>
+
+        <p class="disclaimer">This tool augments your analysis; it is not the system of record.</p>
+      </section>
+
+      <!-- ============ SCREEN 5 · REVIEWS ============ -->
+      <section class="screen" id="screen-reviews" aria-label="Reviews">
+        <div class="landing-hero" style="max-width:680px;margin-top:6px">
+          <div class="micro">Reviews</div>
+          <h1 style="font-size:20px">Reviews</h1>
+          <div class="list-head pin-anchor" style="margin-top:12px">
+            <div class="tabs" role="tablist">
+              <button role="tab" id="tab-my" aria-selected="true">My reviews</button>
+              <button role="tab" id="tab-all" aria-selected="false">All reviews</button>
+            </div>
+            <span class="pin" style="top:-9px;right:-6px" data-pin>3<span class="pin-pop"><span class="eyebrow">Note 3 · durable, and team-wide</span>Every row is a saved review — refresh-proof, reopenable (<code>GET /api/reviews</code> already exists server-side; the POC never built the door). "All reviews" is the team level Steve asked for: every review at every level, open-to-read — a QC and consistency view, not an editing surface.</span></span>
+          </div>
+          <div id="list-my">
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Meridian US Holdco</span><span class="meta"><span class="badge amber" style="font-size:10px;padding:0 7px">4 open</span><span>today</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Atlas Foods Group</span><span class="meta"><span>6/6 sections</span><span>Aug 21</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Halcyon Marine Finance</span><span class="meta"><span>6/6 sections</span><span>Aug 12</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Beacon Health Partners</span><span class="meta"><span>6/6 sections</span><span>Jul 30</span></span></button>
+          </div>
+          <div id="list-all" hidden>
+            <div class="rev-toolbar pin-anchor">
+              <span class="searchbar" style="min-width:180px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><input placeholder="Search borrower, CL number, sector…" aria-label="Search reviews"></span>
+              <select class="ctl" aria-label="Line of business"><option>All lines of business</option><option>IB Lending</option><option>Wealth Management</option><option>Counterparty Credit Risk</option></select>
+              <select class="ctl" aria-label="Owner"><option>All owners</option></select>
+              <select class="ctl" aria-label="Period"><option>Last 12 months</option><option>All time</option></select>
+              <span class="pin" style="top:-9px;right:-6px" data-pin>28<span class="pin-pop"><span class="eyebrow">Note 28 · built for hundreds</span>Steve's call: this list will hold hundreds of reviews, so search and filters arrive now — line of business, owner, period; review "type" is not a thing (a review is a review; only its supporting documentation differs). Every row carries an absolute timestamp, and repeat coverage is first-class — Meridian appears twice because a material change triggered a re-review.</span></span>
+            </div>
+            <p class="ro-note">247 reviews · showing most recent. Team view — open any review to read it; editing stays with its owner.</p>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Meridian US Holdco</span><span class="own">you</span><span class="meta"><span class="badge amber" style="font-size:10px;padding:0 7px">4 open</span><span class="badge slate" style="font-size:10px;padding:0 7px">2nd in 12 mo</span><span>IB</span><span class="mono">2026-08-28</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Crestline Logistics</span><span class="own">R. Chen</span><span class="meta"><span class="badge slate" style="font-size:10px;padding:0 7px">read-only</span><span>IB</span><span class="mono">2026-08-26</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Verdant AgriChem</span><span class="own">T. Alvarez</span><span class="meta"><span class="badge slate" style="font-size:10px;padding:0 7px">read-only</span><span>WM</span><span class="mono">2026-08-24</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Atlas Foods Group</span><span class="own">you</span><span class="meta"><span>6/6 sections</span><span>IB</span><span class="mono">2026-08-21</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Halcyon Marine Finance</span><span class="own">you</span><span class="meta"><span>6/6 sections</span><span>IB</span><span class="mono">2026-08-12</span></span></button>
+            <button class="recent-row" data-goto="screen-overview"><span class="who">Meridian US Holdco</span><span class="own">T. Alvarez</span><span class="meta"><span class="badge slate" style="font-size:10px;padding:0 7px">read-only</span><span>IB</span><span class="mono">2026-02-14</span></span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 6 · DOCUMENTS ============ -->
+      <section class="screen" id="screen-documents" aria-label="Documents">
+        <div class="landing-hero" style="max-width:680px;margin-top:6px">
+          <div class="micro">Document repository</div>
+          <h1 style="font-size:20px">Documents</h1>
+          <p class="sub" style="margin-bottom:14px">Search everything Sentinel has read — every document, every parsed passage.</p>
+          <div class="doc-toolbar pin-anchor">
+            <span class="searchbar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><input value="revolver availability" aria-label="Search documents"></span>
+            <select class="ctl" aria-label="Line of business"><option>All lines of business</option></select>
+            <select class="ctl" aria-label="Counterparty"><option>All counterparties</option></select>
+            <select class="ctl" aria-label="Document type"><option>All types</option></select>
+            <button class="link quiet">Advanced search</button>
+            <span class="pin" style="top:-9px;right:-6px" data-pin>21<span class="pin-pop"><span class="eyebrow">Note 21 · the index store, surfaced</span>Steve's document repository: keyword or advanced search over the index store, returning documents <em>and</em> the passages inside them — the POC's dense library plus the retrieval layer it already runs on. Hits carry provenance and jump either to the source page or into the review that used them.</span></span>
+          </div>
+          <div class="hit-count">3 passages in 2 documents · sorted by relevance</div>
+          <div class="hit">
+            <div class="fname">Meridian_Holdco_Q3_Update.pdf <span class="badge green">extracted</span></div>
+            <div class="pills"><span class="attr-pill">Counterparty · Meridian US Holdco</span><span class="attr-pill">Type · quarterly update</span><span class="attr-pill">2026-07-15</span></div>
+            <p class="snip">"The $150 million <mark>revolving</mark> credit facility remains undrawn, with $6.0 million utilized for standby letters of credit, leaving <mark>availability</mark> of approximately $144 million."</p>
+            <div class="src"><span>Liquidity Summary · p. 14</span><button class="link" data-modal>View source</button><button class="link quiet" data-target="wp-sec2">Used in Meridian review →</button></div>
+          </div>
+          <div class="hit">
+            <div class="fname">Meridian_Holdco_Annual_Review_FY25.pdf <span class="badge green">extracted</span></div>
+            <div class="pills"><span class="attr-pill">Counterparty · Meridian US Holdco</span><span class="attr-pill">Type · annual review</span><span class="attr-pill">2026-03-31</span></div>
+            <p class="snip">"…springing first-lien net leverage covenant tested when <mark>revolver</mark> utilization exceeds 35% of commitments…"</p>
+            <div class="src"><span>Capitalization · p. 10</span><button class="link" data-modal>View source</button></div>
+          </div>
+          <div class="hit">
+            <div class="fname">Halcyon_Marine_Facility_Agreement.pdf <span class="badge green">extracted</span></div>
+            <div class="pills"><span class="attr-pill">Counterparty · Halcyon Marine Finance</span><span class="attr-pill">Type · facility agreement</span><span class="attr-pill">2026-05-02</span></div>
+            <p class="snip">"…<mark>availability</mark> under the <mark>revolving</mark> facility shall be reduced by the aggregate face amount of letters of credit then outstanding…"</p>
+            <div class="src"><span>Clause 7.2 · p. 41</span><button class="link" data-modal>View source</button></div>
+          </div>
+        </div>
+      </section>
+
+      </div>
+    </main>
+
+    <!-- ============ RIGHT CONTEXT RAIL ============ -->
+    <aside class="rail-right" id="ctx-rail" hidden>
+      <div class="ctx-head pin-anchor">
+        <span class="micro">Context</span>
+        <div class="ctx-sel"><span class="sec" id="ctx-sec">§2</span><span id="ctx-name">Expected Case WACC</span></div>
+        <span class="pin pin-left" style="top:10px;left:70px" data-pin>25<span class="pin-pop"><span class="eyebrow">Note 25 · the conversation rail</span>Steve's spec: the right rail is where the analyst talks back. It follows whatever item is selected in the workpaper and answers four questions — why does this content look the way it does, how do I adjust or clear it, what do the agents argue, and what changed since last review. Selection drives it: click the WACC value or the Liquidity block to watch it switch.</span></span>
+      </div>
+      <div class="ctx-tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-pane="why">Why</button>
+        <button role="tab" aria-selected="false" data-pane="respond">Respond</button>
+        <button role="tab" aria-selected="false" data-pane="debate">Debate <span class="b">2</span></button>
+        <button role="tab" aria-selected="false" data-pane="delta">Prior</button>
+      </div>
+      <div class="ctx-body">
+
+        <div class="ctx-variant" data-for="wacc">
+          <div class="ctx-pane active" data-pane="why">
+            <div class="ctx-h">How this got here</div>
+            <div class="why-step"><span class="dot"></span><span>Template <span class="mono">ib_lending</span> asks for <b>Expected Case WACC</b> in Section 2.</span></div>
+            <div class="why-step"><span class="dot"></span><span>Matched the EV/DCF summary table, p. 12 of the annual review (image value · OCR).</span></div>
+            <div class="why-step warn"><span class="dot"></span><span>OCR read <b>9.8%</b> below the confidence floor → flagged <b>review required</b>, here and in the Word export.</span></div>
+            <div class="ctx-h">Applied policies &amp; standards</div>
+            <div class="pol"><div class="id">1-G-007544 · §4.2</div><p>Valuation inputs must be verified against source documents before reliance.</p><button class="link lnk">View standard</button></div>
+            <div class="pol"><div class="id">POLICY · ib-lending/ev-support</div><p>EV coverage of total debt below 1.5x is a downgrade trigger; WACC drives the expected-case EV.</p><button class="link lnk">View policy</button></div>
+            <p class="ctx-note">Every output shows its reasoning chain and the standards it was held to — the same trail the export and the audit record carry.</p>
+          </div>
+          <div class="ctx-pane" data-pane="respond">
+            <div class="ctx-h">Respond to Sentinel</div>
+            <textarea class="qbox" style="min-height:64px;font-size:12px" placeholder="Correct the value, add context, or say what to re-check — Sentinel re-runs this item with your direction."></textarea>
+            <div class="resp-actions"><button class="btn primary small">Send &amp; re-run</button><button class="btn outline small">Mark verified</button></div>
+            <div class="ctx-h">Clear from workpaper</div>
+            <div class="resp-actions" style="margin-top:0"><button class="btn outline small" id="clear-na">Not applicable</button><button class="btn outline small" id="clear-wrong">Incorrect</button></div>
+            <div id="cleared-note" hidden style="margin-top:10px"><span class="cleared-chip" id="cleared-chip">✓ cleared</span> <button class="link quiet" id="undo-clear">undo</button></div>
+            <p class="ctx-note">Cleared content stays on screen — struck through, with your rationale beside it — so the QC trail is visible while you work. The exported review simply renders without it. Nothing is silently deleted.</p>
+          </div>
+          <div class="ctx-pane pin-anchor" data-pane="debate">
+            <div class="debate-card adv"><div class="who">◆ Advocate</div><p>9.8% sits inside the sector range (9–11%) and one step from the prior review's 9.6%. The flag is a legibility problem, not a valuation problem — verify against p. 12 and move on.</p><div class="cite">cites: prior review 2026-02 · sector comps table</div></div>
+            <div class="debate-card dis"><div class="who">◆ Dissent</div><p>The value cannot be verified at required confidence, and expected-case EV coverage is 1.46x — already below the 1.5x trigger. An unverified WACC materially weakens the EV-support conclusion in Section 2.</p><div class="cite">cites: POLICY ib-lending/ev-support · 1-G-007544 §4.2</div></div>
+            <p class="ctx-note">Positions are advisory. The analyst's disposition decides — and both positions ride into the review record.</p>
+            <span class="pin pin-left" style="top:-6px;left:96px" data-pin>26<span class="pin-pop"><span class="eyebrow">Note 26 · advocate &amp; dissent</span>Steve's two-agent design surfaced: one agent argues for the draft conclusion, one against, each with citations. Green and red are stance colors, deliberately quiet — the analyst is the judge, and the debate is part of the audit trail, not a spectacle.</span></span>
+          </div>
+          <div class="ctx-pane pin-anchor" data-pane="delta">
+            <div class="ctx-h">Since the Feb 2026 review</div>
+            <div class="delta-row"><div class="k">Gross leverage</div><div class="v">5.6x → <span class="up">5.9x</span></div></div>
+            <div class="delta-row"><div class="k">Expected-case revenue growth</div><div class="v">9.0% → <span class="up">6.5%</span></div></div>
+            <div class="delta-row"><div class="k">Expected Case WACC</div><div class="v">9.6% → <span class="up">9.8%</span></div></div>
+            <div class="delta-row"><div class="k">Covenant headroom</div><div class="v">0.9x → <span class="up">0.6x</span></div></div>
+            <div class="delta-row"><div class="k">Moody's</div><div class="v">B1 /Stable → B1 /Negative</div></div>
+            <button class="link" style="margin-top:10px">Open the Feb 2026 review</button>
+            <p class="ctx-note">Shown only when the borrower has prior reviews. The story's timeline covers what changed <em>within this run's documents</em>; this tab covers what changed <em>between reviews</em>.</p>
+            <span class="pin pin-left" style="top:-6px;left:120px" data-pin>27<span class="pin-pop"><span class="eyebrow">Note 27 · between reviews, not within</span>Steve's call for repeat coverage: material-change re-reviews mean the same borrower shows up months apart, so the rail carries "what changed since last review" whenever a prior review exists — a different question from the story timeline, which compares documents inside this run.</span></span>
+          </div>
+        </div>
+
+        <div class="ctx-variant" data-for="liq" hidden>
+          <div class="ctx-pane active" data-pane="why">
+            <div class="ctx-h">How this got here</div>
+            <div class="why-step"><span class="dot"></span><span>Template asks for <b>Liquidity</b> in Section 2.</span></div>
+            <div class="why-step"><span class="dot"></span><span>Tier 1 match: the Q3 update's own "Liquidity Summary" section, p. 14 — quoted verbatim.</span></div>
+            <div class="ctx-h">Applied policies &amp; standards</div>
+            <div class="pol"><div class="id">1-G-007544 · §5.1</div><p>Liquidity adequacy assessed against 12-month obligations including LC utilization.</p><button class="link lnk">View standard</button></div>
+          </div>
+          <div class="ctx-pane" data-pane="respond">
+            <div class="ctx-h">Respond to Sentinel</div>
+            <textarea class="qbox" style="min-height:64px;font-size:12px" placeholder="Adjust the liquidity read or add direction…"></textarea>
+            <div class="resp-actions"><button class="btn primary small">Send &amp; re-run</button><button class="btn outline small">Accept</button></div>
+            <div class="ctx-h">Clear from workpaper</div>
+            <div class="resp-actions" style="margin-top:0"><button class="btn outline small">Not applicable</button><button class="btn outline small">Incorrect</button></div>
+          </div>
+          <div class="ctx-pane" data-pane="debate">
+            <div class="debate-card adv"><div class="who">◆ Advocate</div><p>~$144mm available against no near-term maturities — liquidity is a clear strength this cycle.</p><div class="cite">cites: Liquidity Summary p. 14</div></div>
+            <div class="debate-card dis"><div class="who">◆ Dissent</div><p>The $6mm LC figure appears only in a footnote; confirm utilization with the agent bank before calling availability clean.</p><div class="cite">cites: footnote 7, p. 14</div></div>
+          </div>
+          <div class="ctx-pane" data-pane="delta">
+            <div class="ctx-h">Since the Feb 2026 review</div>
+            <div class="delta-row"><div class="k">Revolver availability</div><div class="v">$150mm → $144mm</div></div>
+            <div class="delta-row"><div class="k">LC utilization</div><div class="v">$0 → $6mm</div></div>
+            <button class="link" style="margin-top:10px">Open the Feb 2026 review</button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Evidence source">
+  <div class="modal">
+    <div class="modal-h"><h3>Evidence — Liquidity Summary</h3><button class="icon-btn" id="modal-close" aria-label="Close">✕</button></div>
+    <div class="modal-b">
+      <div class="meta-row"><span class="mono">Meridian_Holdco_Q3_Update.pdf · Liquidity Summary</span><span class="mono">page 14</span><span class="badge green">section image</span></div>
+      <blockquote>"The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit."</blockquote>
+      <div class="img-area"><svg viewBox="0 0 420 150" role="img" aria-label="Section image"><rect x="1" y="1" width="418" height="148" fill="#fff" stroke="#d4d4d8"/><rect x="16" y="14" width="150" height="9" fill="#71717a"/><rect x="16" y="34" width="380" height="6" fill="#e4e4e7"/><rect x="16" y="46" width="380" height="6" fill="#e4e4e7"/><rect x="16" y="58" width="290" height="6" fill="#e4e4e7"/><rect x="16" y="76" width="386" height="6" fill="#d4d4d8"/><rect x="16" y="88" width="386" height="6" fill="#d4d4d8"/><rect x="16" y="100" width="310" height="6" fill="#d4d4d8"/><rect x="16" y="118" width="200" height="6" fill="#e4e4e7"/><rect x="16" y="130" width="260" height="6" fill="#e4e4e7"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CRIT NAV ============ -->
+<nav class="crit-nav" aria-label="Mockup navigation">
+  <button data-screen="screen-landing" aria-selected="true">1 · Landing</button>
+  <button data-screen="screen-processing" aria-selected="false">2 · Processing</button>
+  <button data-screen="screen-overview" aria-selected="false">3 · Review</button>
+  <button data-screen="screen-reviews" aria-selected="false">4 · Reviews</button>
+  <button data-screen="screen-documents" aria-selected="false">5 · Documents</button>
+  <span class="sep"></span>
+  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 29</button>
+</nav>
+<script>
+(function(){
+  document.body.classList.add('notes-on');
+  var procTimers=[];
+  var navBtns=document.querySelectorAll('.crit-nav [data-screen]');
+  var zoneCurrent=document.getElementById('zone-current');
+  var ctxDivider=document.getElementById('ctx-divider');
+  var canvas=document.querySelector('main.canvas');
+  var navMap={'screen-landing':'home','screen-processing':'home','screen-overview':'reviews','screen-reviews':'reviews','screen-documents':'docs'};
+
+  function clearProc(){ procTimers.forEach(clearTimeout); procTimers=[]; }
+
+  function setNav(key){
+    document.querySelectorAll('.rail-nav [data-nav]').forEach(function(b){ b.classList.toggle('active', b.dataset.nav===key); });
+  }
+
+  function selectTab(t){
+    document.getElementById('tab-my').setAttribute('aria-selected', t==='my'?'true':'false');
+    document.getElementById('tab-all').setAttribute('aria-selected', t==='all'?'true':'false');
+    document.getElementById('list-my').hidden = (t!=='my');
+    document.getElementById('list-all').hidden = (t!=='all');
+    setNav(t==='my'?'reviews':'allreviews');
+  }
+
+  function showScreen(id){
+    clearProc();
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('active', s.id===id); });
+    navBtns.forEach(function(b){ b.setAttribute('aria-selected', b.dataset.screen===id ? 'true' : 'false'); });
+    var inReview = (id==='screen-overview');
+    zoneCurrent.hidden = !inReview;
+    ctxDivider.hidden = !inReview;
+    ctxRail.hidden = !inReview;
+    setNav(navMap[id]);
+    document.getElementById('rail-overview').setAttribute('aria-current', id==='screen-overview' ? 'true':'false');
+    canvas.scrollTop=0; window.scrollTo(0,0);
+    if(id==='screen-processing') runProcessing();
+  }
+
+  function runProcessing(){
+    var st=document.getElementById('proc-status');
+    var bar=document.querySelector('.proc-bar .fill');
+    bar.style.animation='none'; void bar.offsetWidth; bar.style.animation='';
+    var steps=[
+      [0,'Reading Meridian_Holdco_Annual_Review_FY25.pdf…'],
+      [1700,'Indexing 33 pages…'],
+      [3300,'Running policy checks…']
+    ];
+    steps.forEach(function(s){ procTimers.push(setTimeout(function(){ st.textContent=s[1]; }, s[0])); });
+    procTimers.push(setTimeout(function(){ showScreen('screen-overview'); }, 5000));
+  }
+
+  navBtns.forEach(function(b){ b.addEventListener('click', function(){ showScreen(b.dataset.screen); }); });
+
+  document.querySelectorAll('[data-goto]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      showScreen(el.dataset.goto);
+      if(el.dataset.tab) selectTab(el.dataset.tab);
+    });
+  });
+
+  // reviews tabs
+  document.getElementById('tab-my').addEventListener('click', function(){ selectTab('my'); });
+  document.getElementById('tab-all').addEventListener('click', function(){ selectTab('all'); });
+
+  // theme family + dark variant — both on the token layer
+  var tt=document.getElementById('theme-toggle');
+  tt.addEventListener('click', function(){
+    var on=document.body.classList.toggle('dark');
+    tt.setAttribute('aria-pressed', on?'true':'false');
+  });
+  document.getElementById('theme-select').addEventListener('change', function(e){
+    document.body.classList.remove('theme-cobalt');
+    if(e.target.value) document.body.classList.add(e.target.value);
+  });
+
+  // right context rail: visibility, tabs, selection, clear, collapse
+  var ctxRail=document.getElementById('ctx-rail');
+  document.getElementById('ctx-toggle').addEventListener('click', function(){
+    var off=document.body.classList.toggle('ctx-collapsed');
+    this.setAttribute('aria-pressed', off?'false':'true');
+  });
+  document.querySelectorAll('.ctx-tabs [data-pane]').forEach(function(tb){
+    tb.addEventListener('click', function(){
+      document.querySelectorAll('.ctx-tabs [data-pane]').forEach(function(x){ x.setAttribute('aria-selected', x===tb?'true':'false'); });
+      document.querySelectorAll('.ctx-variant').forEach(function(v){
+        v.querySelectorAll('.ctx-pane').forEach(function(pn){ pn.classList.toggle('active', pn.dataset.pane===tb.dataset.pane); });
+      });
+    });
+  });
+  var ctxMeta={wacc:{sec:'§2',name:'Expected Case WACC'},liq:{sec:'§2',name:'Liquidity'}};
+  document.querySelectorAll('[data-sel]').forEach(function(it){
+    it.addEventListener('click', function(){
+      document.querySelectorAll('[data-sel]').forEach(function(x){ x.classList.toggle('sel', x===it); });
+      document.querySelectorAll('.ctx-variant').forEach(function(v){ v.hidden = (v.dataset.for!==it.dataset.sel); });
+      document.getElementById('ctx-sec').textContent=ctxMeta[it.dataset.sel].sec;
+      document.getElementById('ctx-name').textContent=ctxMeta[it.dataset.sel].name;
+    });
+  });
+  function clearSel(strike, reason){
+    var it=document.querySelector('.wp-item.sel'); if(!it) return;
+    it.classList.toggle('struck', strike);
+    document.getElementById('cleared-note').hidden=!strike;
+    if(strike) document.getElementById('cleared-chip').textContent='✓ cleared — '+reason+' · struck on screen, omitted from the exported review';
+  }
+  document.getElementById('clear-na').addEventListener('click', function(){ clearSel(true,'not applicable'); });
+  document.getElementById('clear-wrong').addEventListener('click', function(){ clearSel(true,'incorrect'); });
+  document.getElementById('undo-clear').addEventListener('click', function(){ clearSel(false); });
+
+  // collapsible attention block
+  var att=document.getElementById('att');
+  att.querySelector('.att-head').addEventListener('click', function(){
+    var open=att.classList.toggle('open');
+    att.querySelector('.att-head').setAttribute('aria-expanded', open?'true':'false');
+  });
+
+  // inline workpaper accordion
+  function setRow(row, open){
+    row.classList.toggle('open', open);
+    if(!open) row.classList.remove('settled');
+    row.querySelector('.wp-head-row').setAttribute('aria-expanded', open?'true':'false');
+  }
+  document.querySelectorAll('.wp-row').forEach(function(row){
+    var head=row.querySelector('.wp-head-row');
+    head.addEventListener('click', function(){ setRow(row, !row.classList.contains('open')); });
+    row.querySelector('.wp-body').addEventListener('transitionend', function(){
+      if(row.classList.contains('open')) row.classList.add('settled');
+    });
+  });
+
+  // deep links: expand + scroll to a work-paper section
+  document.querySelectorAll('[data-target]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      showScreen('screen-overview');
+      var row=document.getElementById(el.dataset.target);
+      if(!row) return;
+      setRow(row, true);
+      setTimeout(function(){
+        row.scrollIntoView({behavior:'smooth', block:'start'});
+        row.classList.remove('hl'); void row.offsetWidth; row.classList.add('hl');
+      }, 80);
+    });
+  });
+
+  document.getElementById('begin-btn').addEventListener('click', function(){ showScreen('screen-processing'); });
+  document.querySelector('.proc-cancel .link').addEventListener('click', function(){ showScreen('screen-landing'); });
+
+  // dismissable flags
+  document.querySelectorAll('.att-row .dismiss').forEach(function(d){
+    d.addEventListener('click', function(e){
+      e.stopPropagation();
+      var row=d.closest('.att-row'); row.style.opacity='.35'; row.style.pointerEvents='none';
+    });
+  });
+
+  // rail collapse (bottom of rail, GitHub-style)
+  var cb=document.getElementById('collapse-btn');
+  cb.addEventListener('click', function(){
+    var on=document.body.classList.toggle('rail-collapsed');
+    cb.setAttribute('aria-pressed', on?'true':'false');
+    cb.title = on ? 'Expand sidebar' : 'Collapse sidebar';
+    cb.querySelector('.nav-label').textContent = on ? 'Expand sidebar' : 'Collapse sidebar';
+  });
+
+  // notes toggle
+  var nt=document.getElementById('notes-toggle');
+  nt.addEventListener('click', function(){
+    var on=document.body.classList.toggle('notes-on');
+    nt.setAttribute('aria-pressed', on?'true':'false');
+  });
+
+  // pins
+  document.querySelectorAll('.pin').forEach(function(p){
+    p.setAttribute('tabindex','0'); p.setAttribute('role','button');
+    function toggle(e){
+      e.stopPropagation();
+      var was=p.classList.contains('open');
+      document.querySelectorAll('.pin.open').forEach(function(x){ x.classList.remove('open'); });
+      if(!was) p.classList.add('open');
+    }
+    p.addEventListener('click', toggle);
+    p.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ toggle(e); e.preventDefault(); } });
+  });
+  document.addEventListener('click', function(){ document.querySelectorAll('.pin.open').forEach(function(x){ x.classList.remove('open'); }); });
+
+  // modal
+  var ov=document.getElementById('modal-overlay');
+  document.querySelectorAll('[data-modal]').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); ov.classList.add('open'); }); });
+  document.getElementById('modal-close').addEventListener('click', function(){ ov.classList.remove('open'); });
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.classList.remove('open'); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') ov.classList.remove('open'); });
+})();
+</script>
