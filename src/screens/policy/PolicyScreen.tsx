@@ -3,7 +3,7 @@ import { strings } from '@/strings'
 
 export function PolicyScreen() {
   return (
-    <div>
+    <div className="settle">
       <h1 className="font-display text-screen-title font-semibold tracking-display">
         {strings.nav.policyLibrary}
       </h1>

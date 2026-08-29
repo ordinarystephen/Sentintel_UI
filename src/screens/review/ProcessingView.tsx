@@ -35,7 +35,7 @@ export function ProcessingView({ record }: { record: ProcessingReview }) {
   useRegisterCurrentReview(current)
 
   return (
-    <div className="mx-auto mt-[90px] max-w-[460px] text-center">
+    <div className="settle mx-auto mt-[90px] max-w-[460px] text-center">
       <p className="mb-[26px] font-mono text-[12px] text-faint">
         {record.documents.map((d) => d.fileName).join(' · ')}
       </p>

@@ -217,11 +217,15 @@ export function AttentionBlock({ review }: { review: Review }) {
         />
       </button>
       <Collapsible open={open} id="attention-body">
-        <ul>
-          {rows.map((a) => (
-            <Row key={a.id} a={a} reviewId={review.id} />
-          ))}
-        </ul>
+        {rows.length === 0 ? (
+          <p className="px-4 py-3 text-ui-sm text-muted">{s.attentionEmpty}</p>
+        ) : (
+          <ul>
+            {rows.map((a) => (
+              <Row key={a.id} a={a} reviewId={review.id} />
+            ))}
+          </ul>
+        )}
       </Collapsible>
     </div>
   )

@@ -23,7 +23,7 @@ const TABS: ReadonlyArray<{ id: ReviewsTab; to: string; label: string }> = [
 
 export function ReviewsScreen({ tab }: { tab: ReviewsTab }) {
   return (
-    <div>
+    <div className="settle">
       <div className="mb-[14px] flex items-center gap-3">
         <h1 className="font-display text-screen-title font-semibold tracking-display">
           {strings.reviews.title}

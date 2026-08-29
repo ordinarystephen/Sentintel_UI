@@ -123,20 +123,24 @@ function RailBody({ review, item }: { review: Review; item: WorkItem | null }) {
       >
         {!item ? (
           strings.rail.noSelectionBody
-        ) : tab === 'why' ? (
-          <WhyPane reviewId={review.id} item={item} />
-        ) : tab === 'respond' ? (
-          <RespondPane
-            item={item}
-            canEdit={!review.readOnly}
-            ownerName={review.ownerName}
-            actions={actions}
-          />
-        ) : tab === 'debate' ? (
-          <DebatePane itemId={item.id} />
-        ) : prior.data ? (
-          <PriorPane prior={prior.data} />
-        ) : null}
+        ) : (
+          <div key={`${tab}:${item.id}`} className="settle">
+            {tab === 'why' ? (
+              <WhyPane reviewId={review.id} item={item} />
+            ) : tab === 'respond' ? (
+              <RespondPane
+                item={item}
+                canEdit={!review.readOnly}
+                ownerName={review.ownerName}
+                actions={actions}
+              />
+            ) : tab === 'debate' ? (
+              <DebatePane itemId={item.id} />
+            ) : prior.data ? (
+              <PriorPane prior={prior.data} />
+            ) : null}
+          </div>
+        )}
       </div>
     </>
   )

@@ -51,7 +51,7 @@ export function DocumentsScreen() {
   }
 
   return (
-    <div>
+    <div className="settle">
       <p className="micro text-faint">{s.eyebrow}</p>
       <h1 className="mt-1 font-display text-screen-title font-semibold tracking-display">
         {s.title}

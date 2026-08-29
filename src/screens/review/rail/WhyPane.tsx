@@ -28,7 +28,9 @@ export function WhyPane({ reviewId, item }: { reviewId: string; item: WorkItem }
         ))}
       </ol>
       <PaneHeading>{s.policiesHeading}</PaneHeading>
-      {applied.length === 0 && policies.isSuccess && <p className="text-dense text-faint">—</p>}
+      {applied.length === 0 && policies.isSuccess && (
+        <p className="text-dense text-faint">{s.noPolicies}</p>
+      )}
       {applied.map((p) => (
         <div key={p.id} className="mb-2 rounded-lg border border-rule bg-bg px-[11px] py-[9px]">
           <div className="font-mono text-[10.5px] text-indigo">{p.id}</div>

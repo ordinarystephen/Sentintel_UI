@@ -73,7 +73,7 @@ export function LandingScreen() {
   }
 
   return (
-    <div>
+    <div className="settle">
       <div className="mx-auto mt-[26px] max-w-[600px]">
         <p className="micro text-faint">{s.eyebrow}</p>
         <h1 className="mt-1 mb-1 font-display text-screen-title font-semibold tracking-display text-balance">

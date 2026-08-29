@@ -1,0 +1,87 @@
+# API handoff — swapping the mock for the real backend
+
+This is the one document a developer needs to wire Sentinel's UI to the Flask backend. The UI never calls `fetch`; it consumes a single typed interface, `SentinelApi`, through the TanStack Query hooks in `src/api/hooks.ts`. The mock in `src/api/mock/` implements that interface today. Your job is `src/api/http/` — an implementation of the same interface — and nothing else changes.
+
+## Where things are
+
+| Path                       | What                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `src/api/types.ts`         | The domain model. Field-level comments carry the contract notes.                          |
+| `src/api/client.ts`        | `SentinelApi` (every method has JSDoc stating its real-backend semantics) + `createApi()`. |
+| `src/api/hooks.ts`         | Query keys, queries, mutations. Screens use only these.                                   |
+| `src/api/mock/`            | In-memory implementation + fixtures. Reference behaviour; also the demo.                  |
+| `src/api/http/` (yours)    | `createHttpApi(): SentinelApi`. Register it in `createApi()` under `case 'http'`.          |
+| `.env.example`             | `VITE_API=mock` — set `http` to use yours.                                                 |
+
+`createApi()` is the single switch. Nothing else in `src/` knows which implementation is live.
+
+## Ground rules the UI relies on
+
+- **Times** are ISO-8601 strings, UTC. The UI formats in `src/lib/format.ts`; never send pre-formatted dates.
+- **Errors**: reject with `ApiError` (from `src/api/client.ts`) whose `message` is the specific, human-readable reason. The UI shows it verbatim — in the processing banner, the export toast + inline alert, and action toasts. There is no generic "something went wrong"; the message you send is what the analyst reads.
+- **Confidence floor**: every extracted `WorkItem` carries `confidence` in `[0, 1]`; `Review.confidenceFloor` is the single threshold. `WorkItem.flags` must be derived server-side from `confidence < confidenceFloor` — the screen's amber treatment and the DOCX "REVIEW REQUIRED" banner must come from the same number.
+- **Durability**: a review record exists from the moment `createReview` resolves. Every analyst action appends to `Review.dispositions` with `actorId` + `at`. Nothing is deleted; clears are reversible; the exported document simply omits cleared content.
+- **Read-only**: `Review.readOnly` is true when the caller is not the owner. Mutations on such reviews must reject with a message naming the owner (the mock's wording: "This review belongs to R. Chen — you can read it, but editing stays with its owner.").
+- **No review "type"**: the model has none. Do not add one; the UI has nowhere to show it (build-spec §1).
+
+## Auth assumption
+
+`me()` returns the signed-in user. The UI assumes an ambient session (cookie or header the browser supplies) and never handles credentials. Ownership checks (`ownerId === me().id`) drive the "you" label and read-only rendering, but the server is the authority: reject unauthorised mutations regardless of what the UI shows.
+
+## Method by method
+
+Signatures are in `client.ts`; this table is the behaviour the UI expects.
+
+| Method                                          | Reads / writes                       | Semantics the UI depends on                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `me()`                                          | read                                 | Fixed for the session. Cached by the UI.                                                                                                                                                                                                                                                                                                                              |
+| `listMyReviews()`                               | read                                 | Caller's reviews, newest first, **including** ones still processing (`status: 'processing'`, `borrowerName: null` until detected). Landing "Recent" shows the first six.                                                                                                                                                                                              |
+| `listAllReviews(filters)`                       | read                                 | Server-side `query` (borrower, CL number, sector — case-insensitive substring), `lob`, `ownerId`, `period` (`'12m'` default, `'all'`). Return `{ reviews, total, owners }`; `owners` populates the select. May truncate `reviews` — the UI shows `total`.                                                                                                             |
+| `getReview(id)`                                 | read                                 | `ProcessingReview` (status `processing` / `failed` / `cancelled`) or a full `Review` (`ready`). The UI polls this every second while `processing` and renders the same URL either way. Unknown id → reject `No review with id …`.                                                                                                                                       |
+| `createReview(files, contextText, settings?)`   | write                                | Multipart upload; resolve `{ id }` as soon as the record exists — do not wait for the run. Each non-empty line of `contextText` becomes a `question` attention item. `settings` are the demoted extraction controls; omitted = defaults.                                                                                                                              |
+| `getReviewStatus(id)`                           | read                                 | Cheap poll: `{ status: 'ready' }` or the `ProcessingReview` (phase + one status line). The UI currently polls `getReview`; this exists for a lighter endpoint if you want one.                                                                                                                                                                                         |
+| `cancelReview(id)`                              | write                                | Record stays with `status: 'cancelled'`. Reject if not processing.                                                                                                                                                                                                                                                                                                    |
+| `respond(itemId, text)`                         | write + re-run                       | Append `responded` (note = text). Re-run **that item** (scope is an open question, build-spec §9 Q1). Return the item with `reRunning: true`; the UI polls `getReview` every 700 ms while any item is re-running and shows the new value when it lands. Empty text → reject.                                                                                             |
+| `verify(itemId)`                                | write                                | Set `verifiedAt`; append `verified`; resolve the linked `review_required` attention row (`state: 'reviewed'`). The export must not flag a verified value.                                                                                                                                                                                                             |
+| `clear(itemId, reason)`                         | write                                | Set `cleared { reason, actorId, at }`; append `cleared_na` / `cleared_incorrect`. Screen strikes the item; export omits it.                                                                                                                                                                                                                                            |
+| `undoClear(itemId)`                             | write                                | Remove `cleared`; append `clear_undone`. Reject if not cleared.                                                                                                                                                                                                                                                                                                       |
+| `dismissFlag(attentionId)`                      | write                                | Flags only (`kind: 'flag'`); else reject "Only flags can be dismissed." Append `flag_dismissed`; `state: 'dismissed'`.                                                                                                                                                                                                                                                 |
+| `markReviewed(attentionId, note)`               | write                                | `state: 'reviewed'`, store note, append `reviewed`.                                                                                                                                                                                                                                                                                                                   |
+| `unreview(attentionId)`                         | write                                | `state: 'open'`, append `unreviewed` (keep the note in the trail).                                                                                                                                                                                                                                                                                                    |
+| `editNote(attentionId, note)`                   | write                                | Update note, append `note_edited`.                                                                                                                                                                                                                                                                                                                                    |
+| `getDebate(itemId)`                             | read                                 | `DebatePosition[]` — `[]` when none were produced (the UI shows an honest empty state). Production of these is future work.                                                                                                                                                                                                                                            |
+| `getPriorDeltas(reviewId)`                      | read                                 | `null` when the borrower has no prior review (the Prior tab is hidden); else `{ priorReviewId, priorDate, deltas[] }` with `direction` per delta (worsening renders in warn).                                                                                                                                                                                          |
+| `getPolicies(reviewId)`                         | read                                 | Policies/standards applied in the run, each with the `itemIds` it touched (the Why tab filters by the selected item).                                                                                                                                                                                                                                                 |
+| `searchDocuments(query, filters)`               | read                                 | Server-side passage search. Return `snippetHtml` with `<mark>` around matched terms (the UI renders it as trusted HTML — escape everything else), `snippet` plain, provenance (`sectionName`, `page`), optional `imageRef`, and `usedInReviewId` / `usedInBorrower` / `usedInSectionN` when a passage fed a review. Facets (`counterparties`, `docTypes`) fill the selects. |
+| `exportReview(id)`                              | read (renders)                       | Resolve `{ fileName, blob }` of the rendered `.docx`: cleared content omitted, verified values unflagged, flagged values carrying the same REVIEW REQUIRED banner. Reject with the render service's message on failure — the UI shows it in-app.                                                                                                                       |
+
+`Review.readOnly` and `WorkItem.reRunning` are derived fields; compute them per request.
+
+## Polling and caching
+
+TanStack Query owns caching. `useReview` re-fetches every 1 s while a review is processing and every 700 ms while an item is re-running; nothing else polls. Every mutation invalidates `['review', id]` and `['reviews']`. If you add server push later, call `queryClient.invalidateQueries` from the transport — the hooks need no change.
+
+## Implementing `src/api/http/`
+
+1. Create `src/api/http/httpApi.ts` exporting `createHttpApi(baseUrl: string): SentinelApi`.
+2. One small `request()` helper: JSON in/out, `credentials: 'include'`, and on non-2xx `throw new ApiError(body.message ?? statusText)`.
+3. `createReview` sends `FormData` (files + `contextText` + `settings`).
+4. `exportReview` fetches the document as a blob and reads the filename from `Content-Disposition`.
+5. In `client.ts`, `case 'http': return createHttpApi(import.meta.env.VITE_API_BASE_URL)`. Add `VITE_API_BASE_URL` to `.env.example` and the `ImportMetaEnv` typing in `src/vite-env.d.ts`.
+6. Run `npm run verify`. The unit tests for the mock (`src/api/mock/mockApi.test.ts`) double as a behavioural spec — port the relevant cases to an integration suite against a staging backend.
+
+## Deploy notes
+
+- `npm run build` emits a static bundle in `dist/`. Serve `index.html` for every unknown path — the router owns `/review/:id`, `/reviews/all`, etc.
+- Set `VITE_API=http` (and the base URL) at build time; Vite inlines `import.meta.env`.
+- The app stores only UI preferences in `localStorage` (`sentinel.theme`, `sentinel.rail.collapsed`, `sentinel.ctx.collapsed`, `sentinel.extraction.settings`). `sentinel.mock.state` exists only in mock mode.
+- Target browsers: evergreen Chrome/Edge (build-spec §9 Q7); no polyfills are shipped.
+
+## Open questions (build-spec §9)
+
+1. Re-run scope of `respond` (item vs subsection vs section).
+2. Whether clearing requires a note in addition to the reason.
+3. Advocate/dissent production.
+4. Whether non-owners may export or see Prior.
+5. Whether line of business belongs to the review, the documents, or both (the model carries it on both).
+6. Final names for nav items and rail tabs — every user-facing instance reads from `src/strings.ts`.

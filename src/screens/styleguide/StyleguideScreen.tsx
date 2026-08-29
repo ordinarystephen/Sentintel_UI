@@ -8,7 +8,7 @@ import { Badge } from '@/components/Badge'
 
 export function StyleguideScreen() {
   return (
-    <div className="flex flex-col gap-10">
+    <div className="settle flex flex-col gap-10">
       <section>
         <p className="micro text-faint">Credit analysis</p>
         <h1 className="mt-1 font-display text-screen-title font-semibold tracking-display text-balance">

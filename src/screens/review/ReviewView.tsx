@@ -90,7 +90,7 @@ export function ReviewView({ review }: { review: Review }) {
 
   return (
     <ReviewScreenContext.Provider value={screenCtx}>
-      <div>
+      <div className="settle">
         <div className="sticky -top-[26px] z-20 -mx-9 -mt-[26px] flex flex-wrap items-center gap-3 border-b border-rule bg-bg px-9 pt-[38px] pb-[10px] max-[760px]:-mx-[18px] max-[760px]:px-[18px]">
           <h1 className="font-display text-borrower font-semibold tracking-display">
             {review.borrowerName}

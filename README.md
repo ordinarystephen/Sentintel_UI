@@ -1,78 +1,117 @@
 # Sentinel UI
 
-Front end for Sentinel, CRR's credit-review platform. Greenfield, standalone, **no backend in this repo**: the whole app runs against an in-memory mock of the API seam so it can be demoed and explored cold.
+The front end for Sentinel, CRR's credit-review platform: an analyst drops the documents for one borrower, Sentinel reads them, runs the policy checks, and assembles a six-section work paper the analyst dispositions and exports as a Word document.
 
-Read [docs/build-spec.md](docs/build-spec.md) first — it is the implementation brief. [docs/sentinel-ui-decisions.md](docs/sentinel-ui-decisions.md) is the keep/cut ledger (the "why"). [design/sentinel-mvp-concept.html](design/sentinel-mvp-concept.html) is the interactive mockup and the source of truth for layout, tokens and copy (open it in a browser; the pink pins are design notes and are mockup-only).
+This repository is **greenfield and standalone, with no backend**. The whole app runs against an in-memory mock of the API seam, so it can be cloned, started, and explored cold. The real backend is wired in one place — see [docs/api-handoff.md](docs/api-handoff.md).
 
-## Run
-
-Node 24 LTS (see `.nvmrc`; anything ≥ 22.12 works).
+## Start here
 
 ```sh
+nvm use            # Node 24 (see .nvmrc; ≥ 22.12 works)
 npm install
-npm run dev          # http://localhost:5173, mock API, no backend needed
+npm run dev        # http://localhost:5173 — mock API, no backend needed
 ```
 
-| Script                 | What it does                                                                  |
-| ---------------------- | ----------------------------------------------------------------------------- |
-| `npm run dev`          | Vite dev server                                                               |
-| `npm run build`        | typecheck + production build to `dist/`                                       |
-| `npm run lint`         | ESLint (typescript-eslint, react-hooks)                                       |
-| `npm run typecheck`    | `tsc -b` (strict)                                                             |
-| `npm run check:tokens` | fails on any raw hex/rgb/hsl outside `src/styles/tokens.css`                  |
-| `npm run format`       | Prettier                                                                      |
-| `npm test`             | Vitest + React Testing Library                                                |
-| `npm run e2e`          | Playwright: screenshots every theme at 1440px + 900px into `e2e/screenshots/` |
-| `npm run verify`       | everything CI runs, in order                                                  |
+Then read, in this order:
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, token check, format check, tests and build on every push, then the Playwright screenshot suite.
+1. [docs/build-spec.md](docs/build-spec.md) — the implementation brief (behaviours, the API contract, acceptance criteria).
+2. [design/sentinel-mvp-concept.html](design/sentinel-mvp-concept.html) — the interactive mockup: open it in a browser. It is the source of truth for layout, tokens and copy. The pink numbered pins are design rationale and are mockup-only.
+3. [docs/sentinel-ui-decisions.md](docs/sentinel-ui-decisions.md) — the keep/cut ledger: the "why" behind the decisions.
+4. [docs/api-handoff.md](docs/api-handoff.md) — how to replace the mock with the real API, method by method.
+
+[docs/screenshots/](docs/screenshots/) has every screen in Stone light plus the review page in the other three themes (`npm run screenshots:docs` regenerates them).
+
+## Scripts
+
+| Script                     | What it does                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run dev`              | Vite dev server                                                                            |
+| `npm run build`            | typecheck + production build to `dist/`                                                    |
+| `npm run preview`          | serve the production build                                                                 |
+| `npm run lint`             | ESLint (typescript-eslint, react-hooks)                                                    |
+| `npm run typecheck`        | `tsc -b`, strict                                                                           |
+| `npm run check:tokens`     | fails on any raw hex/rgb/hsl outside `src/styles/tokens.css`                               |
+| `npm run format`           | Prettier (`format:check` in CI)                                                            |
+| `npm test`                 | Vitest + React Testing Library (unit and screen tests)                                     |
+| `npm run e2e`              | Playwright: acceptance flows + screenshots per phase into `e2e/screenshots/` (git-ignored) |
+| `npm run verify`           | everything CI runs, in order                                                               |
+| `npm run screenshots:docs` | regenerate the handoff screenshot set in `docs/screenshots/`                               |
+| `npm run audit:contrast`   | regenerate `docs/contrast-audit.md` (WCAG ratios for every token pair in every theme)      |
+
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs lint, typecheck, token check, format check, tests and build on every push, then the Playwright suite.
 
 ## Structure
 
 ```
 src/
-├── styles/tokens.css   # the four theme token blocks — the ONLY place color lives
-├── styles/base.css     # Tailwind v4 config-in-CSS: token → utility bridge, base rules
-├── app/                # shell: AppShell frame, masthead, left rail, right context rail,
-│                       #   router, ThemeProvider, ShellProvider (rail/ctx collapse, current review)
-├── screens/            # one folder per screen: landing, reviews, documents, review, policy
-│                       #   (styleguide/ is a dev-only type reference at /styleguide)
-├── components/         # shared atoms hand-built to the mockup (Badge, Button, Pill, ViaBadge,
-│                       #   ConfChip, Chip, Collapsible, Modal, Toast, Banner, Spinner) — no component kit
-├── api/                # the typed API seam + mock implementation (Phase 2)
-├── strings.ts          # ALL user-facing nav/tab names — placeholders pending rename
-└── lib/                # hooks (usePersistedState, useHashTarget), sections, cx, formatters
+├── styles/tokens.css        # the four theme token blocks — the ONLY place color lives
+├── styles/base.css          # Tailwind v4 config-in-CSS: token → utility bridge, base rules, motion
+├── app/                     # shell: AppShell frame, Masthead, LeftRail, RightRail, router,
+│                            #   ThemeProvider, ShellProvider (rail collapse, current review, selection)
+├── screens/
+│   ├── landing/             # /            upload + context + recents
+│   ├── review/              # /review/:id  processing state, the review page, rail panes, source modal
+│   ├── reviews/             # /reviews, /reviews/all
+│   ├── documents/           # /documents
+│   ├── policy/              # /policy      stub
+│   └── styleguide/          # /styleguide  dev-only type/token reference (not in navigation)
+├── components/              # shared atoms hand-built to the mockup — no component kit
+├── api/
+│   ├── types.ts             # the domain model
+│   ├── client.ts            # SentinelApi + ApiError + createApi() (VITE_API=mock|http)
+│   ├── hooks.ts             # TanStack Query bindings; the only thing screens import
+│   └── mock/                # in-memory implementation + fixtures (the demo)
+├── strings.ts               # ALL user-facing nav/tab names and copy — renames are one-file changes
+├── lib/                     # formatters, hooks (persisted state, hash deep links, debounce), sections
+└── test/                    # test setup + the renderAt harness
 ```
 
-Routes: `/` landing · `/reviews` and `/reviews/all` (tab in the URL) · `/documents` · `/policy` (stub) · `/review/:id` with `#sec-N` section deep links. All are refresh-safe; any static host must serve `index.html` for unknown paths.
+Stack: Vite · React 18 · TypeScript (strict) · Tailwind CSS v4 · React Router 7 · TanStack Query 5. No other state library, no component kit, no exotic dependencies. Every non-obvious module has a header comment.
 
-Inside a review the right context rail follows the selected work-paper item (click or Enter/Space on an item; the first flagged item is selected by default) with four tabs — Why (resolution chain + applied policies), Respond (send & re-run, mark verified, clear as not applicable / incorrect with undo), Debate (advocate / dissent), Prior (deltas vs the borrower's prior review; hidden when there is none). Attention rows can be marked reviewed with a note, edited, un-reviewed, or (flags only) dismissed. All of it records to the review record through the seam and is hidden on another owner's read-only review.
+## How the app is put together
 
-Reviews (`/reviews` My, `/reviews/all` All) and Documents (`/documents`) run their search and filters through the seam — the UI never assumes it holds the full list — and keep them in the URL (`?q=&lob=&owner=&period=`, `?q=&lob=&cp=&type=`) so a refresh keeps them. Document hits carry provenance, a source modal, and a deep link into the review section a passage fed. The search box understands `"quoted phrases"` and `-exclusions` (the "Advanced search" link explains).
+**Frame.** A fixed instrument panel: 48px masthead over left rail / canvas / right context rail. The frame never scrolls — only the canvas (`<main id="canvas">`) does. The left rail collapses to a 58px icon strip; inside a review it grows a contextual zone (the review's name, Overview with the open-items count, sections 1–6 with status dots) that deep-links into the work paper. Both collapse states persist per user.
 
-The frame never scrolls — only the canvas (`<main id="canvas">`) does. The left rail collapses to a 58px icon strip and the right context rail (review route only) can be hidden from the borrower bar; both choices persist per user in `localStorage` (`sentinel.rail.collapsed`, `sentinel.ctx.collapsed`).
+**Routes.** `/` · `/reviews` and `/reviews/all` (tab in the URL) · `/documents` · `/policy` · `/review/:id` with `#sec-N` section anchors. All refresh-safe: a review still processing renders its processing state at the same URL and flips to the review when the run completes. List filters live in the URL too.
 
-Stack: Vite · React 18 · TypeScript (strict) · Tailwind CSS v4 · React Router · TanStack Query. No other state library, no component kit.
+**Review page.** Sticky borrower bar (name · ID · Export Review · rail toggle) → sub line → the story (narrative + within-run timeline) → NEEDS YOUR ATTENTION (collapsible; rows deep-link and can be marked reviewed / edited / un-reviewed / dismissed) → the inline collapsible work paper → disclaimer. Every extracted item shows its resolved-via badge, page ref and confidence chip; anything under the review's `confidenceFloor` gets the amber stripe, the "⚠ review required" chip and the explanation — exactly what the export flags, from the same number. Evidence quotes carry the page on the quote line and open the source modal.
+
+**Right rail.** Follows the selected work-paper item (click, or Enter/Space; the first flagged item by default). Why (resolution chain + applied policies), Respond (send & re-run, mark verified, clear as not applicable / incorrect with undo), Debate (advocate / dissent), Prior (deltas vs the borrower's prior review; hidden when none). Cleared items stay on screen, struck, with the rationale chip; the export omits them. On another owner's review every control disappears and both the page and the rail say whose it is.
+
+**Lists.** Reviews (My / All with search, line of business, owner, period) and Documents (passage search with `"quoted phrases"` and `-exclusions`, LOB / counterparty / doc-type filters) run their queries through the seam — the UI never assumes it holds the full list. Document hits carry provenance, a source modal, and a deep link into the section a passage fed.
 
 ## Theming
 
-One token contract, four looks. `src/styles/tokens.css` defines `:root` (Stone light, default), `body.dark` (Stone dark), `body.theme-cobalt` (Cobalt light) and `body.theme-cobalt.dark` (Cobalt dark). Theme state is **palette family + dark boolean**, persisted in `localStorage` (`sentinel.theme`) and applied as classes on `<body>` by `src/app/ThemeProvider.tsx`; `index.html` re-applies it before first paint so nothing flashes.
+One token contract, four looks. [src/styles/tokens.css](src/styles/tokens.css) defines `:root` (Stone light, default), `body.dark` (Stone dark), `body.theme-cobalt` (Cobalt light) and `body.theme-cobalt.dark` (Cobalt dark). Theme state is palette family + dark boolean, persisted in `localStorage` (`sentinel.theme`), applied as classes on `<body>` by `ThemeProvider`, and pre-applied in `index.html` so nothing flashes.
 
-Components never touch hex. `base.css` bridges every token into Tailwind's semantic namespace — `bg-bg`, `text-ink`, `text-muted`, `border-rule`, `bg-warn-bg`, `text-rail-fg`, … — and removes Tailwind's stock palette, so `text-red-500` simply does not exist. `npm run check:tokens` enforces this by grep.
+Components never touch hex. [src/styles/base.css](src/styles/base.css) bridges every token into Tailwind's semantic namespace — `bg-bg`, `text-ink`, `text-muted`, `border-rule`, `bg-warn-bg`, `text-rail-fg`, … — and removes Tailwind's stock palette, so `text-red-500` does not exist. `npm run check:tokens` enforces it. Color is spent on status only (green populated/verified, amber attention, red error/dissent, indigo attention-accent/provenance); everything else is neutral.
 
-Adding a theme = adding one token block to `tokens.css` and one entry to `FAMILIES` in `src/app/theme.ts`.
+Adding a theme = one token block in `tokens.css` + one entry in `FAMILIES` in `src/app/theme.ts`. [docs/contrast-audit.md](docs/contrast-audit.md) lists the WCAG ratios per theme.
 
-Type roles (`font-display` serif for the names of things, `font-body` sans for UI, `font-mono` for identifiers, `micro` for micro-labels) and the size scale (`text-micro`, `text-dense`, `text-ui`, `text-section-title`, `text-borrower`, `text-screen-title`) are demonstrated on the styleguide screen.
+Type roles: `font-display` (serif) for the names of things — borrower, screen titles, work-paper section titles, and serif-italic for evidence quotes and the processing line; `font-body` (sans) for UI; `font-mono` for identifiers, dates, page refs, confidence chips, policy IDs; `micro` for micro-labels. Sizes: `text-micro` 11 · `text-dense` 11.5 · `text-ui-sm` 12.5 · `text-ui` 13 · `text-section-title` 16 · `text-borrower` 19 · `text-screen-title` 25. `/styleguide` shows them all.
+
+Motion is calm and dies under `prefers-reduced-motion`: screen content settles in with an 80ms stagger (`settle`), accordions use the `grid-template-rows: 0fr → 1fr` technique (`Collapsible`), deep-link targets flash once in neutral (`flash-once`), theme changes transition ~200ms.
 
 ## The API seam and the mock
 
-The app consumes one typed interface, `SentinelApi` in [src/api/client.ts](src/api/client.ts) (every method carries JSDoc stating its real-backend semantics). The domain model is [src/api/types.ts](src/api/types.ts); screens reach the seam only through the TanStack Query hooks in [src/api/hooks.ts](src/api/hooks.ts). No `fetch` is allowed outside `src/api/`.
+Everything the UI knows about data is `SentinelApi` in [src/api/client.ts](src/api/client.ts); screens reach it only through the hooks in [src/api/hooks.ts](src/api/hooks.ts). `createApi()` selects the implementation from `VITE_API` (see `.env.example`; default `mock`). `docs/api-handoff.md` is the complete guide to writing `src/api/http/`.
 
-`createApi()` selects the implementation from `VITE_API` (see `.env.example`; default `mock`). Only `mock` exists in this repo — the real HTTP implementation belongs in `src/api/http/`, selected by `VITE_API=http`, and `docs/api-handoff.md` (written in Phase 6) documents how to build it.
+Mock mode ([src/api/mock/](src/api/mock/)):
 
-**Mock mode** ([src/api/mock/](src/api/mock/)) runs the whole app with no backend:
+- Fixtures from the mockup: Meridian US Holdco (4 open items, WACC at `conf 41%` below the floor, a prior review so the Prior tab is populated), Atlas Foods, Halcyon Marine, Beacon Health (complete, yours), Crestline Logistics and Verdant AgriChem (other owners → read-only; one Wealth Management), plus ~34 generated rows. Document search includes the "revolver availability" passages.
+- `createReview` simulates processing over ~15 s (reading → indexing → policy checks; borrower detected midway so the row renames itself) and then serves a copy of the Meridian record. Processing is derived from elapsed time and persisted, so closing the tab and reopening `/review/:id` resumes. A file whose name contains `corrupt` fails loudly with a parser message.
+- Every disposition, clear, response and dismissal records actor + timestamp and survives reloads (`localStorage` key `sentinel.mock.state`; delete it to reset the demo). `respond` re-runs the item and lands 9.6% after 1.5 s.
+- `exportReview` downloads a placeholder `.docx`; Halcyon's export fails on purpose to show the error path.
 
-- Fixtures: Meridian US Holdco (4 open items, WACC at `conf 41%` below the floor, a prior review so the Prior tab is populated), Atlas Foods, Halcyon Marine, Beacon Health (complete, yours), Crestline Logistics and Verdant AgriChem (other owners → read-only, one Wealth Management), plus ~34 generated rows for search/filter/count lines. Document search includes the "revolver availability" passages.
-- `createReview` simulates processing over ~15 s (reading → indexing → policy checks, borrower detected midway → the row renames itself) and then serves a copy of the Meridian record. Processing is derived from elapsed time and persisted in `localStorage`, so closing the tab and reopening `/review/:id` resumes correctly. A file whose name contains `corrupt` fails loudly with a parser message.
-- Every disposition, clear, response and dismissal is recorded with actor + timestamp and reflected in re-fetches; state persists across reloads under `sentinel.mock.state` (clear that key to reset the demo).
-- `exportReview` downloads a placeholder `.docx`; Halcyon's export fails on purpose to demonstrate the error path.
+## Testing
+
+- **Unit / screen** (`src/**/*.test.tsx`): the mock's behaviour is specified end to end in `src/api/mock/mockApi.test.ts`; screens are tested through `src/test/renderAt.tsx`, which mounts the full provider stack and route table at a path. The mock is reset after every test.
+- **Playwright** (`e2e/phase-N.spec.ts`): the acceptance lines from the build spec — refresh-safety, canvas-only scrolling, the demo path upload → export, deep links, rail flows, list filters — plus screenshots of every affected screen in all four themes at 1440px and 900px, reduced-motion checks and keyboard traversal.
+
+## Conventions
+
+- Paths and names in the build spec are load-bearing; keep them.
+- User-facing copy lives in `src/strings.ts`. Left-nav and rail-tab names are placeholders Steve intends to rename.
+- No `fetch` outside `src/api/`. No raw color outside `tokens.css`. No disabled placeholder controls — if a control doesn't work, it doesn't ship.
+- There is no review "type" anywhere, and there is one export ("Export Review").
+- Failures are loud and specific: the API's `message` is shown verbatim.

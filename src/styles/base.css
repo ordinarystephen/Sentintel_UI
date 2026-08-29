@@ -84,6 +84,42 @@
 @utility shadow-md {
   box-shadow: var(--shadow-md);
 }
+/* Screen content settles in: opacity 0→1 + 6px rise, ~300ms, staggered ~80ms
+   per top-level block, capped after six (§3.3). Apply `settle` to a screen's
+   root; its direct children animate once on mount. */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@utility settle {
+  & > * {
+    animation: settle 0.3s ease both;
+  }
+  & > *:nth-child(2) {
+    animation-delay: 0.08s;
+  }
+  & > *:nth-child(3) {
+    animation-delay: 0.16s;
+  }
+  & > *:nth-child(4) {
+    animation-delay: 0.24s;
+  }
+  & > *:nth-child(5) {
+    animation-delay: 0.32s;
+  }
+  & > *:nth-child(6) {
+    animation-delay: 0.4s;
+  }
+  & > *:nth-child(n + 7) {
+    animation-delay: 0.48s;
+  }
+}
 /* Deep-link target flash: one neutral fade, never a status color (§3.3) */
 @keyframes flash-once {
   from {

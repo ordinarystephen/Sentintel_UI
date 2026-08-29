@@ -3,7 +3,7 @@ import { strings } from '@/strings'
 
 export function NotFoundScreen() {
   return (
-    <div>
+    <div className="settle">
       <h1 className="font-display text-screen-title font-semibold tracking-display">
         {strings.notFound.title}
       </h1>

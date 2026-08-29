@@ -10,6 +10,7 @@ export const strings = {
   app: {
     brand: 'Sentinel',
     healthReady: 'ready',
+    skipToContent: 'Skip to content',
   },
   nav: {
     home: 'Home',
@@ -133,6 +134,8 @@ export const strings = {
     attentionHeading: 'Needs your attention',
     openBadge: (n: number) => `${n} open`,
     reviewedTally: (n: number) => `${n} reviewed`,
+    attentionEmpty:
+      'Nothing needs your attention. Every value was read above the confidence floor and no flags were raised.',
     sectionLink: (n: number) => `Section ${n} →`,
     reviewRequired: 'review required',
     reviewRequiredMark: '⚠ review required',
@@ -170,6 +173,7 @@ export const strings = {
     policiesHeading: 'Applied policies & standards',
     viewStandard: 'View standard',
     viewPolicy: 'View policy',
+    noPolicies: 'No policy or standard cited this item.',
     whyNote:
       'Every output shows its reasoning chain and the standards it was held to — the same trail the export and the audit record carry.',
     respondHeading: 'Respond to Sentinel',
