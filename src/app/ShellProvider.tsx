@@ -6,6 +6,7 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   const [railCollapsed, setRail] = usePersistedState('rail.collapsed', false, isBoolean)
   const [ctxCollapsed, setCtx] = usePersistedState('ctx.collapsed', false, isBoolean)
   const [currentReview, setCurrentReview] = useState<CurrentReview | null>(null)
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   const setRailCollapsed = useCallback((v: boolean) => setRail(v), [setRail])
   const setCtxCollapsed = useCallback((v: boolean) => setCtx(v), [setCtx])
@@ -18,8 +19,10 @@ export function ShellProvider({ children }: { children: ReactNode }) {
       setCtxCollapsed,
       currentReview,
       setCurrentReview,
+      selectedItemId,
+      setSelectedItemId,
     }),
-    [railCollapsed, setRailCollapsed, ctxCollapsed, setCtxCollapsed, currentReview],
+    [railCollapsed, setRailCollapsed, ctxCollapsed, setCtxCollapsed, currentReview, selectedItemId],
   )
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>
 }

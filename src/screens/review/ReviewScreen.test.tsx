@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { renderAt } from '@/app/router.test'
+import { renderAt } from '@/test/renderAt'
 
 const MERIDIAN = 'rev-meridian-2026-08'
 const HALCYON = 'rev-halcyon-2026-08'
@@ -35,18 +35,21 @@ describe('review page — read path', () => {
   it('attention rows deep-link to their sections and reviewed rows show the note', async () => {
     renderAt(`/review/${MERIDIAN}`)
     await screen.findByRole('heading', { level: 1 })
-    const wacc = screen.getByRole('link', { name: /Expected Case WACC 9.8% was read below/ })
-    expect(wacc).toHaveAttribute('href', `/review/${MERIDIAN}#sec-2`)
-    expect(within(wacc).getByText('review required')).toBeInTheDocument()
-    expect(within(wacc).getByText('Section 2 →')).toBeInTheDocument()
-    expect(
-      within(screen.getByRole('link', { name: /Covenant headroom tightening/ })).getByText(
-        '⚑ 0.78',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Confirm the springing covenant/ })).toHaveTextContent(
-      'Reviewed — "confirmed at 35% utilization"',
+    const waccLink = screen.getByRole('link', { name: /Expected Case WACC 9.8% was read below/ })
+    expect(waccLink).toHaveAttribute('href', `/review/${MERIDIAN}#sec-2`)
+    const waccRow = waccLink.closest('li')!
+    expect(within(waccRow).getByText('review required')).toBeInTheDocument()
+    expect(within(waccRow).getByRole('link', { name: 'Section 2 →' })).toHaveAttribute(
+      'href',
+      `/review/${MERIDIAN}#sec-2`,
     )
+    const headroomRow = screen
+      .getByRole('link', { name: /Covenant headroom tightening/ })
+      .closest('li')!
+    expect(within(headroomRow).getByText('⚑ 0.78')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /Confirm the springing covenant/ }).closest('li'),
+    ).toHaveTextContent('Reviewed — "confirmed at 35% utilization"')
   })
 
   it('work paper: Financials open by default with the flagged WACC, evidence with page on the quote line, stubbed factor', async () => {

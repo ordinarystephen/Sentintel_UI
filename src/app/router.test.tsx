@@ -1,34 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, useRoutes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { ToastProvider } from '@/components/Toast'
-import { routes } from './router'
-import { ShellProvider } from './ShellProvider'
-import { ThemeProvider } from './ThemeProvider'
-
-// The app uses createBrowserRouter; tests mount the same route table through
-// useRoutes inside a MemoryRouter (jsdom's AbortSignal is not Node's, which
-// trips the data router's internal Request on navigation).
-const AppRoutes = () => useRoutes(routes)
-
-export function renderAt(path: string) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <ThemeProvider>
-      <QueryClientProvider client={qc}>
-        <ShellProvider>
-          <ToastProvider>
-            <MemoryRouter initialEntries={[path]}>
-              <AppRoutes />
-            </MemoryRouter>
-          </ToastProvider>
-        </ShellProvider>
-      </QueryClientProvider>
-    </ThemeProvider>,
-  )
-}
+import { renderAt } from '@/test/renderAt'
 
 const MERIDIAN = 'rev-meridian-2026-08'
 
@@ -92,11 +65,13 @@ describe('routes', () => {
     )
     expect(within(zone).getByRole('link', { name: 'Overview' })).toHaveTextContent('4') // open items
     const rail = screen.getByRole('complementary', { name: 'Context' })
-    expect(
-      within(rail)
-        .getAllByRole('tab')
-        .map((t) => t.textContent),
-    ).toEqual(['Why', 'Respond', 'Debate', 'Prior'])
+    await waitFor(() =>
+      expect(
+        within(rail)
+          .getAllByRole('tab')
+          .map((t) => t.textContent?.replace(/\d+$/, '')),
+      ).toEqual(['Why', 'Respond', 'Debate', 'Prior']),
+    )
   })
 
   it('leaving the review clears the contextual zone', async () => {

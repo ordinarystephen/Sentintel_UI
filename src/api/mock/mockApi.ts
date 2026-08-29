@@ -109,7 +109,12 @@ function escapeHtml(s: string): string {
   )
 }
 
-export function createMockApi(options: MockOptions = {}): SentinelApi {
+/** The mock plus a test-only reset that discards all mutated/created state. */
+export interface MockApi extends SentinelApi {
+  reset(): void
+}
+
+export function createMockApi(options: MockOptions = {}): MockApi {
   const latencyMs = options.latencyMs ?? 150
   const now = options.now ?? (() => Date.now())
   const storage =
@@ -120,7 +125,7 @@ export function createMockApi(options: MockOptions = {}): SentinelApi {
       : options.storage
 
   const fixtures = buildReviews()
-  const state: PersistedState = load()
+  let state: PersistedState = load()
 
   function load(): PersistedState {
     const fresh: PersistedState = {
@@ -418,6 +423,15 @@ export function createMockApi(options: MockOptions = {}): SentinelApi {
   // ---- the API -----------------------------------------------------------
 
   return {
+    reset: () => {
+      state = { version: STATE_VERSION, overrides: {}, processing: {}, reRuns: {} }
+      try {
+        storage?.removeItem(STORAGE_KEY)
+      } catch {
+        /* ignore */
+      }
+    },
+
     me: () => delay(clone(ME)),
 
     listMyReviews: () => delay(allSummaries().filter((s) => s.ownerId === ME.id)),

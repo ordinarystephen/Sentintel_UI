@@ -4,10 +4,15 @@
  * numerals, evidence quotes with the page ON the quote line + "View source".
  * The low-confidence item carries the amber stripe, the "⚠ review required"
  * chip and the explanation line — exactly what the export will flag, from the
- * same floor. Assessment factors render inline with the honesty pattern
- * (mono name, "reasoning stubbed" pill, collapsed retrieved-snippets).
+ * same floor. Assessment factors render inline with the honesty pattern.
+ *
+ * Click (or Enter/Space) selects the item for the right rail: subtle fill +
+ * accent inset stripe, exactly one selected. Cleared items are struck in
+ * place with the rationale chip and an undo; the export omits them.
  */
+import type { KeyboardEvent, MouseEvent } from 'react'
 import type { Evidence, WorkItem } from '@/api/types'
+import { useShell } from '@/app/ShellContext'
 import { Button } from '@/components/Button'
 import { Chip } from '@/components/Chip'
 import { ConfChip } from '@/components/ConfChip'
@@ -17,6 +22,7 @@ import { ViaBadge } from '@/components/ViaBadge'
 import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
 import { isFlagged } from './itemState'
+import { useReviewScreen } from './reviewContext'
 
 export function WorkItemView({
   item,
@@ -28,16 +34,40 @@ export function WorkItemView({
   onViewSource: (e: Evidence) => void
 }) {
   const s = strings.review
+  const { selectedItemId, setSelectedItemId } = useShell()
+  const { canEdit, actions } = useReviewScreen()
   const flagged = isFlagged(item)
   const struck = !!item.cleared
   const factor = item.factor
+  const selected = selectedItemId === item.id
+
+  function select(e: MouseEvent | KeyboardEvent) {
+    // Controls inside the item keep their own behaviour; anything else selects.
+    if ((e.target as HTMLElement).closest('button, a, summary, details')) return
+    setSelectedItemId(item.id)
+  }
 
   return (
     <div
       id={item.id}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      aria-label={`${strings.rail.selectItem}: ${item.name}`}
+      onClick={select}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if ((e.target as HTMLElement) !== e.currentTarget) return
+          e.preventDefault()
+          setSelectedItemId(item.id)
+        }
+      }}
       className={cx(
-        'py-[11px]',
-        flagged && 'pl-[13px] shadow-[inset_2px_0_0_var(--warn)]',
+        'cursor-default py-[11px] outline-offset-0',
+        (flagged || selected) && 'pl-[13px]',
+        selected && 'rounded-r-lg bg-bg-subtle',
+        selected && !flagged && 'shadow-[inset_2px_0_0_var(--indigo)]',
+        flagged && 'shadow-[inset_2px_0_0_var(--warn)]',
         struck && 'opacity-45',
       )}
     >
@@ -116,6 +146,15 @@ export function WorkItemView({
               {s.viewSource}
             </Button>
           )}
+          {canEdit && (
+            <Button
+              variant="quiet"
+              disabled={actions.pending}
+              onClick={() => actions.verify(item.id)}
+            >
+              {strings.rail.markVerified}
+            </Button>
+          )}
         </div>
       )}
 
@@ -138,13 +177,22 @@ export function WorkItemView({
       )}
 
       {item.cleared && (
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[10.5px] text-muted">
             ✓{' '}
             {s.clearedChip(
               item.cleared.reason === 'not_applicable' ? s.notApplicable : s.incorrect,
             )}
           </span>
+          {canEdit && (
+            <Button
+              variant="quiet"
+              disabled={actions.pending}
+              onClick={() => actions.undoClear(item.id)}
+            >
+              {strings.rail.undo}
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { renderAt } from '@/app/router.test'
+import { renderAt } from '@/test/renderAt'
 
 const pdf = (name: string, size = 500_000) =>
   new File([new Uint8Array(size)], name, { type: 'application/pdf' })

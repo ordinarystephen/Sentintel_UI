@@ -61,3 +61,9 @@ export function shortOutlook(outlook: string): string {
   }
   return map[outlook] ?? outlook
 }
+
+/** `Feb 2026` — from an ISO date, for "Since the Feb 2026 review". */
+export function monthYear(isoDate: string): string {
+  const [y, m] = isoDate.split('-').map(Number)
+  return `${MONTHS[(m ?? 1) - 1]} ${y}`
+}

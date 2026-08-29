@@ -46,6 +46,8 @@ src/
 
 Routes: `/` landing · `/reviews` and `/reviews/all` (tab in the URL) · `/documents` · `/policy` (stub) · `/review/:id` with `#sec-N` section deep links. All are refresh-safe; any static host must serve `index.html` for unknown paths.
 
+Inside a review the right context rail follows the selected work-paper item (click or Enter/Space on an item; the first flagged item is selected by default) with four tabs — Why (resolution chain + applied policies), Respond (send & re-run, mark verified, clear as not applicable / incorrect with undo), Debate (advocate / dissent), Prior (deltas vs the borrower's prior review; hidden when there is none). Attention rows can be marked reviewed with a note, edited, un-reviewed, or (flags only) dismissed. All of it records to the review record through the seam and is hidden on another owner's read-only review.
+
 The frame never scrolls — only the canvas (`<main id="canvas">`) does. The left rail collapses to a 58px icon strip and the right context rail (review route only) can be hidden from the borrower bar; both choices persist per user in `localStorage` (`sentinel.rail.collapsed`, `sentinel.ctx.collapsed`).
 
 Stack: Vite · React 18 · TypeScript (strict) · Tailwind CSS v4 · React Router · TanStack Query. No other state library, no component kit.

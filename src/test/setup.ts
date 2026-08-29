@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
+import { api } from '@/api'
 
 // Node ≥ 22 exposes an experimental `localStorage` global that shadows jsdom's
 // and is inert without --localstorage-file. Tests need a real Storage, so use
@@ -36,4 +37,6 @@ afterEach(() => {
   cleanup()
   document.body.className = ''
   localStorage.clear()
+  // Each test starts from pristine mock state (the API is a module singleton).
+  if ('reset' in api && typeof api.reset === 'function') api.reset()
 })

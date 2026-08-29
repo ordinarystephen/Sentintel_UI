@@ -33,7 +33,15 @@ export const useReview = (id: string) =>
     queryKey: queryKeys.review(id),
     queryFn: () => api.getReview(id),
     enabled: !!id,
-    refetchInterval: (q) => (q.state.data?.status === 'processing' ? 1000 : false),
+    refetchInterval: (q) => {
+      const d = q.state.data
+      if (!d) return false
+      if (d.status === 'processing') return 1000
+      // an item is re-running after `respond`: poll until its new value lands
+      if (d.status === 'ready' && d.sections.some((s) => s.items.some((i) => i.reRunning)))
+        return 700
+      return false
+    },
   })
 
 /** Polls while the review is processing; the caller flips `enabled` off once ready. */
