@@ -33,13 +33,19 @@ CI (`.github/workflows/ci.yml`) runs lint, typecheck, token check, format check,
 src/
 ├── styles/tokens.css   # the four theme token blocks — the ONLY place color lives
 ├── styles/base.css     # Tailwind v4 config-in-CSS: token → utility bridge, base rules
-├── app/                # shell: masthead, theme provider (rails + router arrive in Phase 1)
-├── screens/            # one folder per screen (styleguide/ is a dev-only type reference)
+├── app/                # shell: AppShell frame, masthead, left rail, right context rail,
+│                       #   router, ThemeProvider, ShellProvider (rail/ctx collapse, current review)
+├── screens/            # one folder per screen: landing, reviews, documents, review, policy
+│                       #   (styleguide/ is a dev-only type reference at /styleguide)
 ├── components/         # shared atoms (Badge, …) hand-built to the mockup, no component kit
 ├── api/                # the typed API seam + mock implementation (Phase 2)
 ├── strings.ts          # ALL user-facing nav/tab names — placeholders pending rename
-└── lib/                # hooks, formatters
+└── lib/                # hooks (usePersistedState, useHashTarget), sections, cx, formatters
 ```
+
+Routes: `/` landing · `/reviews` and `/reviews/all` (tab in the URL) · `/documents` · `/policy` (stub) · `/review/:id` with `#sec-N` section deep links. All are refresh-safe; any static host must serve `index.html` for unknown paths.
+
+The frame never scrolls — only the canvas (`<main id="canvas">`) does. The left rail collapses to a 58px icon strip and the right context rail (review route only) can be hidden from the borrower bar; both choices persist per user in `localStorage` (`sentinel.rail.collapsed`, `sentinel.ctx.collapsed`).
 
 Stack: Vite · React 18 · TypeScript (strict) · Tailwind CSS v4 · React Router · TanStack Query. No other state library, no component kit.
 

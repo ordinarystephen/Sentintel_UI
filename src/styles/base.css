@@ -83,6 +83,18 @@
 @utility shadow-md {
   box-shadow: var(--shadow-md);
 }
+/* Deep-link target flash: one neutral fade, never a status color (§3.3) */
+@keyframes flash-once {
+  from {
+    background: var(--bg-hover);
+  }
+  to {
+    background: transparent;
+  }
+}
+@utility flash-once {
+  animation: flash-once 1.4s ease both;
+}
 /* Micro-label: 11px, .12em tracking, uppercase, 600 */
 @utility micro {
   font-size: var(--text-micro);
