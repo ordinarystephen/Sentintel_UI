@@ -59,6 +59,15 @@ Adding a theme = adding one token block to `tokens.css` and one entry to `FAMILI
 
 Type roles (`font-display` serif for the names of things, `font-body` sans for UI, `font-mono` for identifiers, `micro` for micro-labels) and the size scale (`text-micro`, `text-dense`, `text-ui`, `text-section-title`, `text-borrower`, `text-screen-title`) are demonstrated on the styleguide screen.
 
-## Swapping the mock API for the real one
+## The API seam and the mock
 
-The app consumes one typed interface, `SentinelApi` in `src/api/client.ts`; `src/api/mock/` implements it in memory. The real HTTP implementation belongs in `src/api/http/`, selected by `VITE_API=http`. `docs/api-handoff.md` (written in Phase 6) documents every method's semantics. No `fetch` is allowed outside `src/api/`.
+The app consumes one typed interface, `SentinelApi` in [src/api/client.ts](src/api/client.ts) (every method carries JSDoc stating its real-backend semantics). The domain model is [src/api/types.ts](src/api/types.ts); screens reach the seam only through the TanStack Query hooks in [src/api/hooks.ts](src/api/hooks.ts). No `fetch` is allowed outside `src/api/`.
+
+`createApi()` selects the implementation from `VITE_API` (see `.env.example`; default `mock`). Only `mock` exists in this repo — the real HTTP implementation belongs in `src/api/http/`, selected by `VITE_API=http`, and `docs/api-handoff.md` (written in Phase 6) documents how to build it.
+
+**Mock mode** ([src/api/mock/](src/api/mock/)) runs the whole app with no backend:
+
+- Fixtures: Meridian US Holdco (4 open items, WACC at `conf 41%` below the floor, a prior review so the Prior tab is populated), Atlas Foods, Halcyon Marine, Beacon Health (complete, yours), Crestline Logistics and Verdant AgriChem (other owners → read-only, one Wealth Management), plus ~34 generated rows for search/filter/count lines. Document search includes the "revolver availability" passages.
+- `createReview` simulates processing over ~15 s (reading → indexing → policy checks, borrower detected midway → the row renames itself) and then serves a copy of the Meridian record. Processing is derived from elapsed time and persisted in `localStorage`, so closing the tab and reopening `/review/:id` resumes correctly. A file whose name contains `corrupt` fails loudly with a parser message.
+- Every disposition, clear, response and dismissal is recorded with actor + timestamp and reflected in re-fetches; state persists across reloads under `sentinel.mock.state` (clear that key to reset the demo).
+- `exportReview` downloads a placeholder `.docx`; Halcyon's export fails on purpose to demonstrate the error path.
