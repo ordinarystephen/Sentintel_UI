@@ -94,12 +94,14 @@ The data is fictional. Every action below persists in your browser (survives ref
 **Lists**
 
 23. **All reviews** tab: toolbar first. Search `meridian` — two rows appear (a material-change re-review): the newer one carries the **2nd in 12 mo** chip; the older belongs to T. Alvarez with a **read-only** badge. Clear the search; filter Line of business → *Wealth Management*; try Owner and Period (the counts change — filtering happens in the "backend", not the page). Open a read-only review: no dispositions anywhere, and a line says whose it is.
-24. **Documents**: search `revolver availability` — passages appear with the matched words highlighted, provenance (`Liquidity Summary · p. 14`), and "Used in Meridian review →" which deep-links straight into Section 2.
-25. Still in Documents, try the advanced syntax ("Advanced search" explains it): `"letters of credit"` (exact phrase — two hits) and `revolver -letters` (excludes passages containing "letters").
+24. **Documents** opens in browse mode: one row per document — mono filename, extraction badge, LOB, date. No preview text. Click the *Meridian_Holdco_Q3_Update.pdf* row: it selects (accent stripe) and an action bar appears — **Preview extracted text**, **Download original**, and **Used in Meridian review →**. Click the *Crestline_Logistics_Q2_Update.pdf* row: not yet extracted, so its preview action is disabled.
+25. Click **Preview extracted text** on the Meridian Q3 row: a modal titled "Meridian_Holdco_Q3_Update.pdf — extracted text" shows pages, parsed date, status and section count, then the document's own sections as collapsible entries with mono page ranges (first one open). `Esc` closes. **Download original** saves a placeholder PDF.
+26. Now search `revolver availability` — the browse rows give way to match evidence: passages with the matched words highlighted, provenance (`Liquidity Summary · p. 14`), and "Used in Meridian review →" which deep-links straight into Section 2.
+27. Still in Documents, try the advanced syntax ("Advanced search" explains it): `"letters of credit"` (exact phrase — two hits) and `revolver -letters` (excludes passages containing "letters").
 
 **Reset**
 
-26. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
+28. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
 
 ## 5. Serving the built app (Domino-style)
 

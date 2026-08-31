@@ -3,44 +3,106 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderAt } from '@/test/renderAt'
 
-describe('documents', () => {
-  it('renders the heading, toolbar and all passages when there is no query', async () => {
+const q3Row = () =>
+  screen.getByRole('button', { name: 'Select document: Meridian_Holdco_Q3_Update.pdf' })
+
+describe('documents — browse state (no query)', () => {
+  it('shows document rows only: filename, extraction badge, LOB, date — no preview text', async () => {
     renderAt('/documents')
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Documents')
-    expect(
-      screen.getByText(
-        'Search everything Sentinel has read — every document, every parsed passage.',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByLabelText('Search documents')).toBeInTheDocument()
-    expect(screen.getByLabelText('Line of business')).toBeInTheDocument()
-    expect(screen.getByLabelText('Counterparty')).toBeInTheDocument()
-    expect(screen.getByLabelText('Document type')).toBeInTheDocument()
-    expect(
-      await screen.findByText(/passages in \d+ documents · most recent first/),
-    ).toBeInTheDocument()
+    expect(await screen.findByText('7 documents · most recent first')).toBeInTheDocument()
+    const row = q3Row()
+    expect(within(row).getByText('Meridian_Holdco_Q3_Update.pdf')).toBeInTheDocument()
+    expect(within(row).getByText('extracted')).toBeInTheDocument()
+    expect(within(row).getByText('IB')).toBeInTheDocument()
+    expect(within(row).getByText('2026-07-15')).toBeInTheDocument()
+    // no snippets, no marks, no per-passage provenance in browse
+    expect(screen.queryByText(/revolving credit facility remains undrawn/)).toBeNull()
+    expect(document.querySelector('mark')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'View source' })).toBeNull()
+    const crestline = screen.getByRole('button', {
+      name: 'Select document: Crestline_Logistics_Q2_Update.pdf',
+    })
+    expect(within(crestline).getByText('not yet extracted')).toBeInTheDocument()
   })
 
-  it('search marks matched terms, shows provenance, a source modal, and the review deep link', async () => {
+  it('selects a single row and reveals the action bar; deep link included when the document fed a review', async () => {
     const user = userEvent.setup()
     renderAt('/documents')
-    await screen.findByText(/passages in/)
+    await screen.findByText('7 documents · most recent first')
+    await user.click(q3Row())
+    expect(q3Row()).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Preview extracted text' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Download original' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Used in Meridian review →' })).toHaveAttribute(
+      'href',
+      '/review/rev-meridian-2026-08#sec-2',
+    )
+
+    // single-select: choosing another row moves the selection and the bar
+    const halcyon = screen.getByRole('button', {
+      name: 'Select document: Halcyon_Marine_Facility_Agreement.pdf',
+    })
+    await user.click(halcyon)
+    expect(halcyon).toHaveAttribute('aria-pressed', 'true')
+    expect(q3Row()).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByRole('link', { name: 'Used in Meridian review →' })).toBeNull()
+  })
+
+  it('not-yet-extracted documents show the preview action disabled', async () => {
+    const user = userEvent.setup()
+    renderAt('/documents')
+    await screen.findByText('7 documents · most recent first')
+    await user.click(
+      screen.getByRole('button', { name: 'Select document: Crestline_Logistics_Q2_Update.pdf' }),
+    )
+    const previewBtn = screen.getByRole('button', { name: 'Preview extracted text' })
+    expect(previewBtn).toBeDisabled()
+    expect(previewBtn).toHaveAttribute('title', 'Available once extraction completes')
+    expect(screen.getByRole('button', { name: 'Download original' })).toBeEnabled()
+  })
+
+  it('preview modal: title, meta row, collapsible sections with page ranges, first open; Esc closes', async () => {
+    const user = userEvent.setup()
+    renderAt('/documents')
+    await screen.findByText('7 documents · most recent first')
+    await user.click(q3Row())
+    await user.click(screen.getByRole('button', { name: 'Preview extracted text' }))
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveTextContent('Meridian_Holdco_Q3_Update.pdf — extracted text')
+    await waitFor(() => expect(dialog).toHaveTextContent('15 pages')) // seam data arrives async
+    expect(dialog).toHaveTextContent('parsed 2026-08-28')
+    expect(within(dialog).getByText('extracted')).toBeInTheDocument()
+    expect(dialog).toHaveTextContent('5 sections')
+    const first = within(dialog).getByRole('button', { name: /Highlights/ })
+    expect(first).toHaveAttribute('aria-expanded', 'true')
+    expect(dialog).toHaveTextContent('Two enterprise renewals slipped from Q3 into Q4')
+    const liq = within(dialog).getByRole('button', { name: /Liquidity Summary/ })
+    expect(liq).toHaveAttribute('aria-expanded', 'false')
+    expect(liq).toHaveTextContent('pp. 14–15')
+    await user.click(liq)
+    expect(liq).toHaveAttribute('aria-expanded', 'true')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})
+
+describe('documents — search state (query non-empty)', () => {
+  it('hit cards with matched passages and marked terms replace the browse rows', async () => {
+    const user = userEvent.setup()
+    renderAt('/documents')
+    await screen.findByText('7 documents · most recent first')
     await user.type(screen.getByLabelText('Search documents'), 'revolver availability')
     await waitFor(() =>
       expect(
         screen.getByText(/passages in \d+ documents · sorted by relevance/),
       ).toBeInTheDocument(),
     )
-    // the full query settles with the Meridian Q3 liquidity passage ranked first
     await waitFor(() =>
       expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Meridian_Holdco_Q3_Update.pdf'),
     )
+    expect(screen.queryByRole('button', { name: /^Select document:/ })).toBeNull()
     const first = screen.getAllByRole('listitem')[0]
-    expect(within(first).getByText('extracted')).toBeInTheDocument()
-    expect(within(first).getByText('Counterparty · Meridian US Holdco')).toBeInTheDocument()
-    expect(within(first).getByText('Type · quarterly update')).toBeInTheDocument()
-    const marks = first.querySelectorAll('mark')
-    expect(Array.from(marks).map((m) => m.textContent)).toEqual(
+    expect(Array.from(first.querySelectorAll('mark')).map((m) => m.textContent)).toEqual(
       expect.arrayContaining(['revolving', 'availability']),
     )
     expect(within(first).getByText(/Liquidity Summary ·/)).toHaveTextContent('p. 14')
@@ -48,21 +110,14 @@ describe('documents', () => {
       'href',
       '/review/rev-meridian-2026-08#sec-2',
     )
-
-    await user.click(within(first).getByRole('button', { name: 'View source' }))
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveTextContent('Evidence — Liquidity Summary')
-    expect(dialog).toHaveTextContent('page 14')
-    expect(within(dialog).getByRole('img', { name: 'Source image' })).toBeInTheDocument()
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(within(first).getByRole('button', { name: 'View source' })).toBeInTheDocument()
   })
 
-  it('filters hit the seam and live in the URL; advanced help toggles', async () => {
+  it('filters hit the seam in browse state too, and live in the URL; advanced help toggles', async () => {
     const user = userEvent.setup()
     renderAt('/documents?lob=Wealth+Management')
     await waitFor(() =>
-      expect(screen.getByText('1 passage in 1 document · most recent first')).toBeInTheDocument(),
+      expect(screen.getByText('1 document · most recent first')).toBeInTheDocument(),
     )
     expect(screen.getByText('Verdant_AgriChem_Credit_Submission.pdf')).toBeInTheDocument()
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
@@ -70,7 +125,7 @@ describe('documents', () => {
     await waitFor(() =>
       expect(screen.getByText('Halcyon_Marine_Facility_Agreement.pdf')).toBeInTheDocument(),
     )
-    expect(screen.getAllByRole('listitem')).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: /^Select document:/ })).toHaveLength(1)
 
     expect(screen.queryByText('must appear verbatim')).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Advanced search' }))

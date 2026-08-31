@@ -361,6 +361,46 @@ describe('documents', () => {
   })
 })
 
+describe('document text and download', () => {
+  it("returns the extracted text organized by the document's own sections", async () => {
+    const api = make()
+    const text = await api.getDocumentText('doc-meridian-q3')
+    expect(text.fileName).toBe('Meridian_Holdco_Q3_Update.pdf')
+    expect(text.pages).toBe(15)
+    expect(text.extracted).toBe(true)
+    expect(text.sections).toHaveLength(5)
+    expect(text.sections[4]).toMatchObject({
+      title: 'Liquidity Summary',
+      pageStart: 14,
+      pageEnd: 15,
+    })
+    expect(text.sections[4].text).toContain('$150 million revolving credit facility')
+  })
+
+  it('rejects not-yet-extracted documents and unknown ids with messages', async () => {
+    const api = make()
+    await expect(api.getDocumentText('doc-crestline-q2')).rejects.toMatchObject({
+      message:
+        'Crestline_Logistics_Q2_Update.pdf has not been extracted yet — the preview arrives when parsing completes.',
+    })
+    await expect(api.getDocumentText('nope')).rejects.toMatchObject({
+      message: 'No document with id nope.',
+    })
+  })
+
+  it('downloads the original as a placeholder PDF', async () => {
+    const r = await make().downloadDocument('doc-meridian-annual')
+    expect(r.fileName).toBe('Meridian_Holdco_Annual_Review_FY25.pdf')
+    expect(r.blob.type).toBe('application/pdf')
+    expect(r.blob.size).toBeGreaterThan(0)
+  })
+
+  it('search hits carry the document id', async () => {
+    const res = await make().searchDocuments('revolver availability', {})
+    expect(res.hits.find((h) => h.id === 'doc-meridian-q3-liq')?.docId).toBe('doc-meridian-q3')
+  })
+})
+
 describe('export', () => {
   it('downloads a placeholder .docx for a ready review', async () => {
     const res = await make().exportReview(MERIDIAN_ID)

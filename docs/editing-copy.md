@@ -19,7 +19,8 @@ Every word the app shows lives in one of three files — never in a component. C
 | Right rail — tab names (Why / Respond / Debate / Prior), "How this got here", the Respond wording, clear-with-rationale wording, Debate and Prior notes | `src/strings.ts` › **contextRail** and **rail** |
 | Source modal — "Evidence — …", provenance badges, the no-image line | `src/strings.ts` › **source** |
 | Reviews list — tabs, search/filter labels, "N reviews · showing most recent", the team-view note, "read-only", "2nd in 12 mo" | `src/strings.ts` › **reviews** (LOB tags: **lobShort**) |
-| Documents — title and sub, filter labels, "Advanced search" help, count line, "Used in … review →" | `src/strings.ts` › **documents** |
+| Documents — title and sub, filter labels, "Advanced search" help, count lines (browse and search), the action bar (Preview extracted text / Download original / Used in … review →), the preview modal | `src/strings.ts` › **documents** |
+| The extracted text shown in the preview modal (document sections, page ranges) | `src/api/mock/fixtures.ts` › **DOCUMENTS** |
 | Policy-library stub, "Nothing here" (404) | `src/strings.ts` › **policy**, **notFound** |
 | Error banners and toasts from the "backend" (export failure, "belongs to …", parse failure, upload/rationale messages) | `src/api/mock/mockApi.ts` › **MESSAGES** |
 | Demo content — borrower names, CL numbers, sectors, the narrative and timeline, work-paper values, attention rows, debate positions, document passages | `src/api/mock/fixtures.ts` (the whole file is the demo-data file; header explains) |

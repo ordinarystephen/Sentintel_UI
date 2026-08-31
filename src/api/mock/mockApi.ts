@@ -29,6 +29,7 @@ import type {
   DocumentFilters,
   DocumentHit,
   DocumentSearchResult,
+  DocumentText,
   ExportResult,
   ExtractionSettings,
   Policy,
@@ -47,6 +48,7 @@ import type {
 } from '../types'
 import {
   buildReviews,
+  DOCUMENTS,
   CONFIDENCE_FLOOR,
   DEBATES,
   EXPORT_FAILS_ID,
@@ -89,6 +91,9 @@ export const MESSAGES = {
   statusPolicy: 'Running policy checks…',
   statusCancelled: 'Cancelled.',
   statusFailed: 'Failed.',
+  noDocument: 'No document with id {id}.',
+  notExtractedText:
+    '{file} has not been extracted yet — the preview arrives when parsing completes.',
 } as const
 
 export const STORAGE_KEY = 'sentinel.mock.state'
@@ -720,6 +725,33 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         totalDocuments: new Set(hits.map((h) => h.fileName)).size,
         counterparties: [...new Set(PASSAGES.map((p) => p.counterparty))].sort(),
         docTypes: [...new Set(PASSAGES.map((p) => p.docType))].sort(),
+      }
+      return delay(result)
+    },
+
+    getDocumentText: (docId) => {
+      const doc = DOCUMENTS.find((d) => d.docId === docId)
+      if (!doc) return fail(fmt(MESSAGES.noDocument, { id: docId }))
+      if (!doc.extracted) return fail(fmt(MESSAGES.notExtractedText, { file: doc.fileName }))
+      const text: DocumentText = clone({
+        docId: doc.docId,
+        fileName: doc.fileName,
+        pages: doc.pages,
+        parsedAt: doc.parsedAt,
+        extracted: doc.extracted,
+        sections: doc.sections,
+      })
+      return delay(text)
+    },
+
+    downloadDocument: (docId) => {
+      const doc = DOCUMENTS.find((d) => d.docId === docId)
+      if (!doc) return fail(fmt(MESSAGES.noDocument, { id: docId }))
+      // Placeholder bytes, not a real PDF: enough to exercise the download path.
+      const body = `%PDF-1.4\n% Sentinel placeholder original — ${doc.fileName}\n`
+      const result: ExportResult = {
+        fileName: doc.fileName,
+        blob: new Blob([body], { type: 'application/pdf' }),
       }
       return delay(result)
     },

@@ -18,6 +18,7 @@
  */
 import type {
   AttentionItem,
+  DocumentText,
   DebatePosition,
   Disposition,
   DocumentHit,
@@ -751,12 +752,262 @@ export function summaryOf(r: Review): ReviewSummary {
 // Documents
 // ---------------------------------------------------------------------------
 
+/**
+ * The index store's documents: one record per file, with the extracted text
+ * organized by the DOCUMENT's own sections (page ranges in mono). Powers the
+ * Documents browse state, "Preview extracted text", and "Download original".
+ */
+export interface DocumentRecord extends DocumentText {
+  lob: Lob
+  counterparty: string
+  docType: string
+  date: string
+}
+
+export const DOCUMENTS: DocumentRecord[] = [
+  {
+    docId: 'doc-meridian-annual',
+    fileName: MERIDIAN_DOC_ANNUAL,
+    lob: 'IB Lending',
+    counterparty: 'Meridian US Holdco',
+    docType: 'annual review',
+    date: '2026-03-31',
+    pages: 21,
+    parsedAt: '2026-08-28T09:35:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Executive Summary',
+        pageStart: 1,
+        pageEnd: 2,
+        text: 'FY25 closed with revenue growth of 9% and EBITDA margins holding near 31%. The sponsor completed a $35mm voluntary prepayment against the Term Loan B in June; gross leverage ended the year at 5.6x. Management characterizes the renewal pipeline as healthy but concentrated in the enterprise tier.',
+      },
+      {
+        title: 'Company Overview',
+        pageStart: 3,
+        pageEnd: 5,
+        text: 'Meridian US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bellwether Capital in 2023 in a $2.1bn LBO. Contract terms average 2.4 years with annual escalators.',
+      },
+      {
+        title: 'Financial Performance',
+        pageStart: 6,
+        pageEnd: 9,
+        text: 'Revenue of $612mm (+9% YoY); adjusted EBITDA of $190mm at a 31.0% margin. Capital expenditure held at 8% of revenue. Free cash flow conversion of 54% funded the June prepayment without revolver usage.',
+      },
+      {
+        title: 'Capitalization',
+        pageStart: 10,
+        pageEnd: 11,
+        text: 'Total debt outstanding of $1,240mm comprises a $1,240mm Term Loan B due 2030 and an undrawn $150mm revolving credit facility. A springing first-lien net leverage covenant of 6.5x is tested when revolver utilization exceeds 35% of commitments.',
+      },
+      {
+        title: 'EV/DCF Summary',
+        pageStart: 12,
+        pageEnd: 13,
+        text: 'The expected case discounts management projections at a WACC of 9.8%, implying an enterprise value of 8.6x LTM EBITDA. Downside case WACC of 10.6%. Expected-case EV coverage of total debt is 1.46x.',
+      },
+      {
+        title: 'Risk Factors',
+        pageStart: 14,
+        pageEnd: 17,
+        text: 'Customer concentration remains the principal risk: the top-10 customers represent approximately 34% of ARR. Renewal timing risk is noted for the enterprise tier, where procurement cycles have lengthened.',
+      },
+      {
+        title: 'Covenant Schedule',
+        pageStart: 18,
+        pageEnd: 19,
+        text: 'Springing first-lien net leverage covenant: 6.5x, tested at 35% revolver utilization. No maintenance covenants apply while the revolver remains below the test threshold.',
+      },
+      {
+        title: 'Appendices',
+        pageStart: 20,
+        pageEnd: 21,
+        text: 'Reconciliations of adjusted EBITDA and free cash flow; summary of hedging arrangements; organization chart.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-meridian-q3',
+    fileName: MERIDIAN_DOC_Q3,
+    lob: 'IB Lending',
+    counterparty: 'Meridian US Holdco',
+    docType: 'quarterly update',
+    date: '2026-07-15',
+    pages: 15,
+    parsedAt: '2026-08-28T09:38:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Highlights',
+        pageStart: 1,
+        pageEnd: 2,
+        text: 'Two enterprise renewals slipped from Q3 into Q4; management now guides to mid-single-digit revenue growth for FY26. The $35mm voluntary TLB prepayment completed in June was funded entirely from excess cash.',
+      },
+      {
+        title: 'Operating Update',
+        pageStart: 3,
+        pageEnd: 7,
+        text: 'Platform utilization and churn remain in line with plan. The delayed renewals are attributed to lengthened procurement cycles rather than competitive losses; both accounts remain on the platform month-to-month.',
+      },
+      {
+        title: 'Renewal Pipeline',
+        pageStart: 8,
+        pageEnd: 10,
+        text: 'The FY26 renewal cohort covers 28% of ARR. Management expects the two slipped renewals to close in Q4 at flat-to-modestly-lower pricing.',
+      },
+      {
+        title: 'Financial Update',
+        pageStart: 11,
+        pageEnd: 13,
+        text: 'LTM EBITDA of $210mm; gross leverage of 5.9x as of Q3-26, up from 5.6x at FY25 close on the revised EBITDA base. Covenant headroom narrows to 0.6x at the revised EBITDA.',
+      },
+      {
+        title: 'Liquidity Summary',
+        pageStart: 14,
+        pageEnd: 15,
+        text: 'The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit, leaving availability of approximately $144 million. No near-term maturities.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-halcyon-fa',
+    fileName: 'Halcyon_Marine_Facility_Agreement.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Halcyon Marine Finance',
+    docType: 'facility agreement',
+    date: '2026-05-02',
+    pages: 68,
+    parsedAt: '2026-08-12T10:20:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Definitions & Interpretation',
+        pageStart: 1,
+        pageEnd: 14,
+        text: 'Defined terms for the revolving facility, including Availability, Letter of Credit Exposure, and the Borrowing Base as applied to the mortgaged fleet.',
+      },
+      {
+        title: 'The Facility',
+        pageStart: 15,
+        pageEnd: 30,
+        text: 'A senior secured revolving facility with a letter-of-credit sublimit, maturing 2031, secured by first-preferred mortgages over the financed vessels.',
+      },
+      {
+        title: 'Availability & Letters of Credit',
+        pageStart: 31,
+        pageEnd: 45,
+        text: 'Availability under the revolving facility shall be reduced by the aggregate face amount of letters of credit then outstanding. Clause 7.2 sets the mechanics of issuance, renewal and cash-collateralization.',
+      },
+      {
+        title: 'Covenants',
+        pageStart: 46,
+        pageEnd: 68,
+        text: 'Fleet-value maintenance tested semi-annually; minimum liquidity requirements; customary negative covenants.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-atlas-annual',
+    fileName: 'Atlas_Foods_Group_Annual_Review.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Atlas Foods Group',
+    docType: 'annual review',
+    date: '2026-08-20',
+    pages: 18,
+    parsedAt: '2026-08-21T15:05:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Business Overview',
+        pageStart: 1,
+        pageEnd: 4,
+        text: 'Atlas Foods Group manufactures private-label packaged foods across three categories, with long-tenured grocery relationships and modest customer concentration.',
+      },
+      {
+        title: 'Financial Summary',
+        pageStart: 5,
+        pageEnd: 8,
+        text: 'Gross leverage of 3.1x remains comfortably inside the 4.5x maintenance covenant; the revolver was undrawn throughout the year. Margins recovered as input costs normalized.',
+      },
+      {
+        title: 'Outlook',
+        pageStart: 9,
+        pageEnd: 18,
+        text: 'Management guides to low-single-digit growth with continued deleveraging from free cash flow.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-verdant-cs',
+    fileName: 'Verdant_AgriChem_Credit_Submission.pdf',
+    lob: 'Wealth Management',
+    counterparty: 'Verdant AgriChem',
+    docType: 'credit submission',
+    date: '2026-08-22',
+    pages: 11,
+    parsedAt: '2026-08-24T11:15:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Facility Overview',
+        pageStart: 1,
+        pageEnd: 4,
+        text: 'A seasonal working-capital revolver sized to the spring planting cycle; availability peaks ahead of planting and steps down post-harvest.',
+      },
+      {
+        title: 'Credit Assessment',
+        pageStart: 5,
+        pageEnd: 11,
+        text: 'Cash conversion is strongly seasonal; the borrowing base is tested monthly against eligible receivables and inventory.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-vantage-isda',
+    fileName: 'Vantage_Payments_ISDA_Schedule.pdf',
+    lob: 'Counterparty Credit Risk',
+    counterparty: 'Vantage Payments',
+    docType: 'ISDA schedule',
+    date: '2026-06-09',
+    pages: 34,
+    parsedAt: '2026-06-10T08:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Schedule to the ISDA Master Agreement',
+        pageStart: 1,
+        pageEnd: 18,
+        text: 'Elections and amendments to the 2002 Master Agreement, including termination events and calculation agent provisions.',
+      },
+      {
+        title: 'Credit Support Annex',
+        pageStart: 19,
+        pageEnd: 34,
+        text: 'Threshold amount for Party B: USD 5,000,000; Minimum Transfer Amount: USD 250,000; daily valuation with USD cash as eligible collateral.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-crestline-q2',
+    fileName: 'Crestline_Logistics_Q2_Update.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Crestline Logistics',
+    docType: 'quarterly update',
+    date: '2026-08-01',
+    pages: 9,
+    parsedAt: '2026-08-26T14:00:00Z',
+    extracted: false,
+    sections: [],
+  },
+]
+
 /** A passage as stored; `snippetHtml` is produced at search time. */
 export type DocumentPassage = Omit<DocumentHit, 'snippetHtml'>
 
 export const PASSAGES: DocumentPassage[] = [
   {
     id: 'doc-meridian-q3-liq',
+    docId: 'doc-meridian-q3',
     fileName: MERIDIAN_DOC_Q3,
     lob: 'IB Lending',
     counterparty: 'Meridian US Holdco',
@@ -774,6 +1025,7 @@ export const PASSAGES: DocumentPassage[] = [
   },
   {
     id: 'doc-meridian-annual-cov',
+    docId: 'doc-meridian-annual',
     fileName: MERIDIAN_DOC_ANNUAL,
     lob: 'IB Lending',
     counterparty: 'Meridian US Holdco',
@@ -787,6 +1039,7 @@ export const PASSAGES: DocumentPassage[] = [
   },
   {
     id: 'doc-halcyon-fa-72',
+    docId: 'doc-halcyon-fa',
     fileName: 'Halcyon_Marine_Facility_Agreement.pdf',
     lob: 'IB Lending',
     counterparty: 'Halcyon Marine Finance',
@@ -800,6 +1053,7 @@ export const PASSAGES: DocumentPassage[] = [
   },
   {
     id: 'doc-meridian-annual-wacc',
+    docId: 'doc-meridian-annual',
     fileName: MERIDIAN_DOC_ANNUAL,
     lob: 'IB Lending',
     counterparty: 'Meridian US Holdco',
@@ -816,6 +1070,7 @@ export const PASSAGES: DocumentPassage[] = [
   },
   {
     id: 'doc-atlas-annual-lev',
+    docId: 'doc-atlas-annual',
     fileName: 'Atlas_Foods_Group_Annual_Review.pdf',
     lob: 'IB Lending',
     counterparty: 'Atlas Foods Group',
@@ -831,7 +1086,8 @@ export const PASSAGES: DocumentPassage[] = [
     usedInSectionN: 2,
   },
   {
-    id: 'doc-verdant-cs',
+    id: 'doc-verdant-cs-passage',
+    docId: 'doc-verdant-cs',
     fileName: 'Verdant_AgriChem_Credit_Submission.pdf',
     lob: 'Wealth Management',
     counterparty: 'Verdant AgriChem',
@@ -844,7 +1100,8 @@ export const PASSAGES: DocumentPassage[] = [
     page: 3,
   },
   {
-    id: 'doc-vantage-isda',
+    id: 'doc-vantage-isda-passage',
+    docId: 'doc-vantage-isda',
     fileName: 'Vantage_Payments_ISDA_Schedule.pdf',
     lob: 'Counterparty Credit Risk',
     counterparty: 'Vantage Payments',
@@ -856,7 +1113,8 @@ export const PASSAGES: DocumentPassage[] = [
     page: 22,
   },
   {
-    id: 'doc-crestline-q2',
+    id: 'doc-crestline-q2-passage',
+    docId: 'doc-crestline-q2',
     fileName: 'Crestline_Logistics_Q2_Update.pdf',
     lob: 'IB Lending',
     counterparty: 'Crestline Logistics',

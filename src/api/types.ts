@@ -263,8 +263,29 @@ export interface Policy {
   itemIds: string[]
 }
 
+/** One section of a document's extracted text, as the DOCUMENT organizes it. */
+export interface DocumentTextSection {
+  title: string
+  pageStart: number
+  pageEnd: number
+  text: string
+}
+
+/** The extracted text of one document — powers "Preview extracted text". */
+export interface DocumentText {
+  docId: string
+  fileName: string
+  pages: number
+  /** When Sentinel finished parsing this document. */
+  parsedAt: string
+  extracted: boolean
+  sections: DocumentTextSection[]
+}
+
 export interface DocumentHit {
   id: string
+  /** The document this passage belongs to (stable across passages). */
+  docId: string
   fileName: string
   lob: Lob
   counterparty: string

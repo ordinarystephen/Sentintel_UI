@@ -17,6 +17,7 @@ export const queryKeys = {
   prior: (reviewId: string) => ['prior', reviewId] as const,
   policies: (reviewId: string) => ['policies', reviewId] as const,
   documents: (query: string, filters: DocumentFilters) => ['documents', query, filters] as const,
+  documentText: (docId: string) => ['documentText', docId] as const,
 }
 
 export const useMe = () => useQuery({ queryKey: queryKeys.me, queryFn: () => api.me() })
@@ -76,6 +77,16 @@ export const useDocumentSearch = (query: string, filters: DocumentFilters) =>
     queryFn: () => api.searchDocuments(query, filters),
     placeholderData: keepPreviousData,
   })
+
+export const useDocumentText = (docId: string | null) =>
+  useQuery({
+    queryKey: queryKeys.documentText(docId ?? ''),
+    queryFn: () => api.getDocumentText(docId!),
+    enabled: !!docId,
+  })
+
+export const useDownloadDocument = () =>
+  useMutation({ mutationFn: (docId: string) => api.downloadDocument(docId) })
 
 /** Every mutation on a review invalidates that review (and the lists, whose counts may change). */
 export function useReviewMutations(reviewId: string) {

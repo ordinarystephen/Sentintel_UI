@@ -13,6 +13,7 @@ import type {
   DebatePosition,
   DocumentFilters,
   DocumentSearchResult,
+  DocumentText,
   ExportResult,
   ExtractionSettings,
   Policy,
@@ -144,6 +145,21 @@ export interface SentinelApi {
    * passage fed a review, `usedInReviewId`.
    */
   searchDocuments(query: string, filters: DocumentFilters): Promise<DocumentSearchResult>
+
+  /**
+   * The extracted text of one document, organized by the DOCUMENT's own
+   * sections with page ranges — the "Preview extracted text" payload. Real
+   * backend: read from the index store. A not-yet-extracted document rejects
+   * with `{ message }` (the UI disables the action, so this is defensive).
+   */
+  getDocumentText(docId: string): Promise<DocumentText>
+
+  /**
+   * The original uploaded file. Real backend: stream from the document store
+   * (filename from Content-Disposition). Mock: a placeholder PDF blob, same
+   * pattern as exportReview.
+   */
+  downloadDocument(docId: string): Promise<ExportResult>
 
   // ---- export ----
 
