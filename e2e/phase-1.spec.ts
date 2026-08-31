@@ -66,7 +66,7 @@ test.describe('screenshots', () => {
         await page.setViewportSize({ width, height: 900 })
         await page.goto('/review/rev-meridian-2026-08#sec-2')
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
-        await page.waitForTimeout(400)
+        await page.waitForTimeout(900)
         await page.screenshot({ path: `e2e/screenshots/phase-1/review-${theme.name}-${width}.png` })
       })
     }
@@ -75,7 +75,7 @@ test.describe('screenshots', () => {
     test(`${path} · stone-light · 1440px`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 })
       await page.goto(path)
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(900)
       const slug = path === '/' ? 'landing' : path.slice(1).replace(/\//g, '-')
       await page.screenshot({ path: `e2e/screenshots/phase-1/${slug}-stone-light-1440.png` })
     })
@@ -85,7 +85,7 @@ test.describe('screenshots', () => {
     await page.addInitScript(() => localStorage.setItem('sentinel.rail.collapsed', 'true'))
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/review/rev-meridian-2026-08')
-    await page.waitForTimeout(300)
+    await page.waitForTimeout(900)
     await page.screenshot({
       path: 'e2e/screenshots/phase-1/review-collapsed-cobalt-light-1440.png',
     })

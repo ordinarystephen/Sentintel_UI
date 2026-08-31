@@ -146,7 +146,7 @@ test.describe('screenshots', () => {
         await page.setViewportSize({ width, height: 1400 })
         await page.goto(MERIDIAN)
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
-        await page.waitForTimeout(500)
+        await page.waitForTimeout(900)
         await page.screenshot({ path: `e2e/screenshots/phase-3/review-${theme.name}-${width}.png` })
       })
     }
@@ -155,7 +155,7 @@ test.describe('screenshots', () => {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await page.goto('/')
       await expect(page.getByRole('link', { name: /Meridian US Holdco LLC/ })).toBeVisible()
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-3/landing-${theme.name}-1440.png` })
     })
   }

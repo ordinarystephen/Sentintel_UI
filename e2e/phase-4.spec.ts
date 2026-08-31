@@ -124,7 +124,7 @@ test.describe('screenshots', () => {
       await page.goto(`${MERIDIAN}#sec-2`)
       const rail = page.getByRole('complementary', { name: 'Context' })
       await expect(rail).toContainText('How this got here')
-      await page.waitForTimeout(600)
+      await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-4/rail-why-${theme.name}.png` })
       await rail.getByRole('tab', { name: 'Respond' }).click()
       await page.screenshot({

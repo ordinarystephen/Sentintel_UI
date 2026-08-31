@@ -6,11 +6,15 @@ This repository is **greenfield and standalone, with no backend**. The whole app
 
 ## Start here
 
+**Never run a JavaScript project before? Follow [docs/runbook.md](docs/runbook.md)** — prerequisites, install, a numbered tour of the whole demo, and troubleshooting.
+
 ```sh
 nvm use            # Node 24 (see .nvmrc; ≥ 22.12 works)
-npm install
+npm ci
 npm run dev        # http://localhost:5173 — mock API, no backend needed
 ```
+
+[docs/environment.md](docs/environment.md) covers the dependency audit, offline behaviour, static hosting, and running behind a reverse proxy.
 
 Then read, in this order:
 

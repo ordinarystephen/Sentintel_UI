@@ -34,4 +34,10 @@ export const routes: RouteObject[] = [
   },
 ]
 
-export const createAppRouter = () => createBrowserRouter(routes)
+/**
+ * BASE_URL comes from Vite's `base` (VITE_BASE_PATH at build time), so the
+ * same bundle works at '/' or under a proxy prefix like '/sentinel/'.
+ */
+const basename = import.meta.env.BASE_URL.replace(/\/+$/, '') || '/'
+
+export const createAppRouter = () => createBrowserRouter(routes, { basename })

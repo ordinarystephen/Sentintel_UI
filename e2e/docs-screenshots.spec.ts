@@ -25,7 +25,7 @@ async function prep(page: Page, family: string, dark: boolean) {
   )
   await page.setViewportSize({ width: 1440, height: 1000 })
 }
-const settle = (page: Page) => page.waitForTimeout(700)
+const settle = (page: Page) => page.waitForTimeout(900)
 
 test('stone-light: every screen', async ({ page }) => {
   test.setTimeout(90_000)

@@ -118,11 +118,11 @@ test.describe('screenshots', () => {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await page.goto('/reviews/all')
       await expect(page.getByText(/reviews · showing most recent/)).toBeVisible()
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-5/reviews-all-${theme.name}-1440.png` })
       await page.goto('/documents?q=revolver+availability')
       await expect(page.getByText(/sorted by relevance/)).toBeVisible()
-      await page.waitForTimeout(300)
+      await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-5/documents-${theme.name}-1440.png` })
     })
   }
