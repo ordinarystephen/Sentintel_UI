@@ -5,13 +5,14 @@ import { cx } from '@/lib/cx'
 import { monthYear } from '@/lib/format'
 import { strings } from '@/strings'
 import { PaneHeading } from './PaneHeading'
+import { fmt } from '@/lib/fmt'
 
 export function PriorPane({ prior }: { prior: PriorComparison }) {
   const s = strings.rail
   const label = monthYear(prior.priorDate)
   return (
     <div>
-      <PaneHeading first>{s.sinceHeading(label)}</PaneHeading>
+      <PaneHeading first>{fmt(s.sinceHeading, { date: label })}</PaneHeading>
       <dl>
         {prior.deltas.map((d, i) => (
           <div key={d.label} className={cx('py-2 text-[12px]', i > 0 && 'border-t border-rule')}>
@@ -34,7 +35,7 @@ export function PriorPane({ prior }: { prior: PriorComparison }) {
         to={`/review/${prior.priorReviewId}`}
         className="mt-[10px] inline-block text-[12px] text-ink underline underline-offset-2"
       >
-        {s.openPrior(label)}
+        {fmt(s.openPrior, { date: label })}
       </Link>
       <p className="mt-[10px] text-micro leading-[1.55] text-faint">{s.priorNote}</p>
     </div>

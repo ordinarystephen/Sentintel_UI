@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useReviewMutations } from '@/api/hooks'
 import { useToast } from '@/components/toastContext'
 import { strings } from '@/strings'
+import { fmt } from '@/lib/fmt'
 
 function download(blob: Blob, fileName: string) {
   if (typeof URL.createObjectURL !== 'function') return
@@ -29,7 +30,10 @@ export function useExport(reviewId: string) {
     exportReview.mutate(undefined, {
       onSuccess: (res) => {
         download(res.blob, res.fileName)
-        toast({ message: strings.review.exported(res.fileName), tone: 'success' })
+        toast({
+          message: fmt(strings.review.exported, { fileName: res.fileName }),
+          tone: 'success',
+        })
       },
       onError: (e) => {
         setError((e as Error).message)

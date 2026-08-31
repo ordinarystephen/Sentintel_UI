@@ -15,6 +15,7 @@ import { sectionAnchor } from '@/lib/sections'
 import { strings } from '@/strings'
 import { sectionCounts } from './itemState'
 import { WorkItemView } from './WorkItemView'
+import { fmt } from '@/lib/fmt'
 
 export function Workpaper({
   review,
@@ -32,7 +33,9 @@ export function Workpaper({
     <>
       <div className="mt-7 mb-[10px] flex items-baseline gap-[10px]">
         <h3 className="text-[14px] font-semibold tracking-tight">{s.workpaperHeading}</h3>
-        <span className="text-[12px] text-faint">{s.workpaperAside(review.sectionsPopulated)}</span>
+        <span className="text-[12px] text-faint">
+          {fmt(s.workpaperAside, { n: review.sectionsPopulated })}
+        </span>
       </div>
       <div className="border-t border-rule">
         {review.sections.map((sec) => {
@@ -69,9 +72,14 @@ export function Workpaper({
                 <Pill tone={pending ? 'todo' : 'pop'}>
                   {pending ? s.notPopulated : s.populated}
                 </Pill>
-                {counts.reviewRequired > 0 && <Chip>{s.reviewReqChip(counts.reviewRequired)}</Chip>}
+                {counts.reviewRequired > 0 && (
+                  <Chip>{fmt(s.reviewReqChip, { n: counts.reviewRequired })}</Chip>
+                )}
                 {counts.unresolved > 0 && (
-                  <ViaBadge via="unresolved" label={s.unresolvedChip(counts.unresolved)} />
+                  <ViaBadge
+                    via="unresolved"
+                    label={fmt(s.unresolvedChip, { n: counts.unresolved })}
+                  />
                 )}
                 <ChevronIcon
                   className={cx(

@@ -2,6 +2,7 @@
 import type { Review } from '@/api/types'
 import { Badge } from '@/components/Badge'
 import { strings } from '@/strings'
+import { fmt } from '@/lib/fmt'
 
 export function StoryCard({ review }: { review: Review }) {
   const s = strings.review
@@ -24,7 +25,7 @@ export function StoryCard({ review }: { review: Review }) {
                 </div>
                 <div>{c.summary}</div>
                 <div className="mt-0.5 text-muted tabular-nums">
-                  {s.priorArrow(c.prior, c.current)}
+                  {fmt(s.priorArrow, { prior: c.prior, current: c.current })}
                 </div>
                 <div className="mt-[3px] font-display text-muted italic">“{c.snippet}”</div>
               </li>

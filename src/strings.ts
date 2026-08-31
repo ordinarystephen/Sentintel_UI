@@ -1,18 +1,45 @@
 /**
- * ALL user-facing navigation and tab names live here (build-spec §2).
+ * ALL user-facing copy lives in this file — nav names, screen titles and
+ * subtitles, button labels, hints and placeholders, empty states, toasts,
+ * micro-labels, the disclaimer. Components never carry their own words, so
+ * changing wording never requires opening a component file.
  *
- * The left-nav items ("My reviews", "All reviews") and the right-rail tab names
- * ("Why", "Respond", "Debate", "Prior") are placeholders Steve intends to rename.
- * Every rendered instance must read from this file — never inline these strings
- * in a component, so a rename is a one-file change.
+ * How to edit safely (see docs/editing-copy.md for the full map):
+ *  - Change only the text between the quotes. Keep the quotes, keep the
+ *    trailing commas.
+ *  - Pieces in {curly braces} like '{n}' or '{owner}' are fill-ins the app
+ *    replaces at runtime (a count, a name, a date). Keep them — you may move
+ *    them within the sentence, but don't delete or rename them.
+ *  - Where wording differs by count there is a pair: `...One` is used for
+ *    exactly one, `...Other` for any other number.
+ *
+ * Naming note: the left-nav items ("My reviews", "All reviews") and the
+ * context-rail tab names ("Why", "Respond", "Debate", "Prior") are
+ * placeholders pending the naming workshop — rename them right here.
  */
 export const strings = {
+  /* ════════ Shared bits used on several screens ════════ */
+  common: {
+    pageRef: 'p. {n}', // the mono page reference on quotes, items, and search hits
+  },
+
+  /* ════════ Masthead & app chrome ════════ */
   app: {
     brand: 'Sentinel',
     healthReady: 'ready',
     skipToContent: 'Skip to content',
+    dismissToast: 'Dismiss',
   },
+  theme: {
+    selectLabel: 'Theme',
+    stone: 'Stone',
+    cobalt: 'Cobalt',
+    toggleDark: 'Toggle dark mode',
+  },
+
+  /* ════════ Left rail (app navigation) ════════ */
   nav: {
+    appNavAria: 'App navigation',
     home: 'Home',
     myReviews: 'My reviews',
     allReviews: 'All reviews',
@@ -22,6 +49,114 @@ export const strings = {
     collapseSidebar: 'Collapse sidebar',
     expandSidebar: 'Expand sidebar',
   },
+
+  /* ════════ Landing — Start a review (/) ════════ */
+  landing: {
+    eyebrow: 'Credit analysis',
+    title: 'Start a review',
+    sub: 'Drop the documents for one borrower. Sentinel reads them, runs the policy checks, and assembles the work paper.',
+    dropBig: 'Drag documents here',
+    dropOr: 'or',
+    browse: 'browse files',
+    dropHint: 'PDF · one borrower per review',
+    dropAria: 'Upload documents',
+    chooseFilesAria: 'Choose PDF files',
+    fileListAria: 'Documents to review',
+    removeFile: 'Remove file',
+    onlyPdf: 'Only PDF files can be reviewed — skipped:',
+    contextLabel: 'Anything Sentinel should know?',
+    optional: 'optional',
+    contextPlaceholder:
+      'Context or questions, one per line — e.g. Focus on covenant headroom. What is revolver availability at close?',
+    begin: 'Begin review',
+    documentCountOne: '1 document',
+    documentCountOther: '{n} documents',
+    advanced: 'Advanced extraction settings',
+    parser: 'Parser',
+    preset: 'Section preset',
+    concurrency: 'Concurrency',
+    recent: 'Recent',
+    noRecents: 'Your reviews will appear here once you start one.',
+    newReview: 'New review — reading…',
+    openBadge: '{n} open',
+    sectionsComplete: '{n}/6 sections',
+  },
+
+  /* ════════ Processing state of /review/:id ════════ */
+  /* (The cycling status line itself comes from the backend — in demo mode,
+     edit it in src/api/mock/mockApi.ts › MESSAGES.) */
+  processing: {
+    title: 'Reading the documents',
+    away: 'This usually takes a few minutes. You can leave — the review will be waiting in your recents.',
+    cancel: 'Cancel this review',
+    cancelled: 'This review was cancelled.',
+    failedEyebrow: 'Processing failed',
+    startAnother: 'Start another review',
+  },
+
+  /* ════════ Review page (/review/:id) ════════ */
+  review: {
+    loading: 'Opening the review…',
+    exportReview: 'Export Review',
+    exporting: 'Exporting…',
+    exported: 'Exported {fileName}',
+    runCompleted: 'Run completed {time} · {documents}',
+    documentsOne: '1 document',
+    documentsOther: '{n} documents',
+    storyHeading: 'The story',
+    storyAside: 'what the documents say is going on',
+    priorArrow: 'prior {prior} → current {current}',
+    attentionHeading: 'Needs your attention',
+    openBadge: '{n} open',
+    reviewedTally: '{n} reviewed',
+    attentionEmpty:
+      'Nothing needs your attention. Every value was read above the confidence floor and no flags were raised.',
+    sectionLink: 'Section {n} →',
+    reviewRequired: 'review required',
+    reviewRequiredMark: '⚠ review required',
+    unresolved: 'unresolved',
+    question: 'question',
+    reviewedNote: 'Reviewed — "{note}"',
+    reviewedPlain: 'Reviewed',
+    dismissed: 'Dismissed',
+    workpaperHeading: 'Work paper',
+    workpaperAside: '6 sections · {n} populated',
+    populated: 'populated',
+    notPopulated: 'not yet populated',
+    reviewReqChip: '{n} review req.',
+    unresolvedChip: '{n} unresolved',
+    flagLine: 'Read below the OCR confidence floor — the Word export flags this value.',
+    unresolvedText: 'No content extracted for this concept.',
+    reasoningStubbed: 'reasoning stubbed',
+    verdict: 'Verdict: {verdict}',
+    verdictNone: '—',
+    snippets: '{n} retrieved snippet(s)',
+    viewSource: 'View source',
+    reRunning: 're-running…',
+    verified: 'verified',
+    clearedChip: 'cleared — {reason} · struck on screen, omitted from the exported review',
+    notApplicable: 'not applicable',
+    incorrect: 'incorrect',
+    disclaimer: 'This tool augments your analysis; it is not the system of record.',
+  },
+
+  /* ════════ Attention row actions (on the review page) ════════ */
+  attention: {
+    dismiss: 'dismiss',
+    dismissAria: 'Dismiss flag: {title}',
+    markReviewed: 'mark reviewed',
+    markReviewedAria: 'Mark reviewed: {title}',
+    edit: 'edit',
+    editAria: 'Edit note: {title}',
+    unreview: 'un-review',
+    unreviewAria: 'Un-review: {title}',
+    notePlaceholder: 'What you checked, in a line',
+    noteLabel: 'Review note',
+    save: 'Save',
+    cancel: 'Cancel',
+  },
+
+  /* ════════ Right context rail (review page) ════════ */
   contextRail: {
     header: 'Context',
     toggle: 'Toggle context rail',
@@ -34,6 +169,61 @@ export const strings = {
       prior: 'Prior',
     },
   },
+  rail: {
+    selectItem: 'Select this item',
+    readOnly:
+      'Read-only — this review belongs to {owner}. Open it to read; editing stays with its owner.',
+    howHeading: 'How this got here',
+    policiesHeading: 'Applied policies & standards',
+    viewStandard: 'View standard',
+    viewPolicy: 'View policy',
+    noPolicies: 'No policy or standard cited this item.',
+    whyNote:
+      'Every output shows its reasoning chain and the standards it was held to — the same trail the export and the audit record carry.',
+    respondHeading: 'Respond to Sentinel',
+    respondPlaceholder:
+      'Correct the value, add context, or say what to re-check — Sentinel re-runs this item with your direction.',
+    sendRerun: 'Send & re-run',
+    markVerified: 'Mark verified',
+    respondedNote: 'Sent: “{note}”',
+    clearHeading: 'Clear from workpaper',
+    notApplicable: 'Not applicable',
+    incorrect: 'Incorrect',
+    cleared: 'cleared',
+    undo: 'undo',
+    cancel: 'Cancel',
+    rationaleLabel: 'Clear rationale',
+    rationalePlaceholder: 'Why — one line, recorded with the clear',
+    rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
+    confirmClear: 'Clear — {reason}',
+    clearNote:
+      'Cleared content stays on screen — struck through, with your rationale beside it — so the QC trail is visible while you work. The exported review simply renders without it. Nothing is silently deleted.',
+    advocate: 'Advocate',
+    dissent: 'Dissent',
+    cites: 'cites: {citations}',
+    debateNote:
+      'Positions are advisory. The analyst’s disposition decides — and both positions ride into the review record.',
+    debateEmpty: 'No advocate or dissent positions were produced for this item.',
+    sinceHeading: 'Since the {date} review',
+    openPrior: 'Open the {date} review',
+    priorNote:
+      'Shown only when the borrower has prior reviews. The story’s timeline covers what changed within this run’s documents; this tab covers what changed between reviews.',
+    noSelectionBody: 'Select a work paper item to see how it got here.',
+  },
+
+  /* ════════ Source modal (evidence viewer) ════════ */
+  source: {
+    title: 'Evidence — {section}',
+    close: 'Close',
+    page: 'page {n}',
+    sectionImage: 'section image',
+    pageImage: 'page image',
+    imageAria: 'Source image',
+    noImage:
+      'The source image isn’t available for this passage. The quote above is the extracted text.',
+  },
+
+  /* ════════ Reviews list (/reviews, /reviews/all) ════════ */
   reviews: {
     title: 'Reviews',
     tabs: { my: 'My', all: 'All' },
@@ -46,19 +236,24 @@ export const strings = {
     periodAria: 'Period',
     period12m: 'Last 12 months',
     periodAll: 'All time',
-    count: (n: number) => `${n} ${n === 1 ? 'review' : 'reviews'} · showing most recent`,
+    countOne: '1 review · showing most recent',
+    countOther: '{n} reviews · showing most recent',
     readOnlyNote: 'Team view — open any review to read it; editing stays with its owner.',
     you: 'you',
     readOnly: 'read-only',
-    repeat: (ordinal: string) => `${ordinal} in 12 mo`,
+    repeat: '{ordinal} in 12 mo',
+    processingAria: 'Processing',
     emptyMy: 'Your reviews will appear here once you start one.',
     emptyAll: 'No reviews match. Try a borrower name, a CL number, or a sector.',
   },
+  /* Short line-of-business tags shown on list rows. */
   lobShort: {
     'IB Lending': 'IB',
     'Wealth Management': 'WM',
     'Counterparty Credit Risk': 'CCR',
   } as Record<string, string>,
+
+  /* ════════ Documents (/documents) ════════ */
   documents: {
     eyebrow: 'Document repository',
     title: 'Documents',
@@ -77,171 +272,31 @@ export const strings = {
       ['-word', 'excludes passages containing it'],
       ['bare words', 'match any, by stem — more matches rank higher'],
     ] as ReadonlyArray<readonly [string, string]>,
-    count: (passages: number, docs: number, ranked: boolean) =>
-      `${passages} ${passages === 1 ? 'passage' : 'passages'} in ${docs} ${docs === 1 ? 'document' : 'documents'} · ${ranked ? 'sorted by relevance' : 'most recent first'}`,
+    countLine: '{passages} in {documents} · {order}',
+    passagesOne: '1 passage',
+    passagesOther: '{n} passages',
+    documentsOne: '1 document',
+    documentsOther: '{n} documents',
+    orderRelevance: 'sorted by relevance',
+    orderRecent: 'most recent first',
     extracted: 'extracted',
     notExtracted: 'not yet extracted',
-    counterpartyPill: (c: string) => `Counterparty · ${c}`,
-    typePill: (t: string) => `Type · ${t}`,
+    counterpartyPill: 'Counterparty · {name}',
+    typePill: 'Type · {type}',
     viewSource: 'View source',
-    usedIn: (borrower: string) => `Used in ${borrower} review →`,
+    usedIn: 'Used in {borrower} review →',
     empty: 'No passages match. Loosen a filter, or try different words.',
   },
-  landing: {
-    eyebrow: 'Credit analysis',
-    title: 'Start a review',
-    sub: 'Drop the documents for one borrower. Sentinel reads them, runs the policy checks, and assembles the work paper.',
-    dropBig: 'Drag documents here',
-    dropOr: 'or',
-    browse: 'browse files',
-    dropHint: 'PDF · one borrower per review',
-    dropAria: 'Upload documents',
-    removeFile: 'Remove file',
-    onlyPdf: 'Only PDF files can be reviewed — skipped:',
-    contextLabel: 'Anything Sentinel should know?',
-    optional: 'optional',
-    contextPlaceholder:
-      'Context or questions, one per line — e.g. Focus on covenant headroom. What is revolver availability at close?',
-    begin: 'Begin review',
-    documentCount: (n: number) => (n === 1 ? '1 document' : `${n} documents`),
-    advanced: 'Advanced extraction settings',
-    parser: 'Parser',
-    preset: 'Section preset',
-    concurrency: 'Concurrency',
-    recent: 'Recent',
-    noRecents: 'Your reviews will appear here once you start one.',
-    newReview: 'New review — reading…',
-    openBadge: (n: number) => `${n} open`,
-    sectionsComplete: (n: number) => `${n}/6 sections`,
-  },
-  processing: {
-    title: 'Reading the documents',
-    away: 'This usually takes a few minutes. You can leave — the review will be waiting in your recents.',
-    cancel: 'Cancel this review',
-    cancelled: 'This review was cancelled.',
-    failedEyebrow: 'Processing failed',
-    startAnother: 'Start another review',
-  },
-  review: {
-    exportReview: 'Export Review',
-    exporting: 'Exporting…',
-    exported: (fileName: string) => `Exported ${fileName}`,
-    runCompleted: (time: string, n: number) =>
-      `Run completed ${time} · ${n === 1 ? '1 document' : `${n} documents`}`,
-    storyHeading: 'The story',
-    storyAside: 'what the documents say is going on',
-    priorArrow: (prior: string, current: string) => `prior ${prior} → current ${current}`,
-    attentionHeading: 'Needs your attention',
-    openBadge: (n: number) => `${n} open`,
-    reviewedTally: (n: number) => `${n} reviewed`,
-    attentionEmpty:
-      'Nothing needs your attention. Every value was read above the confidence floor and no flags were raised.',
-    sectionLink: (n: number) => `Section ${n} →`,
-    reviewRequired: 'review required',
-    reviewRequiredMark: '⚠ review required',
-    unresolved: 'unresolved',
-    question: 'question',
-    reviewedNote: (note: string) => `Reviewed — "${note}"`,
-    reviewedPlain: 'Reviewed',
-    dismissed: 'Dismissed',
-    workpaperHeading: 'Work paper',
-    workpaperAside: (populated: number) => `6 sections · ${populated} populated`,
-    populated: 'populated',
-    notPopulated: 'not yet populated',
-    reviewReqChip: (n: number) => `${n} review req.`,
-    unresolvedChip: (n: number) => `${n} unresolved`,
-    flagLine: 'Read below the OCR confidence floor — the Word export flags this value.',
-    unresolvedText: 'No content extracted for this concept.',
-    reasoningStubbed: 'reasoning stubbed',
-    verdict: (v: string | null) => `Verdict: ${v ?? '—'}`,
-    snippets: (n: number) => `${n} retrieved snippet(s)`,
-    viewSource: 'View source',
-    reRunning: 're-running…',
-    verified: 'verified',
-    clearedChip: (reason: string) =>
-      `cleared — ${reason} · struck on screen, omitted from the exported review`,
-    notApplicable: 'not applicable',
-    incorrect: 'incorrect',
-    disclaimer: 'This tool augments your analysis; it is not the system of record.',
-    loading: 'Opening the review…',
-  },
-  rail: {
-    selectItem: 'Select this item',
-    readOnly: (owner: string) =>
-      `Read-only — this review belongs to ${owner}. Open it to read; editing stays with its owner.`,
-    howHeading: 'How this got here',
-    policiesHeading: 'Applied policies & standards',
-    viewStandard: 'View standard',
-    viewPolicy: 'View policy',
-    noPolicies: 'No policy or standard cited this item.',
-    whyNote:
-      'Every output shows its reasoning chain and the standards it was held to — the same trail the export and the audit record carry.',
-    respondHeading: 'Respond to Sentinel',
-    respondPlaceholder:
-      'Correct the value, add context, or say what to re-check — Sentinel re-runs this item with your direction.',
-    sendRerun: 'Send & re-run',
-    markVerified: 'Mark verified',
-    clearHeading: 'Clear from workpaper',
-    notApplicable: 'Not applicable',
-    incorrect: 'Incorrect',
-    cleared: 'cleared',
-    undo: 'undo',
-    cancel: 'Cancel',
-    rationaleLabel: 'Clear rationale',
-    rationalePlaceholder: 'Why — one line, recorded with the clear',
-    rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
-    confirmClear: (reason: string) => `Clear — ${reason}`,
-    clearNote:
-      'Cleared content stays on screen — struck through, with your rationale beside it — so the QC trail is visible while you work. The exported review simply renders without it. Nothing is silently deleted.',
-    advocate: 'Advocate',
-    dissent: 'Dissent',
-    cites: (c: string) => `cites: ${c}`,
-    debateNote:
-      'Positions are advisory. The analyst’s disposition decides — and both positions ride into the review record.',
-    debateEmpty: 'No advocate or dissent positions were produced for this item.',
-    sinceHeading: (date: string) => `Since the ${date} review`,
-    openPrior: (date: string) => `Open the ${date} review`,
-    priorNote:
-      'Shown only when the borrower has prior reviews. The story’s timeline covers what changed within this run’s documents; this tab covers what changed between reviews.',
-    respondedNote: (note: string) => `Sent: “${note}”`,
-    noSelectionBody: 'Select a work paper item to see how it got here.',
-  },
-  attention: {
-    dismiss: 'dismiss',
-    dismissAria: (title: string) => `Dismiss flag: ${title}`,
-    markReviewed: 'mark reviewed',
-    markReviewedAria: (title: string) => `Mark reviewed: ${title}`,
-    edit: 'edit',
-    editAria: (title: string) => `Edit note: ${title}`,
-    unreview: 'un-review',
-    unreviewAria: (title: string) => `Un-review: ${title}`,
-    notePlaceholder: 'What you checked, in a line',
-    noteLabel: 'Review note',
-    save: 'Save',
-    cancel: 'Cancel',
-  },
-  source: {
-    title: (section: string) => `Evidence — ${section}`,
-    close: 'Close',
-    page: (n: number) => `page ${n}`,
-    sectionImage: 'section image',
-    pageImage: 'page image',
-    imageAria: 'Source image',
-    noImage:
-      'The source image isn’t available for this passage. The quote above is the extracted text.',
-  },
+
+  /* ════════ Policy library stub (/policy) ════════ */
   policy: {
     stub: 'The policy corpus the checks run against. Browsing arrives after the MVP.',
   },
+
+  /* ════════ Not found ════════ */
   notFound: {
     title: 'Nothing here',
     body: 'That address does not match a screen in Sentinel.',
     home: 'Back to Start a review',
-  },
-  theme: {
-    selectLabel: 'Theme',
-    stone: 'Stone',
-    cobalt: 'Cobalt',
-    toggleDark: 'Toggle dark mode',
   },
 } as const

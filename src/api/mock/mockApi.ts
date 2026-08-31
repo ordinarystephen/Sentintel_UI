@@ -19,6 +19,7 @@
  * (`overrides`), keyed by STORAGE_KEY. Bump STATE_VERSION when fixtures change
  * shape so stale persisted state is discarded.
  */
+import { fmt } from '@/lib/fmt'
 import { ApiError, type SentinelApi } from '../client'
 import type {
   AttentionItem,
@@ -61,6 +62,34 @@ import {
   RERUN_OUTCOMES,
   summaryOf,
 } from './fixtures'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EDIT ME — every user-visible message this mock "backend" returns (error
+// banners, toasts, the processing status line). {curly} pieces are fill-ins.
+// In production these come from the real API; see docs/editing-copy.md.
+// ─────────────────────────────────────────────────────────────────────────────
+export const MESSAGES = {
+  emptyUpload: 'Add at least one PDF to begin a review.',
+  noReview: 'No review with id {id}.',
+  noItem: 'No work item with id {id}.',
+  noAttention: 'No attention item with id {id}.',
+  readOnly: 'This review belongs to {owner} — you can read it, but editing stays with its owner.',
+  respondEmpty: 'Say what to re-check, correct, or add before sending.',
+  rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
+  notCleared: 'This item is not cleared.',
+  flagsOnly: 'Only flags can be dismissed.',
+  notProcessing: 'Review {id} is not processing.',
+  stillProcessing: 'This review is still processing — export once it is ready.',
+  exportFailed:
+    'Export failed: the render service returned no document for {clId} (render-service: 502 Bad Gateway).',
+  parseFailed: 'Could not parse {file}: the file is encrypted or damaged (parser: pdfplumber).',
+  statusReading: 'Reading {file}…',
+  statusReadingFallback: 'Reading the documents…',
+  statusIndexing: 'Indexing {pages} pages…',
+  statusPolicy: 'Running policy checks…',
+  statusCancelled: 'Cancelled.',
+  statusFailed: 'Failed.',
+} as const
 
 export const STORAGE_KEY = 'sentinel.mock.state'
 const STATE_VERSION = 1
@@ -167,7 +196,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
   function mutable(id: string): Review {
     if (!state.overrides[id]) {
       const base = fixtures.get(id)
-      if (!base) throw new ApiError(`No review with id ${id}.`)
+      if (!base) throw new ApiError(fmt(MESSAGES.noReview, { id }))
       state.overrides[id] = clone(base)
     }
     return state.overrides[id]
@@ -243,7 +272,12 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       documents,
     }
     if (seed.cancelledAt !== undefined) {
-      return { ...base, status: 'cancelled', phase: 'reading', statusLine: 'Cancelled.' }
+      return {
+        ...base,
+        status: 'cancelled',
+        phase: 'reading',
+        statusLine: MESSAGES.statusCancelled,
+      }
     }
     const corrupt = seed.files.find((f) => /corrupt/i.test(f.name))
     if (corrupt && elapsed >= PROCESSING.failAt) {
@@ -251,9 +285,9 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         ...base,
         status: 'failed',
         phase: 'indexing',
-        statusLine: 'Failed.',
+        statusLine: MESSAGES.statusFailed,
         error: {
-          message: `Could not parse ${corrupt.name}: the file is encrypted or damaged (parser: pdfplumber).`,
+          message: fmt(MESSAGES.parseFailed, { file: corrupt.name }),
         },
       }
     }
@@ -266,10 +300,12 @@ export function createMockApi(options: MockOptions = {}): MockApi {
           : 'policy_checks'
     const statusLine =
       phase === 'reading'
-        ? `Reading ${seed.files[0]?.name ?? 'the documents'}…`
+        ? seed.files[0]
+          ? fmt(MESSAGES.statusReading, { file: seed.files[0].name })
+          : MESSAGES.statusReadingFallback
         : phase === 'indexing'
-          ? `Indexing ${pages} pages…`
-          : 'Running policy checks…'
+          ? fmt(MESSAGES.statusIndexing, { pages })
+          : MESSAGES.statusPolicy
     return { ...base, status: 'processing', phase, statusLine }
   }
 
@@ -367,9 +403,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
   function assertOwner(review: Review): void {
     if (review.ownerId !== ME.id) {
-      throw new ApiError(
-        `This review belongs to ${review.ownerName} — you can read it, but editing stays with its owner.`,
-      )
+      throw new ApiError(fmt(MESSAGES.readOnly, { owner: review.ownerName }))
     }
   }
 
@@ -393,7 +427,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
   ): Promise<WorkItem> {
     settleReRuns()
     const found = findItemMutable(itemId)
-    if (!found) return fail(`No work item with id ${itemId}.`)
+    if (!found) return fail(fmt(MESSAGES.noItem, { id: itemId }))
     try {
       assertOwner(found.review)
       fn(found)
@@ -408,7 +442,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     fn: (ctx: { review: Review; attention: AttentionItem }) => void,
   ): Promise<void> {
     const found = findAttentionMutable(attentionId)
-    if (!found) return fail(`No attention item with id ${attentionId}.`)
+    if (!found) return fail(fmt(MESSAGES.noAttention, { id: attentionId }))
     try {
       assertOwner(found.review)
       fn(found)
@@ -458,11 +492,11 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     getReview: (id) => {
       const rec = record(id)
-      return rec ? delay(rec) : fail(`No review with id ${id}.`)
+      return rec ? delay(rec) : fail(fmt(MESSAGES.noReview, { id }))
     },
 
     createReview: (files, contextText, settings) => {
-      if (files.length === 0) return fail('Add at least one PDF to begin a review.')
+      if (files.length === 0) return fail(MESSAGES.emptyUpload)
       const startedAt = now()
       const id = `rev-new-${startedAt.toString(36)}`
       state.processing[id] = {
@@ -478,13 +512,13 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     getReviewStatus: (id) => {
       const rec = record(id)
-      if (!rec) return fail(`No review with id ${id}.`)
+      if (!rec) return fail(fmt(MESSAGES.noReview, { id }))
       return delay(rec.status === 'ready' ? { status: 'ready' as const } : rec)
     },
 
     cancelReview: (id) => {
       const seed = state.processing[id]
-      if (!seed) return fail(`Review ${id} is not processing.`)
+      if (!seed) return fail(fmt(MESSAGES.notProcessing, { id }))
       seed.cancelledAt = now()
       save()
       return delay(undefined)
@@ -492,8 +526,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     respond: (itemId, text) =>
       withItem(itemId, ({ review, item }) => {
-        if (!text.trim())
-          throw new ApiError('Say what to re-check, correct, or add before sending.')
+        if (!text.trim()) throw new ApiError(MESSAGES.respondEmpty)
         record_(review, { itemId: item.id, action: 'responded', note: text })
         item.disposition = review.dispositions[review.dispositions.length - 1]
         state.reRuns[item.id] = { until: now() + PROCESSING.reRun, text }
@@ -514,7 +547,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     clear: (itemId, reason: ClearReason, note: string) =>
       withItem(itemId, ({ review, item }) => {
         if (!note.trim()) {
-          throw new ApiError('Add a one-line rationale — it is recorded with the clear.')
+          throw new ApiError(MESSAGES.rationaleRequired)
         }
         item.cleared = {
           reason,
@@ -532,14 +565,14 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     undoClear: (itemId) =>
       withItem(itemId, ({ review, item }) => {
-        if (!item.cleared) throw new ApiError('This item is not cleared.')
+        if (!item.cleared) throw new ApiError(MESSAGES.notCleared)
         delete item.cleared
         item.disposition = record_(review, { itemId: item.id, action: 'clear_undone' })
       }),
 
     dismissFlag: (attentionId) =>
       withAttention(attentionId, ({ review, attention }) => {
-        if (attention.kind !== 'flag') throw new ApiError('Only flags can be dismissed.')
+        if (attention.kind !== 'flag') throw new ApiError(MESSAGES.flagsOnly)
         attention.state = 'dismissed'
         record_(review, { itemId: attention.id, action: 'flag_dismissed' })
       }),
@@ -568,7 +601,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     getPriorDeltas: (reviewId) => {
       const r = stored(reviewId)
-      if (!r) return fail(`No review with id ${reviewId}.`)
+      if (!r) return fail(fmt(MESSAGES.noReview, { id: reviewId }))
       if (!r.priorReviewId) return delay(null)
       const prior = stored(r.priorReviewId)
       const priorDate = (prior?.createdAt ?? MERIDIAN_PRIOR.priorDate).slice(0, 10)
@@ -598,7 +631,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     getPolicies: (reviewId) => {
       const r = stored(reviewId)
-      if (!r) return fail(`No review with id ${reviewId}.`)
+      if (!r) return fail(fmt(MESSAGES.noReview, { id: reviewId }))
       const ids = new Set(r.sections.flatMap((s) => s.items.map((it) => it.id)))
       const matched = POLICIES.filter((p) => p.itemIds.some((id) => ids.has(id)))
       const out: Policy[] =
@@ -693,13 +726,10 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     exportReview: (id) => {
       const rec = record(id)
-      if (!rec) return fail(`No review with id ${id}.`)
-      if (rec.status !== 'ready')
-        return fail('This review is still processing — export once it is ready.')
+      if (!rec) return fail(fmt(MESSAGES.noReview, { id }))
+      if (rec.status !== 'ready') return fail(MESSAGES.stillProcessing)
       if (id === EXPORT_FAILS_ID) {
-        return fail(
-          `Export failed: the render service returned no document for ${rec.clId} (render-service: 502 Bad Gateway).`,
-        )
+        return fail(fmt(MESSAGES.exportFailed, { clId: rec.clId }))
       }
       // Placeholder bytes, not a real OOXML package: enough to exercise the download path.
       const body = `Sentinel placeholder export — ${rec.borrowerName} · ${rec.clId}\n`

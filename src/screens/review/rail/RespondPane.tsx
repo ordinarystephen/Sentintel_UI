@@ -9,6 +9,7 @@ import { Button } from '@/components/Button'
 import { strings } from '@/strings'
 import type { ReviewActions } from '../useReviewActions'
 import { PaneHeading } from './PaneHeading'
+import { fmt } from '@/lib/fmt'
 
 export function RespondPane({
   item,
@@ -29,7 +30,11 @@ export function RespondPane({
   const last = item.disposition
 
   if (!canEdit)
-    return <p className="text-dense leading-[1.55] text-faint">{s.readOnly(ownerName)}</p>
+    return (
+      <p className="text-dense leading-[1.55] text-faint">
+        {fmt(s.readOnly, { owner: ownerName })}
+      </p>
+    )
 
   return (
     <div>
@@ -65,7 +70,7 @@ export function RespondPane({
         )}
       </div>
       {last?.action === 'responded' && last.note && (
-        <p className="mt-2 text-micro text-faint">{s.respondedNote(last.note)}</p>
+        <p className="mt-2 text-micro text-faint">{fmt(s.respondedNote, { note: last.note })}</p>
       )}
 
       <PaneHeading>{s.clearHeading}</PaneHeading>
@@ -139,7 +144,9 @@ export function RespondPane({
           )}
           <div className="mt-2 flex flex-wrap gap-2">
             <Button type="submit" variant="primary" small disabled={actions.pending}>
-              {s.confirmClear(clearReason === 'not_applicable' ? s.notApplicable : s.incorrect)}
+              {fmt(s.confirmClear, {
+                reason: clearReason === 'not_applicable' ? s.notApplicable : s.incorrect,
+              })}
             </Button>
             <Button
               variant="quiet"

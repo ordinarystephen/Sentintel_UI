@@ -21,6 +21,7 @@ import { StoryCard } from './StoryCard'
 import { isFlagged } from './itemState'
 import { useExport } from './useExport'
 import { Workpaper } from './Workpaper'
+import { fmt, plural } from '@/lib/fmt'
 
 function hashSection(hash: string): number | null {
   const m = /^#sec-(\d)$/.exec(hash)
@@ -111,7 +112,9 @@ export function ReviewView({ review }: { review: Review }) {
           </div>
         </div>
         {review.readOnly && (
-          <p className="mt-3 text-dense text-faint">{strings.rail.readOnly(review.ownerName)}</p>
+          <p className="mt-3 text-dense text-faint">
+            {fmt(strings.rail.readOnly, { owner: review.ownerName })}
+          </p>
         )}
         {exp.error && (
           <p
@@ -142,7 +145,10 @@ export function ReviewView({ review }: { review: Review }) {
             </Badge>
           ))}
           <span className="text-faint">
-            {s.runCompleted(formatTime(review.runCompletedAt), review.documents.length)}
+            {fmt(s.runCompleted, {
+              time: formatTime(review.runCompletedAt),
+              documents: plural(review.documents.length, s.documentsOne, s.documentsOther),
+            })}
           </span>
         </div>
 

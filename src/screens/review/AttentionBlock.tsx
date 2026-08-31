@@ -19,6 +19,7 @@ import { formatFlagConfidence } from '@/lib/format'
 import { sectionAnchor } from '@/lib/sections'
 import { strings } from '@/strings'
 import { useReviewScreen } from './reviewContext'
+import { fmt } from '@/lib/fmt'
 
 function Tag({ a }: { a: AttentionItem }) {
   const s = strings.review
@@ -110,7 +111,7 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
           >
             {a.state === 'reviewed'
               ? a.note
-                ? s.reviewedNote(a.note)
+                ? fmt(s.reviewedNote, { note: a.note })
                 : s.reviewedPlain
               : a.state === 'dismissed'
                 ? s.dismissed
@@ -134,14 +135,14 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
           to={`/review/${reviewId}#${sectionAnchor(a.sectionN)}`}
           className="mt-0.5 flex-none text-dense whitespace-nowrap text-indigo"
         >
-          {s.sectionLink(a.sectionN)}
+          {fmt(s.sectionLink, { n: a.sectionN })}
         </Link>
         {canEdit && !editing && (
           <span className="mt-0.5 flex flex-none items-center gap-2 text-micro">
             {a.state === 'open' && (
               <Button
                 variant="quiet"
-                aria-label={t.markReviewedAria(a.title)}
+                aria-label={fmt(t.markReviewedAria, { title: a.title })}
                 onClick={() => setEditing(true)}
               >
                 {t.markReviewed}
@@ -150,7 +151,7 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
             {a.state === 'open' && a.kind === 'flag' && (
               <Button
                 variant="quiet"
-                aria-label={t.dismissAria(a.title)}
+                aria-label={fmt(t.dismissAria, { title: a.title })}
                 disabled={actions.pending}
                 onClick={() => actions.dismissFlag(a.id)}
               >
@@ -161,14 +162,14 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
               <>
                 <Button
                   variant="quiet"
-                  aria-label={t.editAria(a.title)}
+                  aria-label={fmt(t.editAria, { title: a.title })}
                   onClick={() => setEditing(true)}
                 >
                   {t.edit}
                 </Button>
                 <Button
                   variant="quiet"
-                  aria-label={t.unreviewAria(a.title)}
+                  aria-label={fmt(t.unreviewAria, { title: a.title })}
                   disabled={actions.pending}
                   onClick={() => actions.unreview(a.id)}
                 >
@@ -207,8 +208,8 @@ export function AttentionBlock({ review }: { review: Review }) {
         <h3 className="text-micro font-semibold tracking-[0.1em] text-indigo uppercase">
           {s.attentionHeading}
         </h3>
-        <Badge tone="amber">{s.openBadge(openCount)}</Badge>
-        <span className="text-dense text-faint">{s.reviewedTally(reviewedCount)}</span>
+        <Badge tone="amber">{fmt(s.openBadge, { n: openCount })}</Badge>
+        <span className="text-dense text-faint">{fmt(s.reviewedTally, { n: reviewedCount })}</span>
         <ChevronIcon
           className={cx(
             'ml-auto h-[13px] w-[13px] flex-none text-faint transition-transform duration-200',

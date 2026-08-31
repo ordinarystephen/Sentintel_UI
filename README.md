@@ -6,12 +6,20 @@ This repository is **greenfield and standalone, with no backend**. The whole app
 
 ## Start here
 
+**Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
+
 **Never run a JavaScript project before? Follow [docs/runbook.md](docs/runbook.md)** — prerequisites, install, a numbered tour of the whole demo, and troubleshooting.
 
+The complete from-clone path (Node ≥ 22.12 — see `.nvmrc` — and Python 3 with pip):
+
 ```sh
-nvm use            # Node 24 (see .nvmrc; ≥ 22.12 works)
-npm ci
-npm run dev        # http://localhost:5173 — mock API, no backend needed
+make install && make build && make run    # → http://localhost:8082, served like Domino will serve it
+```
+
+To play around with hot reload instead, use the dev server:
+
+```sh
+make dev                                  # → http://localhost:5173 — mock API, no backend needed
 ```
 
 [docs/environment.md](docs/environment.md) covers the dependency audit, offline behaviour, static hosting, and running behind a reverse proxy.

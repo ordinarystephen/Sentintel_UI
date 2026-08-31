@@ -16,6 +16,7 @@ import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { sectionAnchor } from '@/lib/sections'
 import { SourceModal } from '@/screens/review/SourceModal'
 import { strings } from '@/strings'
+import { fmt, plural } from '@/lib/fmt'
 
 const isLob = (v: string | null): v is Lob => LOBS.includes(v as Lob)
 
@@ -123,7 +124,11 @@ export function DocumentsScreen() {
       {res.data && (
         <>
           <p className="mt-[10px] mb-3 text-dense text-faint" aria-live="polite">
-            {s.count(res.data.totalPassages, res.data.totalDocuments, debounced.trim().length > 0)}
+            {fmt(s.countLine, {
+              passages: plural(res.data.totalPassages, s.passagesOne, s.passagesOther),
+              documents: plural(res.data.totalDocuments, s.documentsOne, s.documentsOther),
+              order: debounced.trim().length > 0 ? s.orderRelevance : s.orderRecent,
+            })}
           </p>
           {res.data.hits.length === 0 && <p className="text-ui-sm text-faint">{s.empty}</p>}
           <ul>
@@ -141,16 +146,18 @@ export function DocumentsScreen() {
                   )}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
-                  {[s.counterpartyPill(h.counterparty), s.typePill(h.docType), h.date].map(
-                    (pill) => (
-                      <span
-                        key={pill}
-                        className="rounded border border-rule bg-bg-subtle px-1.5 text-[10px] text-muted"
-                      >
-                        {pill}
-                      </span>
-                    ),
-                  )}
+                  {[
+                    fmt(s.counterpartyPill, { name: h.counterparty }),
+                    fmt(s.typePill, { type: h.docType }),
+                    h.date,
+                  ].map((pill) => (
+                    <span
+                      key={pill}
+                      className="rounded border border-rule bg-bg-subtle px-1.5 text-[10px] text-muted"
+                    >
+                      {pill}
+                    </span>
+                  ))}
                 </div>
                 {/* snippetHtml is trusted markup from the API seam: text plus <mark>. */}
                 <p
@@ -159,7 +166,8 @@ export function DocumentsScreen() {
                 />
                 <div className="mt-1.5 flex flex-wrap items-center gap-[10px] text-micro text-faint">
                   <span>
-                    {h.sectionName} · <span className="font-mono">p. {h.page}</span>
+                    {h.sectionName} ·{' '}
+                    <span className="font-mono">{fmt(strings.common.pageRef, { n: h.page })}</span>
                   </span>
                   <Button variant="link" onClick={() => setSource(toEvidence(h))}>
                     {s.viewSource}
@@ -169,7 +177,7 @@ export function DocumentsScreen() {
                       to={`/review/${h.usedInReviewId}${h.usedInSectionN ? `#${sectionAnchor(h.usedInSectionN)}` : ''}`}
                       className="text-[12px] text-muted underline underline-offset-2 hover:text-ink"
                     >
-                      {s.usedIn(h.usedInBorrower ?? h.counterparty)}
+                      {fmt(s.usedIn, { borrower: h.usedInBorrower ?? h.counterparty })}
                     </Link>
                   )}
                 </div>

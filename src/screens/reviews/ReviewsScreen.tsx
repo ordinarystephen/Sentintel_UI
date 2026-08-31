@@ -13,6 +13,7 @@ import { cx } from '@/lib/cx'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { strings } from '@/strings'
 import { ReviewRow } from './ReviewRow'
+import { plural } from '@/lib/fmt'
 
 export type ReviewsTab = 'my' | 'all'
 
@@ -127,7 +128,7 @@ function AllList() {
       {list.data && (
         <>
           <p className="text-dense text-faint" aria-live="polite">
-            {s.count(list.data.total)}
+            {plural(list.data.total, s.countOne, s.countOther)}
           </p>
           <p className="mt-0.5 mb-3 text-dense text-faint">{s.readOnlyNote}</p>
           {list.data.reviews.length === 0 && <p className="text-ui-sm text-faint">{s.emptyAll}</p>}

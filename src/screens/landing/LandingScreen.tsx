@@ -15,6 +15,7 @@ import { formatBytes } from '@/lib/format'
 import { usePersistedState } from '@/lib/usePersistedState'
 import { ReviewRow } from '@/screens/reviews/ReviewRow'
 import { strings } from '@/strings'
+import { plural } from '@/lib/fmt'
 
 const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
 const isSettings = (v: unknown): v is ExtractionSettings =>
@@ -122,7 +123,7 @@ export function LandingScreen() {
             type="file"
             accept="application/pdf,.pdf"
             multiple
-            aria-label="Choose PDF files"
+            aria-label={s.chooseFilesAria}
             className="sr-only"
             onChange={(e) => {
               if (e.target.files) addFiles(e.target.files)
@@ -138,7 +139,7 @@ export function LandingScreen() {
         )}
 
         {files.length > 0 && (
-          <ul className="mt-3 flex flex-col gap-1.5" aria-label="Documents to review">
+          <ul className="mt-3 flex flex-col gap-1.5" aria-label={s.fileListAria}>
             {files.map((f) => (
               <li
                 key={`${f.name}:${f.size}`}
@@ -178,7 +179,9 @@ export function LandingScreen() {
           <Button variant="primary" onClick={begin} disabled={create.isPending}>
             {s.begin}
           </Button>
-          <span className="text-[12px] text-faint">{s.documentCount(files.length)}</span>
+          <span className="text-[12px] text-faint">
+            {plural(files.length, s.documentCountOne, s.documentCountOther)}
+          </span>
           <Button
             variant="quiet"
             className="ml-auto"

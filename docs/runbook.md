@@ -20,10 +20,10 @@ If `node` is missing or old, either install Node 24 LTS from https://nodejs.org,
 From the repository folder:
 
 ```sh
-npm ci
+make install
 ```
 
-- **What it does**: downloads the exact dependency versions recorded in `package-lock.json` into a local `node_modules/` folder. This is the **only step that touches the network**.
+- **What it does**: installs the Flask serving wrapper's Python dependency (`pip install -r requirements.txt`) and downloads the exact JavaScript dependency versions recorded in `package-lock.json` into a local `node_modules/` folder (`npm ci`). This is the **only step that touches the network**.
 - **Expected output**: ends with a line like `added 292 packages, and audited 293 packages in …`. Two `npm warn deprecated` lines are expected and harmless.
 - **How long**: 1–2 minutes on a first-ever install (downloads ~200 MB); a few seconds when npm's cache is warm.
 
@@ -32,7 +32,7 @@ Nothing is compiled and nothing else is downloaded. If `npm ci` fails, see Troub
 ## 3. Start the app
 
 ```sh
-npm run dev
+make dev
 ```
 
 - **Expected output**, within about a second:
@@ -106,10 +106,11 @@ The data is fictional. Every action below persists in your browser (survives ref
 The repo ships a minimal Flask wrapper (`server/` + `run.py` + `app.sh`) that serves the production build the way it will be served on Domino — one process, SPA fallback included (deep-link refresh works, unlike a bare static server). You need Python 3 with Flask:
 
 ```sh
-pip install -r requirements.txt   # installs Flask (only)
-npm run build                     # produces dist/
-python run.py                     # → "Running on http://0.0.0.0:8082"
+make build                        # produces dist/
+make run                          # → "Running on http://0.0.0.0:8082"
 ```
+
+(`make install` already covered the Flask dependency.)
 
 Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/review/rev-meridian-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as a Domino App entry point.
 

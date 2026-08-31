@@ -7,16 +7,21 @@ import type { Evidence } from '@/api/types'
 import { Badge } from '@/components/Badge'
 import { Modal } from '@/components/Modal'
 import { strings } from '@/strings'
+import { fmt } from '@/lib/fmt'
 
 export function SourceModal({ evidence, onClose }: { evidence: Evidence; onClose: () => void }) {
   const s = strings.source
   return (
-    <Modal title={s.title(evidence.sectionName)} onClose={onClose} closeLabel={s.close}>
+    <Modal
+      title={fmt(s.title, { section: evidence.sectionName })}
+      onClose={onClose}
+      closeLabel={s.close}
+    >
       <div className="mb-3 flex flex-wrap items-center gap-[10px] text-dense text-muted">
         <span className="font-mono text-[12px]">
           {evidence.sourceDoc} · {evidence.sectionName}
         </span>
-        <span className="font-mono text-[12px]">{s.page(evidence.page)}</span>
+        <span className="font-mono text-[12px]">{fmt(s.page, { n: evidence.page })}</span>
         <Badge tone="green">
           {evidence.imageKind === 'section' ? s.sectionImage : s.pageImage}
         </Badge>

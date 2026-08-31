@@ -8,10 +8,9 @@ import type { ReviewSummary } from '@/api/types'
 import { Badge } from '@/components/Badge'
 import { Spinner } from '@/components/Spinner'
 import { cx } from '@/lib/cx'
-import { formatDate, formatRelative } from '@/lib/format'
+import { formatDate, formatRelative, ordinal } from '@/lib/format'
 import { strings } from '@/strings'
-
-const ordinal = (n: number) => `${n}${n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}`
+import { fmt } from '@/lib/fmt'
 
 export function ReviewRow({
   review: r,
@@ -45,16 +44,16 @@ export function ReviewRow({
       )}
       <span className="flex flex-none items-center gap-[10px] text-dense text-faint">
         {processing ? (
-          <Spinner label="Processing" />
+          <Spinner label={s.processingAria} />
         ) : mine && r.openItems > 0 ? (
-          <Badge tone="amber">{strings.landing.openBadge(r.openItems)}</Badge>
+          <Badge tone="amber">{fmt(strings.landing.openBadge, { n: r.openItems })}</Badge>
         ) : mine ? (
-          <span>{strings.landing.sectionsComplete(r.sectionsPopulated)}</span>
+          <span>{fmt(strings.landing.sectionsComplete, { n: r.sectionsPopulated })}</span>
         ) : (
           <Badge tone="slate">{s.readOnly}</Badge>
         )}
         {variant === 'all' && r.repeatIndex !== undefined && r.repeatIndex > 1 && (
-          <Badge tone="slate">{s.repeat(ordinal(r.repeatIndex))}</Badge>
+          <Badge tone="slate">{fmt(s.repeat, { ordinal: ordinal(r.repeatIndex) })}</Badge>
         )}
         {variant === 'all' && <span>{strings.lobShort[r.lob] ?? r.lob}</span>}
         {variant === 'all' ? (

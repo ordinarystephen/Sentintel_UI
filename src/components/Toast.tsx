@@ -6,6 +6,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { cx } from '@/lib/cx'
 import { ToastContext, type ToastInput } from './toastContext'
+import { strings } from '@/strings'
 
 interface Toast extends ToastInput {
   id: number
@@ -43,7 +44,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <span className="flex-1 leading-relaxed">{t.message}</span>
             <button
               type="button"
-              aria-label="Dismiss"
+              aria-label={strings.app.dismissToast}
               onClick={() => dismiss(t.id)}
               className="text-[12px] opacity-70 hover:opacity-100"
             >

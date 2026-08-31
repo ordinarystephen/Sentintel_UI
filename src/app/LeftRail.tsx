@@ -123,7 +123,7 @@ export function LeftRail() {
 
   return (
     <nav
-      aria-label="App navigation"
+      aria-label={strings.nav.appNavAria}
       data-collapsed={collapsed || undefined}
       className={cx(
         'flex flex-none flex-col gap-0.5 overflow-y-auto border-r border-rail-rule bg-rail-bg py-[14px] transition-[width] duration-150 ease-out max-[760px]:hidden',

@@ -23,6 +23,7 @@ import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
 import { isFlagged } from './itemState'
 import { useReviewScreen } from './reviewContext'
+import { fmt } from '@/lib/fmt'
 
 export function WorkItemView({
   item,
@@ -81,7 +82,9 @@ export function WorkItemView({
           <ViaBadge via={item.via} label={item.viaLabel} />
         )}
         {item.page !== undefined && (
-          <span className="font-mono text-micro text-faint">p. {item.page}</span>
+          <span className="font-mono text-micro text-faint">
+            {fmt(strings.common.pageRef, { n: item.page })}
+          </span>
         )}
         {item.confidence !== undefined && !factor && (
           <ConfChip confidence={item.confidence} floor={floor} />
@@ -99,10 +102,12 @@ export function WorkItemView({
         {factor ? (
           <>
             <p className="text-[12px] text-muted">{factor.question}</p>
-            <div className="my-1 mb-1.5 text-ui-sm text-ink-soft">{s.verdict(factor.verdict)}</div>
+            <div className="my-1 mb-1.5 text-ui-sm text-ink-soft">
+              {fmt(s.verdict, { verdict: factor.verdict ?? s.verdictNone })}
+            </div>
             <details className="group">
               <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-dense text-indigo before:text-[9px] before:content-['▸'] group-open:before:rotate-90">
-                {s.snippets(factor.snippets.length)}
+                {fmt(s.snippets, { n: factor.snippets.length })}
               </summary>
               <ol className="mt-2 ml-[18px] flex max-h-[180px] list-decimal flex-col gap-1.5 overflow-auto font-mono text-micro whitespace-pre-wrap text-ink-soft">
                 {factor.snippets.map((sn, i) => (
@@ -120,7 +125,7 @@ export function WorkItemView({
             “{item.content.text}”
             {item.content.page !== undefined && (
               <span className="ml-2 font-mono text-micro not-italic text-faint">
-                p. {item.content.page}
+                {fmt(strings.common.pageRef, { n: item.content.page })}
               </span>
             )}
           </p>
@@ -165,7 +170,8 @@ export function WorkItemView({
               <div className="font-display text-ui text-ink-soft italic">“{ev.quote}”</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-micro text-faint">
                 <span>
-                  {ev.sectionName} · <span className="font-mono">p. {ev.page}</span>
+                  {ev.sectionName} ·{' '}
+                  <span className="font-mono">{fmt(strings.common.pageRef, { n: ev.page })}</span>
                 </span>
                 <Button variant="link" onClick={() => onViewSource(ev)}>
                   {s.viewSource}
@@ -180,9 +186,9 @@ export function WorkItemView({
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[10.5px] text-muted">
             ✓{' '}
-            {s.clearedChip(
-              item.cleared.reason === 'not_applicable' ? s.notApplicable : s.incorrect,
-            )}
+            {fmt(s.clearedChip, {
+              reason: item.cleared.reason === 'not_applicable' ? s.notApplicable : s.incorrect,
+            })}
           </span>
           <span className="text-micro text-muted italic">“{item.cleared.note}”</span>
           {canEdit && (

@@ -1,4 +1,15 @@
 /**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE DEMO DATA FILE — safe to edit.
+ * Borrower names, CL numbers, sector labels, the narrative and timeline text,
+ * work-paper values, attention-row wording, debate positions, document
+ * passages: it all lives here. Change the text between quotes and the demo
+ * changes with it (`make dev` hot-reloads; delete the browser's
+ * `sentinel.mock.state` storage key to reset a used demo).
+ * UI chrome wording (buttons, headings, labels) is NOT here — that is
+ * src/strings.ts. See docs/editing-copy.md.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
  * Mock fixtures (build-spec §7), seeded from the mockup's content. All
  * borrowers, people and figures are fictional. The Meridian review is the
  * fully-worked record (4 open items, WACC at conf 41% below the floor, a

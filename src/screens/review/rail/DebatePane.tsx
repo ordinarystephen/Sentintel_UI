@@ -2,6 +2,7 @@
 import { useDebate } from '@/api/hooks'
 import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
+import { fmt } from '@/lib/fmt'
 
 export function DebatePane({ itemId }: { itemId: string }) {
   const s = strings.rail
@@ -26,7 +27,7 @@ export function DebatePane({ itemId }: { itemId: string }) {
           </div>
           <p className="text-[12px] leading-[1.55] text-ink-soft">{p.text}</p>
           <div className="mt-1.5 font-mono text-[10.5px] text-faint">
-            {s.cites(p.citations.join(' · '))}
+            {fmt(s.cites, { citations: p.citations.join(' · ') })}
           </div>
         </div>
       ))}

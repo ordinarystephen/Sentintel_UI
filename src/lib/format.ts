@@ -67,3 +67,8 @@ export function monthYear(isoDate: string): string {
   const [y, m] = isoDate.split('-').map(Number)
   return `${MONTHS[(m ?? 1) - 1]} ${y}`
 }
+
+/** 2 → "2nd", 3 → "3rd", n → "nth" — for the repeat-review chip. */
+export function ordinal(n: number): string {
+  return `${n}${n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'}`
+}
