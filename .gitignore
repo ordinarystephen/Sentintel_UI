@@ -6,3 +6,5 @@ playwright-report/
 e2e/screenshots/
 .vite/
 *.local
+__pycache__/
+.pytest_cache/

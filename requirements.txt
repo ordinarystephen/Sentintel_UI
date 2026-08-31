@@ -1,0 +1,4 @@
+# Serving wrapper only (server/ + run.py — docs/poc-serving-patterns.md §3).
+# Deps resolve via the internal Nexus on Domino: never edit this file to work
+# around a sandbox/laptop install issue — flag it instead.
+Flask>=3.0,<4.0

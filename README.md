@@ -22,6 +22,7 @@ Then read, in this order:
 2. [design/sentinel-mvp-concept.html](design/sentinel-mvp-concept.html) — the interactive mockup: open it in a browser. It is the source of truth for layout, tokens and copy. The pink numbered pins are design rationale and are mockup-only.
 3. [docs/sentinel-ui-decisions.md](docs/sentinel-ui-decisions.md) — the keep/cut ledger: the "why" behind the decisions.
 4. [docs/api-handoff.md](docs/api-handoff.md) — how to replace the mock with the real API, method by method.
+5. [docs/poc-serving-patterns.md](docs/poc-serving-patterns.md) — how the parent POC installs, builds, and serves on Domino; the patterns this repo inherits (`.npmrc`, the Flask wrapper in `server/`, the relative-URL rules).
 
 [docs/screenshots/](docs/screenshots/) has every screen in Stone light plus the review page in the other three themes (`npm run screenshots:docs` regenerates them).
 

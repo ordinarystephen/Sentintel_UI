@@ -8,7 +8,7 @@
  *   /review/:id      the review page; `#sec-N` anchors deep-link into sections
  *   /styleguide      dev-only type/token reference — not linked from navigation
  */
-import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+import { createBrowserRouter, createHashRouter, type RouteObject } from 'react-router-dom'
 import { DocumentsScreen } from '@/screens/documents/DocumentsScreen'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { NotFoundScreen } from '@/screens/NotFoundScreen'
@@ -36,8 +36,18 @@ export const routes: RouteObject[] = [
 
 /**
  * BASE_URL comes from Vite's `base` (VITE_BASE_PATH at build time), so the
- * same bundle works at '/' or under a proxy prefix like '/sentinel/'.
+ * same bundle works at '/' or under a proxy prefix like '/proxy/8082/'.
+ *
+ * VITE_ROUTER=hash is the Domino escape hatch (docs/poc-serving-patterns.md
+ * §3.3/§5): if the published-App proxy prefix proves unstable, build with
+ * `VITE_BASE_PATH=./ VITE_ROUTER=hash` — relative assets plus routes in the
+ * URL fragment (`#/review/:id`), which no proxy rewrites. Section anchors
+ * still work: react-router parses `#/review/x#sec-2` into pathname + hash.
+ * Default is the browser (history) router.
  */
 const basename = import.meta.env.BASE_URL.replace(/\/+$/, '') || '/'
 
-export const createAppRouter = () => createBrowserRouter(routes, { basename })
+export const createAppRouter = () =>
+  import.meta.env.VITE_ROUTER === 'hash'
+    ? createHashRouter(routes)
+    : createBrowserRouter(routes, { basename })
