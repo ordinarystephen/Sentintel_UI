@@ -511,13 +511,22 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         }
       }),
 
-    clear: (itemId, reason: ClearReason) =>
+    clear: (itemId, reason: ClearReason, note: string) =>
       withItem(itemId, ({ review, item }) => {
-        item.cleared = { reason, actorId: ME.id, at: new Date(now()).toISOString() }
+        if (!note.trim()) {
+          throw new ApiError('Add a one-line rationale — it is recorded with the clear.')
+        }
+        item.cleared = {
+          reason,
+          note: note.trim(),
+          actorId: ME.id,
+          at: new Date(now()).toISOString(),
+        }
         item.disposition = record_(review, {
           itemId: item.id,
           action: reason === 'not_applicable' ? 'cleared_na' : 'cleared_incorrect',
           reason,
+          note: note.trim(),
         })
       }),
 

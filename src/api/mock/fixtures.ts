@@ -20,7 +20,7 @@ import type {
   WorkItem,
 } from '../types'
 
-export const ME: User = { id: 'u-me', name: 'S. Costello' }
+export const ME: User = { id: 'u-me', name: 'Costello, Stephen' }
 export const OWNERS: User[] = [
   ME,
   { id: 'u-chen', name: 'R. Chen' },
@@ -459,24 +459,32 @@ export const DEBATES: DebatePosition[] = [
     stance: 'advocate',
     text: "9.8% sits inside the sector range (9–11%) and one step from the prior review's 9.6%. The flag is a legibility problem, not a valuation problem — verify against p. 12 and move on.",
     citations: ['prior review 2026-02', 'sector comps table'],
+    at: '2026-08-28T09:42:00Z',
+    runId: 'run-meridian-2026-08',
   },
   {
     itemId: 'wi-2-wacc',
     stance: 'dissent',
     text: 'The value cannot be verified at required confidence, and expected-case EV coverage is 1.46x — already below the 1.5x trigger. An unverified WACC materially weakens the EV-support conclusion in Section 2.',
     citations: ['POLICY ib-lending/ev-support', '1-G-007544 §4.2'],
+    at: '2026-08-28T09:42:00Z',
+    runId: 'run-meridian-2026-08',
   },
   {
     itemId: 'wi-2-liq',
     stance: 'advocate',
     text: '~$144mm available against no near-term maturities — liquidity is a clear strength this cycle.',
     citations: ['Liquidity Summary p. 14'],
+    at: '2026-08-28T09:42:00Z',
+    runId: 'run-meridian-2026-08',
   },
   {
     itemId: 'wi-2-liq',
     stance: 'dissent',
     text: 'The $6mm LC figure appears only in a footnote; confirm utilization with the agent bank before calling availability clean.',
     citations: ['footnote 7, p. 14'],
+    at: '2026-08-28T09:42:00Z',
+    runId: 'run-meridian-2026-08',
   },
 ]
 

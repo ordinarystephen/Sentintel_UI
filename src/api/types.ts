@@ -129,6 +129,8 @@ export type ClearReason = 'not_applicable' | 'incorrect'
 
 export interface ClearedState {
   reason: ClearReason
+  /** The analyst's one-line rationale, shown beside the struck item. */
+  note: string
   actorId: string
   at: string
 }
@@ -233,6 +235,10 @@ export interface DebatePosition {
   stance: 'advocate' | 'dissent'
   text: string
   citations: string[]
+  /** When the position was produced. */
+  at: string
+  /** The run that produced it. */
+  runId: string
 }
 
 export interface PriorDelta {

@@ -216,10 +216,17 @@ describe('dispositions persist and are reflected in re-fetches', () => {
     expect(r.openItems).toBe(3)
   })
 
-  it('clear with a reason strikes the item; undo restores it; both stay in the trail', async () => {
+  it('clear requires a rationale note, strikes the item; undo restores it; both stay in the trail', async () => {
     const api = make()
-    const cleared = await api.clear('wi-2-liq', 'incorrect')
-    expect(cleared.cleared).toMatchObject({ reason: 'incorrect', actorId: ME.id })
+    await expect(api.clear('wi-2-liq', 'incorrect', '   ')).rejects.toMatchObject({
+      message: 'Add a one-line rationale — it is recorded with the clear.',
+    })
+    const cleared = await api.clear('wi-2-liq', 'incorrect', 'Figure superseded by the Q3 update')
+    expect(cleared.cleared).toMatchObject({
+      reason: 'incorrect',
+      note: 'Figure superseded by the Q3 update',
+      actorId: ME.id,
+    })
     const restored = await api.undoClear('wi-2-liq')
     expect(restored.cleared).toBeUndefined()
     const r = asReview(await api.getReview(MERIDIAN_ID))
@@ -272,7 +279,9 @@ describe('dispositions persist and are reflected in re-fetches', () => {
 
   it("rejects mutations on another owner's review with a specific message", async () => {
     const api = make()
-    await expect(api.clear('rev-crestline-2026-08-wi-1', 'not_applicable')).rejects.toMatchObject({
+    await expect(
+      api.clear('rev-crestline-2026-08-wi-1', 'not_applicable', 'n/a'),
+    ).rejects.toMatchObject({
       message:
         'This review belongs to R. Chen — you can read it, but editing stays with its owner.',
     })
@@ -291,6 +300,7 @@ describe('context rail data', () => {
     const api = make()
     const d = await api.getDebate('wi-2-wacc')
     expect(d.map((p) => p.stance)).toEqual(['advocate', 'dissent'])
+    expect(d[0]).toMatchObject({ at: '2026-08-28T09:42:00Z', runId: 'run-meridian-2026-08' })
     expect(await api.getDebate('wi-2-debt')).toEqual([])
   })
 

@@ -186,6 +186,11 @@ export const strings = {
     incorrect: 'Incorrect',
     cleared: 'cleared',
     undo: 'undo',
+    cancel: 'Cancel',
+    rationaleLabel: 'Clear rationale',
+    rationalePlaceholder: 'Why — one line, recorded with the clear',
+    rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
+    confirmClear: (reason: string) => `Clear — ${reason}`,
     clearNote:
       'Cleared content stays on screen — struck through, with your rationale beside it — so the QC trail is visible while you work. The exported review simply renders without it. Nothing is silently deleted.',
     advocate: 'Advocate',

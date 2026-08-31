@@ -93,7 +93,8 @@ export function useReviewMutations(reviewId: string) {
     }),
     verify: useMutation({ mutationFn: (itemId: string) => api.verify(itemId), ...opts }),
     clear: useMutation({
-      mutationFn: (v: { itemId: string; reason: ClearReason }) => api.clear(v.itemId, v.reason),
+      mutationFn: (v: { itemId: string; reason: ClearReason; note: string }) =>
+        api.clear(v.itemId, v.reason, v.note),
       ...opts,
     }),
     undoClear: useMutation({ mutationFn: (itemId: string) => api.undoClear(itemId), ...opts }),

@@ -34,7 +34,11 @@ export class ApiError extends Error implements ApiErrorShape {
 }
 
 export interface SentinelApi {
-  /** The signed-in user. Real backend: from the session; the mock returns a fixed user. */
+  /**
+   * The signed-in user. Real backend: identity comes from the firm's
+   * credential management system; `name` is display-formatted "Last, First".
+   * The mock returns a fixed user.
+   */
   me(): Promise<User>
 
   /**
@@ -93,11 +97,16 @@ export interface SentinelApi {
   verify(itemId: string): Promise<WorkItem>
 
   /**
-   * Clear an item from the workpaper with a reason. The item stays on screen,
-   * struck, with the rationale chip; the exported document renders without it.
-   * Records `cleared_na` / `cleared_incorrect` with actor + time.
+   * Clear an item from the workpaper with a reason and a required one-line
+   * rationale note. The item stays on screen, struck, with the rationale
+   * beside it; the exported document renders without it. Records
+   * `cleared_na` / `cleared_incorrect` with the note, actor + time.
+   *
+   * The UI enforces only that the note is non-empty. UI validation is NOT
+   * the enforcement point: the server must require a substantive rationale —
+   * more than the category label — before accepting the clear.
    */
-  clear(itemId: string, reason: ClearReason): Promise<WorkItem>
+  clear(itemId: string, reason: ClearReason, note: string): Promise<WorkItem>
 
   /** Reverse a clear. Records `clear_undone`; the original clear stays in the trail. */
   undoClear(itemId: string): Promise<WorkItem>

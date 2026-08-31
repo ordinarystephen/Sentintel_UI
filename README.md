@@ -108,6 +108,10 @@ Mock mode ([src/api/mock/](src/api/mock/)):
 - **Unit / screen** (`src/**/*.test.tsx`): the mock's behaviour is specified end to end in `src/api/mock/mockApi.test.ts`; screens are tested through `src/test/renderAt.tsx`, which mounts the full provider stack and route table at a path. The mock is reset after every test.
 - **Playwright** (`e2e/phase-N.spec.ts`): the acceptance lines from the build spec — refresh-safety, canvas-only scrolling, the demo path upload → export, deep links, rail flows, list filters — plus screenshots of every affected screen in all four themes at 1440px and 900px, reduced-motion checks and keyboard traversal.
 
+## Developer environment note
+
+The firm's development environment uses the internal Nexus package repository (configured via environment variables in `.npmrc`). This repo's CI locks against public npm; the dev team's first task after handoff is re-locking dependencies against Nexus — see [docs/api-handoff.md](docs/api-handoff.md).
+
 ## Conventions
 
 - Paths and names in the build spec are load-bearing; keep them.

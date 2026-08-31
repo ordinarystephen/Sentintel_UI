@@ -54,10 +54,15 @@ test('clear → struck in place with rationale → undo; the state survives a re
   await page.getByRole('button', { name: 'Select this item: Liquidity' }).click()
   await rail.getByRole('tab', { name: 'Respond' }).click()
   await rail.getByRole('button', { name: 'Incorrect' }).click()
+  await rail
+    .getByRole('textbox', { name: 'Clear rationale' })
+    .fill('Figure superseded by the Q3 update')
+  await rail.getByRole('button', { name: 'Clear — Incorrect' }).click()
   const item = page.getByRole('button', { name: 'Select this item: Liquidity' })
   await expect(item).toContainText(
     'cleared — incorrect · struck on screen, omitted from the exported review',
   )
+  await expect(item).toContainText('“Figure superseded by the Q3 update”')
   await page.screenshot({ path: 'e2e/screenshots/phase-4/cleared-item-stone-light-1440.png' })
   await page.reload()
   await expect(page.getByRole('button', { name: 'Select this item: Liquidity' })).toContainText(

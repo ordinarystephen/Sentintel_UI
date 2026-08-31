@@ -184,6 +184,7 @@ export function WorkItemView({
               item.cleared.reason === 'not_applicable' ? s.notApplicable : s.incorrect,
             )}
           </span>
+          <span className="text-micro text-muted italic">“{item.cleared.note}”</span>
           {canEdit && (
             <Button
               variant="quiet"

@@ -32,7 +32,8 @@ export function useReviewActions(reviewId: string) {
       m.editNote.isPending,
     respond: (itemId: string, text: string) => guard(m.respond.mutateAsync({ itemId, text })),
     verify: (itemId: string) => guard(m.verify.mutateAsync(itemId)),
-    clear: (itemId: string, reason: ClearReason) => guard(m.clear.mutateAsync({ itemId, reason })),
+    clear: (itemId: string, reason: ClearReason, note: string) =>
+      guard(m.clear.mutateAsync({ itemId, reason, note })),
     undoClear: (itemId: string) => guard(m.undoClear.mutateAsync(itemId)),
     dismissFlag: (attentionId: string) => guard(m.dismissFlag.mutateAsync(attentionId)),
     markReviewed: (attentionId: string, note: string) =>

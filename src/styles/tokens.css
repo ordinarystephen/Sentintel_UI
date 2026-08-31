@@ -18,13 +18,17 @@
      chrome and are not part of the product token contract.
    - `--overlay` (modal scrim) is added: the mockup hard-coded
      rgba(24,24,27,.45) on `.overlay`; components may not carry raw color.
+   - Light-theme contrast fix (ratified — decisions ledger): Stone light
+     `--faint`/`--rail-fg-muted` #a8a29e → #8a837b; Cobalt light `--faint`
+     #9aa3b8 → #76839d. Micro-labels and rail glyphs now sit at ≥ 3:1.
+     Dark themes unchanged (already passing).
    ============================================================ */
 :root {
   /* stone, not zinc — the neutral has temperature now */
   --ink: #1c1917;
   --ink-soft: #44403c;
   --muted: #78716c;
-  --faint: #a8a29e;
+  --faint: #8a837b;
   --bg: #fdfdfc;
   --bg-subtle: #f8f7f5;
   --bg-hover: #f1efec;
@@ -48,7 +52,7 @@
   --primary: #1c1917;
   --rail-bg: #f8f7f5;
   --rail-fg: #44403c;
-  --rail-fg-muted: #a8a29e;
+  --rail-fg-muted: #8a837b;
   --rail-hover: #f1efec;
   --rail-rule: #e9e6e2;
   --rail-active-bg: #f1efec;
@@ -98,7 +102,7 @@ body.theme-cobalt {
   --ink: #0b0f1d;
   --ink-soft: #39415a;
   --muted: #5b6478;
-  --faint: #9aa3b8;
+  --faint: #76839d;
   --bg: #ffffff;
   --bg-subtle: #f3f5fb;
   --bg-hover: #e9edf7;

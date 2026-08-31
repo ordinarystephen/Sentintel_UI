@@ -79,12 +79,21 @@ describe('right context rail', () => {
     await user.click(screen.getByRole('button', { name: 'Select this item: Liquidity' }))
     await user.click(within(rail()).getByRole('tab', { name: 'Respond' }))
     await user.click(within(rail()).getByRole('button', { name: 'Not applicable' }))
+    // rationale is required: confirming empty shows the message and does not clear
+    await user.click(within(rail()).getByRole('button', { name: 'Clear — Not applicable' }))
+    expect(within(rail()).getByRole('alert')).toHaveTextContent('Add a one-line rationale')
+    await user.type(
+      within(rail()).getByRole('textbox', { name: 'Clear rationale' }),
+      'Covered in the Q3 liquidity summary',
+    )
+    await user.click(within(rail()).getByRole('button', { name: 'Clear — Not applicable' }))
     const item = () => screen.getByRole('button', { name: 'Select this item: Liquidity' })
     await waitFor(() =>
       expect(item()).toHaveTextContent(
         'cleared — not applicable · struck on screen, omitted from the exported review',
       ),
     )
+    expect(item()).toHaveTextContent('“Covered in the Q3 liquidity summary”')
     expect(item().className).toContain('opacity-45')
     expect(rail()).toHaveTextContent('cleared — not applicable')
     await user.click(within(rail()).getByRole('button', { name: 'undo' }))

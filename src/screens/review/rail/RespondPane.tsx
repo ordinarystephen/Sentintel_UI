@@ -4,7 +4,7 @@
  * Incorrect, with the cleared chip + undo (build-spec §5.3).
  */
 import { useState } from 'react'
-import type { WorkItem } from '@/api/types'
+import type { ClearReason, WorkItem } from '@/api/types'
 import { Button } from '@/components/Button'
 import { strings } from '@/strings'
 import type { ReviewActions } from '../useReviewActions'
@@ -23,6 +23,9 @@ export function RespondPane({
 }) {
   const s = strings.rail
   const [text, setText] = useState('')
+  const [clearReason, setClearReason] = useState<ClearReason | null>(null)
+  const [clearNoteText, setClearNoteText] = useState('')
+  const [noteError, setNoteError] = useState(false)
   const last = item.disposition
 
   if (!canEdit)
@@ -74,6 +77,7 @@ export function RespondPane({
               ? strings.review.notApplicable
               : strings.review.incorrect}
           </span>
+          <span className="text-micro text-muted italic">“{item.cleared.note}”</span>
           <Button
             variant="quiet"
             disabled={actions.pending}
@@ -82,13 +86,13 @@ export function RespondPane({
             {s.undo}
           </Button>
         </div>
-      ) : (
+      ) : clearReason === null ? (
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             small
             disabled={actions.pending}
-            onClick={() => actions.clear(item.id, 'not_applicable')}
+            onClick={() => setClearReason('not_applicable')}
           >
             {s.notApplicable}
           </Button>
@@ -96,11 +100,58 @@ export function RespondPane({
             variant="outline"
             small
             disabled={actions.pending}
-            onClick={() => actions.clear(item.id, 'incorrect')}
+            onClick={() => setClearReason('incorrect')}
           >
             {s.incorrect}
           </Button>
         </div>
+      ) : (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            if (!clearNoteText.trim()) {
+              setNoteError(true)
+              return
+            }
+            const ok = await actions.clear(item.id, clearReason, clearNoteText.trim())
+            if (ok) {
+              setClearReason(null)
+              setClearNoteText('')
+              setNoteError(false)
+            }
+          }}
+        >
+          <input
+            autoFocus
+            aria-label={s.rationaleLabel}
+            value={clearNoteText}
+            onChange={(e) => {
+              setClearNoteText(e.target.value)
+              setNoteError(false)
+            }}
+            placeholder={s.rationalePlaceholder}
+            className="w-full rounded-md border border-rule-strong bg-bg px-2 py-1.5 text-[12px]"
+          />
+          {noteError && (
+            <p role="alert" className="mt-1 text-micro text-error">
+              {s.rationaleRequired}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button type="submit" variant="primary" small disabled={actions.pending}>
+              {s.confirmClear(clearReason === 'not_applicable' ? s.notApplicable : s.incorrect)}
+            </Button>
+            <Button
+              variant="quiet"
+              onClick={() => {
+                setClearReason(null)
+                setNoteError(false)
+              }}
+            >
+              {s.cancel}
+            </Button>
+          </div>
+        </form>
       )}
       <p className="mt-[10px] text-micro leading-[1.55] text-faint">{s.clearNote}</p>
     </div>

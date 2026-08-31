@@ -36,6 +36,7 @@ The new UI is a **greenfield standalone repo** (see build spec §2): Vite + Reac
 - Serif (New York/Georgia) promoted to the names of things: borrower, screen titles, workpaper section titles. UI labels stay sans. Serif italic remains the evidence voice.
 - Quiet motion: ~150ms stagger settle on screen content, easing accordions, neutral one-time flash on deep-link targets. All disabled under prefers-reduced-motion. Calm, never bouncy.
 - Theme selection on one token contract: Stone (default) and Cobalt (Steve's navy palette: primary #19398d, dark navy sidebar #001B3C, cool light ground #f3f5fb), each with a real dark variant; moon toggle flips dark within the chosen family.
+- Light-theme contrast fix (ratified 2026-08-28): `--faint` darkened to `#8a837b` in Stone light (also `--rail-fg-muted`) and `#76839d` in Cobalt light, bringing micro-labels, timestamps, and rail glyphs to ≥3:1. Dark themes unchanged (already passing). Mockup and repo tokens both updated.
 
 **Principles**
 - Screen = deliverable: whatever the exported DOCX flags (e.g. REVIEW REQUIRED on low-OCR values), the screen shows in place. The screen may additionally show working state (struck cleared content, dispositions) that the export omits — the export is always the clean rendered document.
@@ -44,6 +45,18 @@ The new UI is a **greenfield standalone repo** (see build spec §2): Vite + Reac
 - Honest seams: "reasoning stubbed" labeled, retrieved-snippets disclosure preserved; assessment factors live inside the section they assess.
 - Flags are actionable: confidence inline, dismissable, linked to their section.
 - Read-only parsed content + dispositionable findings (mark reviewed with note, un-review, note editing, clear-with-reason) is the MVP edit boundary.
+
+## Ratified — build round 1 (2026-08-28)
+
+Decisions from the Phase 0–6 build review, now settled:
+- "Send & re-run" scope: the single selected item. The analyst's text records as a `responded` disposition and drives the re-run.
+- Clear rationale: a required one-line note field in the UI for both Not applicable and Incorrect. UI validation is NOT the enforcement point — the handoff docs must state that the server enforces a substantive rationale (more than the category label).
+- Read-only (non-owner) reviews: Prior tab visible, Export Review allowed; dispositions and clearing hidden.
+- Line of business: the review is authoritative; documents carry a denormalized copy for search.
+- `DebatePosition` contract frozen as `{ itemId, stance, text, citations[] }` plus a timestamp (and run id) added before the dev team builds the producer.
+- Ratified as built: Tailwind v4; `--overlay` token; `ReviewStatus` gains `failed | cancelled`; `getPriorDeltas` returns `{ priorReviewId, priorDate, deltas }`; real advanced search (quoted phrases, `-exclusions`); desktop-only below 760px accepted as a documented known limitation; docs screenshots stay in git; spec lives at `docs/build-spec.md`.
+- Demo identity: `me()` displays "Costello, Stephen"; production identity comes from the firm's credential management system ("Last, First" display format).
+- Developer environment: internal Nexus package repository, configured via environment variables (`.npmrc`); dev team's first task is re-locking dependencies against Nexus. Assume evergreen Chrome/Edge, Node LTS.
 
 ## Cut
 
@@ -60,5 +73,5 @@ The new UI is a **greenfield standalone repo** (see build spec §2): Vite + Reac
 - Right-rail tab naming: "Why / Respond / Debate / Prior" is placeholder — Steve wants to rethink it.
 - Rail slots 5–6: Policy library sketched; QC queue (stage 2, RIC worklist) and Templates are the other candidates.
 - Left-nav naming workshop: "My reviews" / "All reviews" are placeholders.
-- Right-rail behaviors to spec for build: what "send & re-run" re-runs (item vs. section), where cleared-content reasons are captured, advocate/dissent agent architecture.
+- Advocate/dissent producer architecture (server-side) — UI contract frozen; the engine behind it is future work.
 - 21st.dev component/behavior pass planned later with Claude Code (interaction stage, not design stage).
