@@ -9,14 +9,14 @@
    ============================================================ */
 :root{
   /* stone, not zinc — the neutral has temperature now */
-  --ink:#1c1917; --ink-soft:#44403c; --muted:#746d67; --faint:#8a837b;
+  --ink:#1c1917; --ink-soft:#44403c; --muted:#78716c; --faint:#8a837b;
   --bg:#fdfdfc; --bg-subtle:#f8f7f5; --bg-hover:#f1efec;
   --rule:#e9e6e2; --rule-strong:#d8d4cf;
   --on-ink:#fdfdfc;
-  --success:#15803d; --success-bg:#f0fdf4; --success-line:var(--success-line);
+  --success:#15803d; --success-bg:#f0fdf4; --success-line:#bbf7d0;
   --warn:#a16207; --warn-bg:#fdf9e7; --warn-line:#eedc9e;
   --error:#991b1b; --error-bg:#fdf2f2;
-  --indigo:#4f46e5; --indigo-bg:#eef0fd; --indigo-line:var(--indigo-line);
+  --indigo:#4f46e5; --indigo-bg:#eef0fd; --indigo-line:#c7d2fe;
   --note:#db2777; --note-bg:#fdf2f8;
   --shadow-sm:0 1px 2px rgba(28,25,23,.06);
   --shadow-md:0 4px 16px rgba(28,25,23,.10);
@@ -480,7 +480,7 @@ body.ctx-collapsed .rail-right{display:none}
 .doc-actions .spacer{flex:1}
 .prevsec{border:1px solid var(--rule);border-radius:8px;background:var(--bg);margin-bottom:8px}
 .prevsec summary{list-style:none;cursor:pointer;display:flex;gap:9px;align-items:center;padding:9px 12px;font-size:12.5px;font-weight:600}
-.prevsec summary::before{content:"\25B8";font-size:9px;color:var(--faint);transition:transform .12s}
+.prevsec summary::before{content:"▸";font-size:9px;color:var(--faint);transition:transform .12s}
 .prevsec[open] summary::before{transform:rotate(90deg)}
 .prevsec summary .pg{font-family:var(--font-mono);font-size:11px;color:var(--faint);font-weight:400;margin-left:auto}
 .prevsec .txt{padding:2px 12px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;border-top:1px solid var(--rule);padding-top:10px}
@@ -689,7 +689,7 @@ body.ctx-collapsed .rail-right{display:none}
           <details class="aa-row"><summary><span class="aa-name">US Regulatory Classification</span><span class="rate sat">satisfactory</span></summary><div class="aa-body">Pass classification appropriately assigned and supported by the leverage trajectory, consistent positive projected FCF, and repayment capacity over the projection period.<div class="lnks"><button class="link" data-target="wp-sec5">Supporting: Section 5 →</button></div></div></details>
           <details class="aa-row"><summary><span class="aa-name">Probability of Default Assessment</span><span class="rate sat">satisfactory</span></summary><div class="aa-body">The PD rating applied was correctly derived using the appropriate rating model and standards.<div class="lnks"><button class="link" data-target="wp-sec5">Supporting: Section 5 →</button></div></div></details>
           <details class="aa-row"><summary><span class="aa-name">Loss Given Default Assessment</span><span class="rate sat">satisfactory</span></summary><div class="aa-body">The LGD applied was correctly derived and is appropriate for the facility's position in the capital structure.<div class="lnks"><button class="link" data-target="wp-sec5">Supporting: Section 5 →</button></div></div></details>
-          <details class="aa-row"><summary><span class="aa-name">Traded Products</span><span class="rate na">n/a</span></summary><div class="aa-body">No traded products exposure to the counterparty.</div></details>
+          <details class="aa-row"><summary><span class="aa-name">Traded Products</span><span class="rate na">n/a</span></summary><div class="aa-body">No traded products exposure to the counterparty.<div class="lnks"><button class="link" data-target="wp-sec6">Supporting: Section 6 →</button></div></div></details>
         </details>
         <div class="zone-h pin-anchor"><h3>Work paper</h3><span class="aside">6 sections · 2 populated</span>
           <span class="pin" style="top:-8px;right:-4px" data-pin>12<span class="pin-pop"><span class="eyebrow">Note 12 · cards retired</span>Steve's call: the card grid and the separate drill-in screen are gone. The work paper reads as one inline document — serif section titles, hairline rules, collapsible sections — because the thing being assembled <em>is</em> a document. Attention items and the rail expand and scroll to the section they name. Sections settle in with the quiet stagger.</span></span>
@@ -743,11 +743,11 @@ body.ctx-collapsed .rail-right{display:none}
 
           <div class="wp-row todo" id="wp-sec3">
             <button class="wp-head-row" aria-expanded="false"><span class="n">3</span><span class="t">Underwriting &amp; Documentation</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
-            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: credit agreement, underwriting file.</div></div></div>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: credit approval memo, facility documentation.</div></div></div>
           </div>
           <div class="wp-row todo" id="wp-sec4">
             <button class="wp-head-row" aria-expanded="false"><span class="n">4</span><span class="t">Portfolio Management</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
-            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: monitoring history, covenant schedule.</div></div></div>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: monitoring cadence, covenant schedule, review dates.</div></div></div>
           </div>
           <div class="wp-row todo" id="wp-sec5">
             <button class="wp-head-row" aria-expanded="false"><span class="n">5</span><span class="t">Risk Rating Accuracy</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
@@ -755,7 +755,7 @@ body.ctx-collapsed .rail-right{display:none}
           </div>
           <div class="wp-row todo" id="wp-sec6">
             <button class="wp-head-row" aria-expanded="false"><span class="n">6</span><span class="t">Trading Activity &amp; Exposure Analysis</span><span class="pill todo">not yet populated</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></button>
-            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: trading lines, ISDA/CSA terms.</div></div></div>
+            <div class="wp-body"><div class="wp-inner"><div class="feeder">TO BE POPULATED. Feeders: traded products exposure, MtM data.</div></div></div>
           </div>
         </div>
 
@@ -1115,6 +1115,20 @@ body.ctx-collapsed .rail-right{display:none}
   document.getElementById('clear-wrong').addEventListener('click', function(){ clearSel(true,'incorrect'); });
   document.getElementById('undo-clear').addEventListener('click', function(){ clearSel(false); });
 
+  // areas of assessment: set a pending rating
+  document.querySelectorAll('[data-rate]').forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
+      var pill=document.getElementById('aa-pend-rate');
+      var sat=(b.dataset.rate==='sat');
+      pill.className='rate '+(sat?'sat':'unsat');
+      pill.textContent=sat?'satisfactory':'unsatisfactory';
+      b.closest('.lnks').querySelectorAll('[data-rate]').forEach(function(x){ x.remove(); });
+      document.getElementById('aa-pend-badge').remove();
+      document.getElementById('aa-tally').textContent = sat ? '8 areas · 7 satisfactory · 1 n/a' : '8 areas · 6 satisfactory · 1 unsatisfactory · 1 n/a';
+    });
+  });
+
   // collapsible attention block
   var att=document.getElementById('att');
   att.querySelector('.att-head').addEventListener('click', function(){
@@ -1191,20 +1205,6 @@ body.ctx-collapsed .rail-right{display:none}
     p.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ toggle(e); e.preventDefault(); } });
   });
   document.addEventListener('click', function(){ document.querySelectorAll('.pin.open').forEach(function(x){ x.classList.remove('open'); }); });
-
-  // areas of assessment: set a pending rating
-  document.querySelectorAll('[data-rate]').forEach(function(b){
-    b.addEventListener('click', function(e){
-      e.stopPropagation();
-      var pill=document.getElementById('aa-pend-rate');
-      var sat=(b.dataset.rate==='sat');
-      pill.className='rate '+(sat?'sat':'unsat');
-      pill.textContent=sat?'satisfactory':'unsatisfactory';
-      b.closest('.lnks').querySelectorAll('[data-rate]').forEach(function(x){ x.remove(); });
-      document.getElementById('aa-pend-badge').remove();
-      document.getElementById('aa-tally').textContent = sat ? '8 areas · 7 satisfactory · 1 n/a' : '8 areas · 6 satisfactory · 1 unsatisfactory · 1 n/a';
-    });
-  });
 
   // documents: browse vs search states, selection, preview modal
   var ds=document.getElementById('doc-search');
