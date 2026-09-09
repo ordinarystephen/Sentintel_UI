@@ -98,7 +98,14 @@ export const MESSAGES = {
 } as const
 
 export const STORAGE_KEY = 'sentinel.mock.state'
-const STATE_VERSION = 1
+/**
+ * SCHEMA VERSION of the persisted payload — reviews saved under an older
+ * shape must never shadow current fixtures. BUMP THIS whenever the Review /
+ * fixture shape changes (a new field counts!); on load, any payload whose
+ * version differs is discarded and the fixtures win. History: 1 = through
+ * v0.5; 2 = v1.0 (Review gained `areas` + `referenceData`).
+ */
+export const STATE_VERSION = 2
 
 /** Processing timeline (ms since upload). */
 export const PROCESSING = {
@@ -605,7 +612,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     setAreaRating: (areaId, rating) => {
       for (const id of new Set([...Object.keys(state.overrides), ...fixtures.keys()])) {
         const r = stored(id)!
-        if (r.areas.some((a) => a.id === areaId)) {
+        if ((r.areas ?? []).some((a) => a.id === areaId)) {
           const review = mutable(id)
           try {
             assertOwner(review)

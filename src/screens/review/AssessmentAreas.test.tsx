@@ -74,6 +74,32 @@ describe('areas of assessment', () => {
   })
 })
 
+describe('older-schema guard', () => {
+  it('a review object missing `areas`/`referenceData` renders neither zone (absent feature, not a crash)', async () => {
+    const { render, screen: scr } = await import('@testing-library/react')
+    const { MemoryRouter } = await import('react-router-dom')
+    const { AssessmentAreas } = await import('./AssessmentAreas')
+    const { ReferenceDataBlock } = await import('./ReferenceDataBlock')
+    const { ReviewScreenContext } = await import('./reviewContext')
+    const { api } = await import('@/api')
+    const legacy = (await api.getReview('rev-meridian-2026-08')) as import('@/api/types').Review
+    // simulate a record persisted before v1.0: the fields simply aren't there
+    delete (legacy as Partial<import('@/api/types').Review>).areas
+    delete (legacy as Partial<import('@/api/types').Review>).referenceData
+    const ctx = { reviewId: legacy.id, canEdit: true, actions: {} as never }
+    render(
+      <MemoryRouter>
+        <ReviewScreenContext.Provider value={ctx}>
+          <AssessmentAreas review={legacy} />
+          <ReferenceDataBlock review={legacy} />
+        </ReviewScreenContext.Provider>
+      </MemoryRouter>,
+    )
+    expect(scr.queryByRole('button', { name: /Areas of assessment/ })).toBeNull()
+    expect(scr.queryByRole('button', { name: /Reference data/ })).toBeNull()
+  })
+})
+
 describe('reference data', () => {
   it('collapsed disclosure under the sub line; expands to the grid with origin chips; absent when a review has none', async () => {
     const user = userEvent.setup()

@@ -136,8 +136,11 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
 
 export function AssessmentAreas({ review }: { review: Review }) {
   const [open, setOpen] = useState(true)
-  const pending = review.areas.filter((a) => a.rating === 'pending').length
-  if (review.areas.length === 0) return null
+  // A missing field is an absent feature (e.g. a review persisted under an
+  // older schema): undefined and empty are both "no zone".
+  const areas = review.areas ?? []
+  const pending = areas.filter((a) => a.rating === 'pending').length
+  if (areas.length === 0) return null
   return (
     <div className="mb-7">
       <button
@@ -155,11 +158,11 @@ export function AssessmentAreas({ review }: { review: Review }) {
         />
         <h3 className="text-[14px] font-semibold tracking-tight">{s.areasHeading}</h3>
         {pending > 0 && <Badge tone="amber">{fmt(s.areasPendingBadge, { n: pending })}</Badge>}
-        <span className="text-[12px] text-faint">{tally(review.areas)}</span>
+        <span className="text-[12px] text-faint">{tally(areas)}</span>
       </button>
       <Collapsible open={open} id="areas-body">
         <div>
-          {review.areas.map((a) => (
+          {areas.map((a) => (
             <AreaRow key={a.id} area={a} reviewId={review.id} />
           ))}
         </div>

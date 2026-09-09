@@ -15,21 +15,31 @@ import { NotFoundScreen } from '@/screens/NotFoundScreen'
 import { PolicyScreen } from '@/screens/policy/PolicyScreen'
 import { ReviewScreen } from '@/screens/review/ReviewScreen'
 import { ReviewsScreen } from '@/screens/reviews/ReviewsScreen'
+import { RouteErrorScreen } from '@/screens/RouteErrorScreen'
 import { StyleguideScreen } from '@/screens/styleguide/StyleguideScreen'
 import { AppShell } from './AppShell'
 
 export const routes: RouteObject[] = [
   {
     element: <AppShell />,
+    // Last-resort boundary (a crash in the shell itself): no rail, full page.
+    errorElement: <RouteErrorScreen />,
     children: [
-      { index: true, element: <LandingScreen /> },
-      { path: 'reviews', element: <ReviewsScreen tab="my" /> },
-      { path: 'reviews/all', element: <ReviewsScreen tab="all" /> },
-      { path: 'documents', element: <DocumentsScreen /> },
-      { path: 'policy', element: <PolicyScreen /> },
-      { path: 'review/:id', element: <ReviewScreen /> },
-      { path: 'styleguide', element: <StyleguideScreen /> },
-      { path: '*', element: <NotFoundScreen /> },
+      {
+        // Pathless boundary for screen crashes: the card renders in the
+        // canvas and the shell (rail, masthead) stays usable.
+        errorElement: <RouteErrorScreen />,
+        children: [
+          { index: true, element: <LandingScreen /> },
+          { path: 'reviews', element: <ReviewsScreen tab="my" /> },
+          { path: 'reviews/all', element: <ReviewsScreen tab="all" /> },
+          { path: 'documents', element: <DocumentsScreen /> },
+          { path: 'policy', element: <PolicyScreen /> },
+          { path: 'review/:id', element: <ReviewScreen /> },
+          { path: 'styleguide', element: <StyleguideScreen /> },
+          { path: '*', element: <NotFoundScreen /> },
+        ],
+      },
     ],
   },
 ]

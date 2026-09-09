@@ -328,6 +328,14 @@ export const strings = {
     stub: 'The policy corpus the checks run against. Browsing arrives after the MVP.',
   },
 
+  /* ════════ Render-error screen (route error boundary) ════════ */
+  errorScreen: {
+    eyebrow: 'Something broke',
+    title: 'This screen failed to render',
+    intro: 'The error below is shown verbatim — include it if you report this.',
+    back: 'Back to My reviews',
+  },
+
   /* ════════ Not found ════════ */
   notFound: {
     title: 'Nothing here',
