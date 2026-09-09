@@ -92,6 +92,7 @@ export const MESSAGES = {
   statusCancelled: 'Cancelled.',
   statusFailed: 'Failed.',
   noDocument: 'No document with id {id}.',
+  noArea: 'No assessment area with id {id}.',
   notExtractedText:
     '{file} has not been extracted yet — the preview arrives when parsing completes.',
 } as const
@@ -600,6 +601,26 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         attention.note = note
         record_(review, { itemId: attention.id, action: 'note_edited', note })
       }),
+
+    setAreaRating: (areaId, rating) => {
+      for (const id of new Set([...Object.keys(state.overrides), ...fixtures.keys()])) {
+        const r = stored(id)!
+        if (r.areas.some((a) => a.id === areaId)) {
+          const review = mutable(id)
+          try {
+            assertOwner(review)
+          } catch (e) {
+            return fail((e as Error).message)
+          }
+          const area = review.areas.find((a) => a.id === areaId)!
+          area.rating = rating
+          record_(review, { itemId: areaId, action: 'area_rated', note: rating })
+          save()
+          return delay(undefined)
+        }
+      }
+      return fail(fmt(MESSAGES.noArea, { id: areaId }))
+    },
 
     getDebate: (itemId) =>
       delay(clone(DEBATES.filter((d) => d.itemId === itemId)) as DebatePosition[]),

@@ -126,6 +126,14 @@ export interface SentinelApi {
   /** Edit the note on a reviewed row. Records `note_edited`. */
   editNote(attentionId: string, note: string): Promise<void>
 
+  /**
+   * Set the analyst's verdict on an assessment area (the Satisfactory /
+   * Unsatisfactory buttons on a pending area). A disposition (`area_rated`,
+   * note = the rating) records with actor + timestamp; re-fetches reflect the
+   * new rating and the zone's tally. Owner only.
+   */
+  setAreaRating(areaId: string, rating: 'satisfactory' | 'unsatisfactory'): Promise<void>
+
   // ---- context rail ----
 
   /** Advocate + dissent positions for an item. Empty when none were produced (UI hides the cards). */

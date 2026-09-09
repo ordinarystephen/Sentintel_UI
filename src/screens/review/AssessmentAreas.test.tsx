@@ -1,0 +1,98 @@
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it } from 'vitest'
+import { renderAt } from '@/test/renderAt'
+
+const MERIDIAN = 'rev-meridian-2026-08'
+const zoneHeader = () => screen.getByRole('button', { name: /Areas of assessment/ })
+
+describe('areas of assessment', () => {
+  it('renders between attention and work paper with badge + tally; folding keeps the header line', async () => {
+    const user = userEvent.setup()
+    renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('heading', { level: 1, name: 'Meridian US Holdco LLC' })
+    expect(zoneHeader()).toHaveTextContent('1 pending')
+    expect(zoneHeader()).toHaveTextContent('8 areas · 6 satisfactory · 1 n/a')
+    expect(zoneHeader()).toHaveAttribute('aria-expanded', 'true')
+    await user.click(zoneHeader())
+    expect(zoneHeader()).toHaveAttribute('aria-expanded', 'false')
+    expect(zoneHeader()).toHaveTextContent('1 pending') // folded summary never goes stale
+  })
+
+  it('pending row opens by default, names its blocker, links to the section, and takes a verdict that updates badge + tally live', async () => {
+    const user = userEvent.setup()
+    renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('heading', { level: 1 })
+    const pendingRow = screen.getByRole('button', {
+      name: /Repayment Capacity — Secondary Sources/,
+    })
+    expect(pendingRow).toHaveAttribute('aria-expanded', 'true')
+    expect(pendingRow).toHaveTextContent('pending')
+    expect(screen.getByText(/Expected Case WACC input remains unverified/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Resolve in Section 2 →' })).toHaveAttribute(
+      'href',
+      `/review/${MERIDIAN}#sec-2`,
+    )
+
+    // a satisfactory row is closed; expanding shows its supporting link
+    const pdRow = screen.getByRole('button', { name: /Probability of Default Assessment/ })
+    expect(pdRow).toHaveAttribute('aria-expanded', 'false')
+    await user.click(pdRow)
+    expect(screen.getAllByRole('link', { name: 'Supporting: Section 4 →' }).length).toBeGreaterThan(
+      0,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Satisfactory' }))
+    await waitFor(() => expect(zoneHeader()).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a'))
+    expect(zoneHeader()).not.toHaveTextContent('pending')
+    expect(
+      within(
+        screen.getByRole('button', { name: /Repayment Capacity — Secondary Sources/ }),
+      ).getByText('satisfactory'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Satisfactory' })).toBeNull()
+  })
+
+  it('the verdict survives a fresh mount (recorded like any disposition)', async () => {
+    const user = userEvent.setup()
+    const first = renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('heading', { level: 1 })
+    await user.click(screen.getByRole('button', { name: 'Unsatisfactory' }))
+    await waitFor(() => expect(zoneHeader()).toHaveTextContent('1 unsatisfactory'))
+    first.unmount()
+    renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('heading', { level: 1 })
+    await waitFor(() =>
+      expect(zoneHeader()).toHaveTextContent('8 areas · 6 satisfactory · 1 unsatisfactory · 1 n/a'),
+    )
+  })
+
+  it('absent areas render nothing; read-only reviews hide the verdict buttons', async () => {
+    renderAt('/review/rev-atlas-2026-08')
+    await screen.findByRole('heading', { level: 1, name: 'Atlas Foods Group' })
+    expect(screen.queryByRole('button', { name: /Areas of assessment/ })).toBeNull()
+  })
+})
+
+describe('reference data', () => {
+  it('collapsed disclosure under the sub line; expands to the grid with origin chips; absent when a review has none', async () => {
+    const user = userEvent.setup()
+    const first = renderAt(`/review/${MERIDIAN}`)
+    await screen.findByRole('heading', { level: 1 })
+    const toggle = screen.getByRole('button', { name: /Reference data/ })
+    expect(toggle).toHaveTextContent('upstream · as of 2026-08-15')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Reference number')).toBeInTheDocument()
+    expect(screen.getByText(/3117-04/)).toBeInTheDocument()
+    expect(screen.getAllByText('CRR')).toHaveLength(2)
+    expect(screen.getAllByText('upstream')).toHaveLength(4)
+    expect(screen.getByText(/TLB 71834/)).toBeInTheDocument()
+    first.unmount()
+
+    renderAt('/review/rev-atlas-2026-08')
+    await screen.findByRole('heading', { level: 1, name: 'Atlas Foods Group' })
+    expect(screen.queryByRole('button', { name: /Reference data/ })).toBeNull()
+  })
+})

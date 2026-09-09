@@ -75,6 +75,11 @@ The data is fictional. Every action below persists in your browser (survives ref
 14. **Debate** tab — advocate (green) and dissent (red) positions with citations, and the footnote: positions are advisory; the analyst's disposition decides.
 15. **Prior** tab — "Since the Feb 2026 review": deltas with worsening values in amber, and a link to the prior review. (Open a review with no prior — e.g. Atlas Foods — and this tab isn't there at all.)
 
+**Areas of assessment and reference data**
+
+15a. Between the attention block and the work paper sits **Areas of assessment** — the management-summary verdicts the exported review opens with. Click its header to fold it: the amber "1 pending" badge and the tally ("8 areas · 6 satisfactory · 1 n/a") stay visible. Expand *Repayment Capacity — Secondary Sources* (the pending one): it names its blocker (the unverified WACC), links **Resolve in Section 2 →**, and offers **Satisfactory / Unsatisfactory**. Set one — the pill, badge, and tally all update, and the verdict records like any disposition (refresh to prove it).
+15b. Just under the sub line, click **Reference data** — the upstream credit-system snapshot (as-of date) and CRR-internal designations unfold in a compact grid, each value carrying an origin chip. Collapsed by default so the facts never compete with the story.
+
 **Dispositions**
 
 16. Select **Liquidity**, open **Respond**, click **Incorrect**. A rationale field appears — confirming with it empty is refused. Type `Figure superseded by the Q3 update` and click **Clear — Incorrect**. The item is struck in place with "✓ cleared — incorrect · struck on screen, omitted from the exported review" and your rationale beside it. Click **undo** to restore it.

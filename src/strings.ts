@@ -138,6 +138,27 @@ export const strings = {
     notApplicable: 'not applicable',
     incorrect: 'incorrect',
     disclaimer: 'This tool augments your analysis; it is not the system of record.',
+    /* — Areas of assessment (the management-summary verdicts) — */
+    areasHeading: 'Areas of assessment',
+    areasPendingBadge: '{n} pending',
+    areasCount: '{n} areas',
+    areasTallySat: '{n} satisfactory',
+    areasTallyUnsat: '{n} unsatisfactory',
+    areasTallyNa: '{n} n/a',
+    ratingSatisfactory: 'satisfactory',
+    ratingUnsatisfactory: 'unsatisfactory',
+    ratingNa: 'n/a',
+    ratingPending: 'pending',
+    supportingLink: 'Supporting: Section {n} →',
+    resolveLink: 'Resolve in Section {n} →',
+    thenSet: 'then set:',
+    setSatisfactory: 'Satisfactory',
+    setUnsatisfactory: 'Unsatisfactory',
+    /* — Reference data disclosure — */
+    refData: 'Reference data',
+    refDataMeta: 'upstream · as of {date}',
+    refUpstream: 'upstream',
+    refCrr: 'CRR',
   },
 
   /* ════════ Attention row actions (on the review page) ════════ */

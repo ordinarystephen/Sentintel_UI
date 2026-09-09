@@ -122,6 +122,11 @@ export function useReviewMutations(reviewId: string) {
       mutationFn: (attentionId: string) => api.unreview(attentionId),
       ...opts,
     }),
+    setAreaRating: useMutation({
+      mutationFn: (v: { areaId: string; rating: 'satisfactory' | 'unsatisfactory' }) =>
+        api.setAreaRating(v.areaId, v.rating),
+      ...opts,
+    }),
     editNote: useMutation({
       mutationFn: (v: { attentionId: string; note: string }) => api.editNote(v.attentionId, v.note),
       ...opts,

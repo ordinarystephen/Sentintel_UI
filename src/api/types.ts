@@ -171,6 +171,34 @@ export interface Section {
   items: WorkItem[]
 }
 
+/** One management-summary verdict (the "Areas of assessment" zone; the export opens with this table). */
+export type AreaRating = 'satisfactory' | 'unsatisfactory' | 'na' | 'pending'
+
+export interface AssessmentArea {
+  id: string
+  name: string
+  rating: AreaRating
+  /** The narrative under the rating — why it is what it is. */
+  reason: string
+  /** For pending areas: the WorkItem blocking the verdict (named in `reason`). */
+  blockedBy?: string
+  /** Sections whose content supports (or resolves) this area; rendered as deep links. */
+  sectionRefs: number[]
+}
+
+/** Entity/facility snapshot from the upstream credit system + CRR-internal designations. */
+export interface ReferenceField {
+  label: string
+  value: string
+  /** upstream = credit-system snapshot (as of `ReferenceData.asOf`); crr = CRR-internal designation. */
+  source: 'upstream' | 'crr'
+}
+
+export interface ReferenceData {
+  asOf: string
+  fields: ReferenceField[]
+}
+
 export type AttentionKind = 'review_required' | 'flag' | 'unresolved' | 'question'
 
 export interface AttentionItem {
@@ -196,6 +224,7 @@ export type DispositionAction =
   | 'note_edited'
   | 'flag_dismissed'
   | 'responded'
+  | 'area_rated'
 
 /** One row of the audit trail. `itemId` is a WorkItem id or an AttentionItem id depending on the action. */
 export interface Disposition {
@@ -221,6 +250,14 @@ export interface Review extends ReviewSummary {
   /** Always six, in order. */
   sections: Section[]
   attention: AttentionItem[]
+  /** Management-summary verdicts; empty when the template carries none (zone not rendered). */
+  areas: AssessmentArea[]
+  /**
+   * Upstream/CRR reference snapshot. Absent → the disclosure is not rendered
+   * at all. Real upstream integration is future work; the seam just carries
+   * the snapshot the backend captured.
+   */
+  referenceData?: ReferenceData
   dispositions: Disposition[]
   /** The single threshold both the screen and the export flag against. */
   confidenceFloor: number

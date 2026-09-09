@@ -29,6 +29,7 @@ export function useReviewActions(reviewId: string) {
       m.dismissFlag.isPending ||
       m.markReviewed.isPending ||
       m.unreview.isPending ||
+      m.setAreaRating.isPending ||
       m.editNote.isPending,
     respond: (itemId: string, text: string) => guard(m.respond.mutateAsync({ itemId, text })),
     verify: (itemId: string) => guard(m.verify.mutateAsync(itemId)),
@@ -41,6 +42,8 @@ export function useReviewActions(reviewId: string) {
     unreview: (attentionId: string) => guard(m.unreview.mutateAsync(attentionId)),
     editNote: (attentionId: string, note: string) =>
       guard(m.editNote.mutateAsync({ attentionId, note })),
+    setAreaRating: (areaId: string, rating: 'satisfactory' | 'unsatisfactory') =>
+      guard(m.setAreaRating.mutateAsync({ areaId, rating })),
   }
 }
 

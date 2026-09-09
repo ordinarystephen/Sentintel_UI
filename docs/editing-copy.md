@@ -16,6 +16,9 @@ Every word the app shows lives in one of three files — never in a component. C
 | The cycling status line while processing ("Reading … / Indexing … pages…") | `src/api/mock/mockApi.ts` › **MESSAGES** (backend-owned copy) |
 | Review page — "Export Review", "The story", "Needs your attention", "Work paper", section pills, the flagged-value line, the disclaimer | `src/strings.ts` › **review** |
 | Attention-row actions — dismiss / mark reviewed / edit / un-review, the note field | `src/strings.ts` › **attention** |
+| Areas of assessment — zone heading, rating pills, tally, "Resolve in Section N →", the Satisfactory/Unsatisfactory buttons | `src/strings.ts` › **review** (the Areas block) |
+| Area names and reason narratives, the reference-data field labels and values | `src/api/mock/fixtures.ts` › **MERIDIAN_AREAS** and the `referenceData` block |
+| Reference data — the disclosure label, "upstream · as of …", origin chips | `src/strings.ts` › **review** (refData keys) |
 | Right rail — tab names (Why / Respond / Debate / Prior), "How this got here", the Respond wording, clear-with-rationale wording, Debate and Prior notes | `src/strings.ts` › **contextRail** and **rail** |
 | Source modal — "Evidence — …", provenance badges, the no-image line | `src/strings.ts` › **source** |
 | Reviews list — tabs, search/filter labels, "N reviews · showing most recent", the team-view note, "read-only", "2nd in 12 mo" | `src/strings.ts` › **reviews** (LOB tags: **lobShort**) |

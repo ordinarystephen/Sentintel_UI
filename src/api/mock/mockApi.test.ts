@@ -361,6 +361,52 @@ describe('documents', () => {
   })
 })
 
+describe('areas of assessment + reference data', () => {
+  it('Meridian carries the 8 areas and the reference snapshot; complete reviews carry none', async () => {
+    const api = make()
+    const r = asReview(await api.getReview(MERIDIAN_ID))
+    expect(r.areas).toHaveLength(8)
+    const pending = r.areas.find((a) => a.rating === 'pending')!
+    expect(pending).toMatchObject({
+      id: 'aa-repay-secondary',
+      blockedBy: 'wi-2-wacc',
+      sectionRefs: [2],
+    })
+    expect(r.areas.filter((a) => a.rating === 'satisfactory')).toHaveLength(6)
+    expect(r.referenceData).toMatchObject({ asOf: '2026-08-15' })
+    expect(r.referenceData!.fields).toHaveLength(6)
+    expect(r.referenceData!.fields.find((f) => f.label === 'Reference number')).toMatchObject({
+      value: '3117-04',
+      source: 'crr',
+    })
+
+    const atlas = asReview(await api.getReview('rev-atlas-2026-08'))
+    expect(atlas.areas).toEqual([])
+    expect(atlas.referenceData).toBeUndefined()
+  })
+
+  it('setAreaRating records a disposition, updates the rating, and persists', async () => {
+    const api = make(localStorage)
+    await api.setAreaRating('aa-repay-secondary', 'satisfactory')
+    const r = asReview(await api.getReview(MERIDIAN_ID))
+    expect(r.areas.find((a) => a.id === 'aa-repay-secondary')?.rating).toBe('satisfactory')
+    expect(r.dispositions.at(-1)).toMatchObject({
+      itemId: 'aa-repay-secondary',
+      action: 'area_rated',
+      note: 'satisfactory',
+      actorId: ME.id,
+    })
+    const fresh = make(localStorage)
+    expect(
+      asReview(await fresh.getReview(MERIDIAN_ID)).areas.find((a) => a.id === 'aa-repay-secondary')
+        ?.rating,
+    ).toBe('satisfactory')
+    await expect(api.setAreaRating('nope', 'satisfactory')).rejects.toMatchObject({
+      message: 'No assessment area with id nope.',
+    })
+  })
+})
+
 describe('document text and download', () => {
   it("returns the extracted text organized by the document's own sections", async () => {
     const api = make()

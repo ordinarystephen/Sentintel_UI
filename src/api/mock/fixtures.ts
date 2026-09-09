@@ -17,6 +17,7 @@
  * generated rows make search/filter/count lines credible.
  */
 import type {
+  AssessmentArea,
   AttentionItem,
   DocumentText,
   DebatePosition,
@@ -341,6 +342,73 @@ export const MERIDIAN_ATTENTION: AttentionItem[] = [
   },
 ]
 
+export const MERIDIAN_AREAS: AssessmentArea[] = [
+  {
+    id: 'aa-structure',
+    name: 'Transaction Structure / Underwriting',
+    rating: 'satisfactory',
+    reason:
+      'The 2023 LBO financing and subsequent amendments were appropriately evaluated, documented and approved under the leveraged lending standards. Write-up quality acceptable; key risks and mitigants adequately identified.',
+    sectionRefs: [1],
+  },
+  {
+    id: 'aa-repay-primary',
+    name: 'Repayment Capacity — Primary Sources',
+    rating: 'satisfactory',
+    reason:
+      'Cash flow from operations correctly identified as the primary source of repayment. Expected-case cumulative FCF adequately covers debt service; model assumptions reasonable after challenge.',
+    sectionRefs: [2],
+  },
+  {
+    id: 'aa-repay-secondary',
+    name: 'Repayment Capacity — Secondary Sources',
+    rating: 'pending',
+    reason:
+      'Refinancing supported by enterprise value is the identified secondary source. EV coverage of total debt at 1.46x sits below the 1.5x trigger at the revised expected case, and the Expected Case WACC input remains unverified (review required, §2). Rating held pending analyst verification.',
+    blockedBy: 'wi-2-wacc',
+    sectionRefs: [2],
+  },
+  {
+    id: 'aa-portfolio',
+    name: 'Portfolio Management',
+    rating: 'satisfactory',
+    reason:
+      'Required monitoring practices are adequate and timely: the annual review completed on schedule, covenant and liquidity monitoring current, and the Q3 update received within expected timeframes.',
+    sectionRefs: [5],
+  },
+  {
+    id: 'aa-reg-class',
+    name: 'US Regulatory Classification',
+    rating: 'satisfactory',
+    reason:
+      'Pass classification appropriately assigned and supported by the leverage trajectory, consistent positive projected FCF, and repayment capacity over the projection period.',
+    sectionRefs: [4],
+  },
+  {
+    id: 'aa-pd',
+    name: 'Probability of Default Assessment',
+    rating: 'satisfactory',
+    reason:
+      'The PD rating applied was correctly derived using the appropriate rating model and standards.',
+    sectionRefs: [4],
+  },
+  {
+    id: 'aa-lgd',
+    name: 'Loss Given Default Assessment',
+    rating: 'satisfactory',
+    reason:
+      "The LGD applied was correctly derived and is appropriate for the facility's position in the capital structure.",
+    sectionRefs: [4],
+  },
+  {
+    id: 'aa-traded',
+    name: 'Traded Products',
+    rating: 'na',
+    reason: 'No traded products exposure to the counterparty.',
+    sectionRefs: [],
+  },
+]
+
 const MERIDIAN_DISPOSITIONS: Disposition[] = [
   {
     itemId: 'att-covenant-threshold',
@@ -413,6 +481,18 @@ export const MERIDIAN: Review = {
   },
   sections: MERIDIAN_SECTIONS,
   attention: MERIDIAN_ATTENTION,
+  areas: MERIDIAN_AREAS,
+  referenceData: {
+    asOf: '2026-08-15',
+    fields: [
+      { label: 'Reference number', value: '3117-04', source: 'crr' },
+      { label: 'Industry (portfolio bucket)', value: 'TMT — Software Services', source: 'crr' },
+      { label: 'Credit officer', value: 'M. Okafor', source: 'upstream' },
+      { label: 'PD / PD CRR', value: 'B1 / B1', source: 'upstream' },
+      { label: 'Facility', value: 'TLB 71834 · $1,240mm CMT · matures 2030', source: 'upstream' },
+      { label: 'Accrual status', value: 'Accruing', source: 'upstream' },
+    ],
+  },
   dispositions: MERIDIAN_DISPOSITIONS,
   confidenceFloor: CONFIDENCE_FLOOR,
   readOnly: false,
@@ -583,6 +663,7 @@ function completeReview(seed: SummarySeed): Review {
     },
     sections,
     attention: [],
+    areas: [],
     dispositions: [],
     confidenceFloor: CONFIDENCE_FLOOR,
     readOnly: o.id !== ME.id,

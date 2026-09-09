@@ -14,8 +14,10 @@ import { Badge } from '@/components/Badge'
 import { formatTime, shortOutlook } from '@/lib/format'
 import { useHashTarget } from '@/lib/useHashTarget'
 import { strings } from '@/strings'
+import { AssessmentAreas } from './AssessmentAreas'
 import { AttentionBlock } from './AttentionBlock'
 import { ExportButton } from './ExportButton'
+import { ReferenceDataBlock } from './ReferenceDataBlock'
 import { SourceModal } from './SourceModal'
 import { StoryCard } from './StoryCard'
 import { isFlagged } from './itemState'
@@ -152,8 +154,10 @@ export function ReviewView({ review }: { review: Review }) {
           </span>
         </div>
 
+        <ReferenceDataBlock review={review} />
         <StoryCard review={review} />
         <AttentionBlock review={review} />
+        <AssessmentAreas review={review} />
         <Workpaper review={review} open={open} onToggle={toggle} onViewSource={setSource} />
 
         <p className="mt-[30px] border-t border-rule pt-3 text-micro text-faint">{s.disclaimer}</p>
