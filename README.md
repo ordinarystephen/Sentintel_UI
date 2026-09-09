@@ -8,7 +8,7 @@ _All company, person, and transaction data in this application is fictional; any
 
 ## Start here
 
-**The development team inherits the `v1.1.1` tag** — clone `main` at that tag (patch over `v1.1-handoff`, which superseded `v1.0-handoff`).
+**The development team inherits the `v1.1.2` tag** — clone `main` at that tag (fictional-name hygiene over `v1.1.1`, which patched `v1.1-handoff`).
 
 **Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
 
