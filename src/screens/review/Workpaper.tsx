@@ -32,8 +32,8 @@ export function Workpaper({
   return (
     <>
       <div className="mt-7 mb-[10px] flex items-baseline gap-[10px]">
-        <h3 className="text-[14px] font-semibold tracking-tight">{s.workpaperHeading}</h3>
-        <span className="text-[12px] text-faint">
+        <h3 className="text-[0.875rem] font-semibold tracking-tight">{s.workpaperHeading}</h3>
+        <span className="text-[0.75rem] text-faint">
           {fmt(s.workpaperAside, { n: review.sectionsPopulated })}
         </span>
       </div>
@@ -57,7 +57,7 @@ export function Workpaper({
                 onClick={() => onToggle(sec.n)}
                 className="flex w-full items-center gap-[11px] px-0.5 py-[13px] text-left hover:bg-bg-subtle"
               >
-                <span className="w-[18px] flex-none text-center font-mono text-[12px] text-faint">
+                <span className="w-[18px] flex-none text-center font-mono text-[0.75rem] text-faint">
                   {sec.n}
                 </span>
                 <h2

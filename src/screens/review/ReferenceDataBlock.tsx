@@ -43,7 +43,7 @@ export function ReferenceDataBlock({ review }: { review: Review }) {
         <dl className="mt-[9px] grid grid-cols-3 gap-x-5 gap-y-3 rounded-[10px] border border-rule bg-bg-subtle px-[15px] py-[13px] max-[900px]:grid-cols-2">
           {rd.fields.map((f) => (
             <div key={f.label}>
-              <dt className="text-[10.5px] font-semibold tracking-[0.08em] text-faint uppercase">
+              <dt className="text-[0.65625rem] font-semibold tracking-[0.08em] text-faint uppercase">
                 {f.label}
               </dt>
               <dd className="mt-0.5 text-ui-sm text-ink">

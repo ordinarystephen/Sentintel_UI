@@ -9,8 +9,8 @@ const BASE: Record<Variant, string> = {
     'inline-flex items-center gap-[7px] rounded-lg border border-transparent bg-primary font-medium text-on-ink hover:brightness-115',
   outline:
     'inline-flex items-center gap-[7px] rounded-lg border border-rule-strong bg-bg font-medium hover:bg-bg-hover',
-  link: 'text-[12px] text-ink underline underline-offset-2',
-  quiet: 'text-[12px] text-muted underline underline-offset-2 hover:text-ink',
+  link: 'text-[0.75rem] text-ink underline underline-offset-2',
+  quiet: 'text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink',
 }
 
 export function Button({
@@ -23,7 +23,7 @@ export function Button({
   const sized =
     variant === 'primary' || variant === 'outline'
       ? small
-        ? 'rounded-md px-[11px] py-[5px] text-[12px]'
+        ? 'rounded-md px-[11px] py-[5px] text-[0.75rem]'
         : 'px-4 py-2 text-ui'
       : ''
   return <button type={type} className={cx(BASE[variant], sized, className)} {...rest} />

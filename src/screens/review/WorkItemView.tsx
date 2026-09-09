@@ -101,12 +101,12 @@ export function WorkItemView({
       <div className={cx(struck && 'line-through')}>
         {factor ? (
           <>
-            <p className="text-[12px] text-muted">{factor.question}</p>
+            <p className="text-[0.75rem] text-muted">{factor.question}</p>
             <div className="my-1 mb-1.5 text-ui-sm text-ink-soft">
               {fmt(s.verdict, { verdict: factor.verdict ?? s.verdictNone })}
             </div>
             <details className="group">
-              <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-dense text-indigo before:text-[9px] before:content-['▸'] group-open:before:rotate-90">
+              <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-dense text-indigo before:text-[0.5625rem] before:content-['▸'] group-open:before:rotate-90">
                 {fmt(s.snippets, { n: factor.snippets.length })}
               </summary>
               <ol className="mt-2 ml-[18px] flex max-h-[180px] list-decimal flex-col gap-1.5 overflow-auto font-mono text-micro whitespace-pre-wrap text-ink-soft">
@@ -184,7 +184,7 @@ export function WorkItemView({
 
       {item.cleared && (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[10.5px] text-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[0.65625rem] text-muted">
             ✓{' '}
             {fmt(s.clearedChip, {
               reason: item.cleared.reason === 'not_applicable' ? s.notApplicable : s.incorrect,

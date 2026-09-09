@@ -13,7 +13,7 @@ export function Chip({
   return (
     <span
       className={cx(
-        'rounded border px-[7px] text-[10px]',
+        'rounded border px-[7px] text-[0.625rem]',
         tone === 'warn'
           ? 'border-warn-line bg-warn-bg text-warn'
           : 'border-rule-strong bg-bg-subtle text-muted',

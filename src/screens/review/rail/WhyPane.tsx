@@ -15,7 +15,10 @@ export function WhyPane({ reviewId, item }: { reviewId: string; item: WorkItem }
       <PaneHeading first>{s.howHeading}</PaneHeading>
       <ol>
         {item.resolution.map((step, i) => (
-          <li key={i} className="flex gap-[9px] py-[5px] text-[12px] leading-[1.5] text-ink-soft">
+          <li
+            key={i}
+            className="flex gap-[9px] py-[5px] text-[0.75rem] leading-[1.5] text-ink-soft"
+          >
             <span
               aria-hidden="true"
               className={cx(
@@ -33,7 +36,7 @@ export function WhyPane({ reviewId, item }: { reviewId: string; item: WorkItem }
       )}
       {applied.map((p) => (
         <div key={p.id} className="mb-2 rounded-lg border border-rule bg-bg px-[11px] py-[9px]">
-          <div className="font-mono text-[10.5px] text-indigo">{p.id}</div>
+          <div className="font-mono text-[0.65625rem] text-indigo">{p.id}</div>
           <p className="mt-0.5 text-dense leading-[1.5] text-ink-soft">{p.text}</p>
           <Link
             to="/policy"

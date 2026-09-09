@@ -69,7 +69,7 @@ export function Modal({
         className="max-h-[88vh] w-full max-w-[760px] overflow-auto rounded-xl bg-bg shadow-md"
       >
         <div className="flex items-center gap-[10px] border-b border-rule px-[18px] py-[14px]">
-          <h3 id="modal-title" className="flex-1 text-[14px] font-semibold">
+          <h3 id="modal-title" className="flex-1 text-[0.875rem] font-semibold">
             {title}
           </h3>
           <button

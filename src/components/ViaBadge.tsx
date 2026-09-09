@@ -6,7 +6,7 @@ export function ViaBadge({ via, label }: { via: Via; label: string }) {
   return (
     <span
       className={cx(
-        'rounded border px-[7px] text-[10px]',
+        'rounded border px-[7px] text-[0.625rem]',
         via === 'unresolved'
           ? 'border-warn-line bg-warn-bg text-warn'
           : via === 'tier2' || via === 'ocr'

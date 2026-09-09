@@ -18,15 +18,15 @@ export function SourceModal({ evidence, onClose }: { evidence: Evidence; onClose
       closeLabel={s.close}
     >
       <div className="mb-3 flex flex-wrap items-center gap-[10px] text-dense text-muted">
-        <span className="font-mono text-[12px]">
+        <span className="font-mono text-[0.75rem]">
           {evidence.sourceDoc} · {evidence.sectionName}
         </span>
-        <span className="font-mono text-[12px]">{fmt(s.page, { n: evidence.page })}</span>
+        <span className="font-mono text-[0.75rem]">{fmt(s.page, { n: evidence.page })}</span>
         <Badge tone="green">
           {evidence.imageKind === 'section' ? s.sectionImage : s.pageImage}
         </Badge>
       </div>
-      <blockquote className="mb-3.5 max-h-[120px] overflow-auto border-l-2 border-rule-strong pl-3 font-display text-[14px] text-ink-soft italic">
+      <blockquote className="mb-3.5 max-h-[120px] overflow-auto border-l-2 border-rule-strong pl-3 font-display text-[0.875rem] text-ink-soft italic">
         “{evidence.quote}”
       </blockquote>
       <div className="flex justify-center rounded-lg border border-rule bg-bg-subtle p-3.5">

@@ -37,7 +37,7 @@ export function ReviewsScreen({ tab }: { tab: ReviewsTab }) {
               role="tab"
               aria-selected={tab === t.id}
               className={cx(
-                'rounded-md px-[13px] py-[5px] text-[12px] text-muted',
+                'rounded-md px-[13px] py-[5px] text-[0.75rem] text-muted',
                 tab === t.id && 'bg-bg font-medium text-ink shadow-sm',
               )}
             >

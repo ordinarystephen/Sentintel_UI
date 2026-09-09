@@ -15,9 +15,9 @@ export function PriorPane({ prior }: { prior: PriorComparison }) {
       <PaneHeading first>{fmt(s.sinceHeading, { date: label })}</PaneHeading>
       <dl>
         {prior.deltas.map((d, i) => (
-          <div key={d.label} className={cx('py-2 text-[12px]', i > 0 && 'border-t border-rule')}>
+          <div key={d.label} className={cx('py-2 text-[0.75rem]', i > 0 && 'border-t border-rule')}>
             <dt className="text-micro text-muted">{d.label}</dt>
-            <dd className="mt-px font-mono text-[12px] tabular-nums">
+            <dd className="mt-px font-mono text-[0.75rem] tabular-nums">
               {d.prior} →{' '}
               <span
                 className={cx(
@@ -33,7 +33,7 @@ export function PriorPane({ prior }: { prior: PriorComparison }) {
       </dl>
       <Link
         to={`/review/${prior.priorReviewId}`}
-        className="mt-[10px] inline-block text-[12px] text-ink underline underline-offset-2"
+        className="mt-[10px] inline-block text-[0.75rem] text-ink underline underline-offset-2"
       >
         {fmt(s.openPrior, { date: label })}
       </Link>

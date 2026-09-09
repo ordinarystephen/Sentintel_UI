@@ -182,7 +182,7 @@ export function DocumentsScreen() {
         >
           {s.advancedHelp.map(([syntax, meaning]) => (
             <div key={syntax} className="flex items-baseline gap-2">
-              <dt className="font-mono text-[11.5px] text-ink-soft">{syntax}</dt>
+              <dt className="font-mono text-[0.71875rem] text-ink-soft">{syntax}</dt>
               <dd>{meaning}</dd>
             </div>
           ))}
@@ -274,7 +274,7 @@ export function DocumentsScreen() {
                           {'to' in a ? (
                             <Link
                               to={a.to}
-                              className="text-[12px] text-muted underline underline-offset-2 hover:text-ink"
+                              className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
                             >
                               {a.label}
                             </Link>
@@ -334,7 +334,7 @@ export function DocumentsScreen() {
                   ].map((pill) => (
                     <span
                       key={pill}
-                      className="rounded border border-rule bg-bg-subtle px-1.5 text-[10px] text-muted"
+                      className="rounded border border-rule bg-bg-subtle px-1.5 text-[0.625rem] text-muted"
                     >
                       {pill}
                     </span>
@@ -356,7 +356,7 @@ export function DocumentsScreen() {
                   {h.usedInReviewId && (
                     <Link
                       to={`/review/${h.usedInReviewId}${h.usedInSectionN ? `#${sectionAnchor(h.usedInSectionN)}` : ''}`}
-                      className="text-[12px] text-muted underline underline-offset-2 hover:text-ink"
+                      className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
                     >
                       {fmt(s.usedIn, { borrower: h.usedInBorrower ?? h.counterparty })}
                     </Link>

@@ -108,7 +108,7 @@ function RailBody({ review, item }: { review: Review; item: WorkItem | null }) {
           >
             {strings.contextRail.tabs[id]}
             {id === 'debate' && debate.data && debate.data.length > 0 && (
-              <span className="ml-[3px] inline-block min-w-[15px] rounded-full border border-rule-strong px-1 text-[9.5px] text-muted">
+              <span className="ml-[3px] inline-block min-w-[15px] rounded-full border border-rule-strong px-1 text-[0.59375rem] text-muted">
                 {debate.data.length}
               </span>
             )}

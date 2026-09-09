@@ -55,7 +55,7 @@ A scan of every package in `node_modules` (install scripts, `binding.gyp`, `gypf
 
 ## Static build (verified)
 
-`npm run build` emits a self-contained `dist/`: one HTML file, one JS bundle, one CSS bundle (fonts are system stacks — no font files; the favicon is inline). Verified with `python3 -m http.server` serving `dist/`:
+`npm run build` emits a self-contained `dist/`: one HTML file, one JS bundle, one CSS bundle plus the bundled font files (v1.2: Inter Variable and Source Serif 4 Variable ship as woff2 via `@fontsource-variable/*` pinned 5.3.0 — Vite emits them into `dist/assets/`, **no CDN or external font hosts**, so rendering is identical on Mac, Windows, and Linux/CI; the favicon is inline). Verified with `python3 -m http.server` serving `dist/`:
 
 - `GET /` → 200, `GET /assets/index-*.js` → 200 — the app runs from any dumb static file server; no Node server is required at runtime.
 - **One caveat, inherent to client-side routing**: `GET /review/x` → **404** on a server without SPA fallback. Navigation *within* the app works fine from `/`; only hard refresh/direct entry on deep URLs needs the server to rewrite unknown paths to `index.html` (one line in nginx: `try_files $uri /index.html;`). `npm run preview` and virtually every real hosting frontend do this; bare `python -m http.server` does not.

@@ -6,7 +6,7 @@ export function Select({ className, ...rest }: SelectHTMLAttributes<HTMLSelectEl
   return (
     <select
       className={cx(
-        'rounded-[7px] border border-rule-strong bg-bg px-[9px] py-[7px] text-[12px] text-ink-soft',
+        'rounded-[7px] border border-rule-strong bg-bg px-[9px] py-[7px] text-[0.75rem] text-ink-soft',
         className,
       )}
       {...rest}

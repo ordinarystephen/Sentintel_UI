@@ -9,8 +9,8 @@ export function StoryCard({ review }: { review: Review }) {
   return (
     <>
       <div className="mb-[10px] flex items-baseline gap-[10px]">
-        <h3 className="text-[14px] font-semibold tracking-tight">{s.storyHeading}</h3>
-        <span className="text-[12px] text-faint">{s.storyAside}</span>
+        <h3 className="text-[0.875rem] font-semibold tracking-tight">{s.storyHeading}</h3>
+        <span className="text-[0.75rem] text-faint">{s.storyAside}</span>
       </div>
       <div className="mb-7 rounded-xl border border-rule bg-bg-subtle px-[18px] py-4">
         <p className="mb-[10px] font-mono text-micro text-faint">{review.story.docsLine}</p>
@@ -18,7 +18,10 @@ export function StoryCard({ review }: { review: Review }) {
         {review.story.changes.length > 0 && (
           <ul className="mt-3.5 flex flex-col gap-2">
             {review.story.changes.map((c, i) => (
-              <li key={i} className="rounded-lg border border-rule bg-bg px-3 py-[9px] text-[12px]">
+              <li
+                key={i}
+                className="rounded-lg border border-rule bg-bg px-3 py-[9px] text-[0.75rem]"
+              >
                 <div className="mb-[3px] flex items-center gap-2">
                   <span className="font-mono text-micro text-muted">{c.date}</span>
                   <Badge tone="slate">{c.factor}</Badge>

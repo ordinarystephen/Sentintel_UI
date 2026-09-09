@@ -44,7 +44,7 @@ export function RespondPane({
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={s.respondPlaceholder}
-        className="min-h-16 w-full resize-y rounded-lg border border-rule-strong bg-bg px-[11px] py-[9px] text-[12px]"
+        className="min-h-16 w-full resize-y rounded-lg border border-rule-strong bg-bg px-[11px] py-[9px] text-[0.75rem]"
       />
       <div className="mt-[10px] flex flex-wrap gap-2">
         <Button
@@ -76,7 +76,7 @@ export function RespondPane({
       <PaneHeading>{s.clearHeading}</PaneHeading>
       {item.cleared ? (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[10.5px] text-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-rule-strong bg-bg px-2 text-[0.65625rem] text-muted">
             ✓ {s.cleared} —{' '}
             {item.cleared.reason === 'not_applicable'
               ? strings.review.notApplicable
@@ -137,7 +137,7 @@ export function RespondPane({
               setNoteError(false)
             }}
             placeholder={s.rationalePlaceholder}
-            className="w-full rounded-md border border-rule-strong bg-bg px-2 py-1.5 text-[12px]"
+            className="w-full rounded-md border border-rule-strong bg-bg px-2 py-1.5 text-[0.75rem]"
           />
           {noteError && (
             <p role="alert" className="mt-1 text-micro text-error">

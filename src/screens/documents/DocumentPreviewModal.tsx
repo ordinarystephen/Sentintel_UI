@@ -42,10 +42,10 @@ export function DocumentPreviewModal({
       {q.data && (
         <>
           <div className="mb-3 flex flex-wrap items-center gap-[10px] text-dense text-muted">
-            <span className="font-mono text-[12px]">
+            <span className="font-mono text-[0.75rem]">
               {plural(q.data.pages, s.previewPagesOne, s.previewPagesOther)}
             </span>
-            <span className="font-mono text-[12px]">
+            <span className="font-mono text-[0.75rem]">
               {fmt(s.previewParsed, { date: formatDate(q.data.parsedAt) })}
             </span>
             <Badge tone="green">{s.extracted}</Badge>

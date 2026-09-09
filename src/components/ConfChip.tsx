@@ -11,7 +11,7 @@ export function ConfChip({ confidence, floor }: { confidence: number; floor: num
   return (
     <span
       className={cx(
-        'rounded border px-1.5 font-mono text-[10px]',
+        'rounded border px-1.5 font-mono text-[0.625rem]',
         low ? 'border-warn-line bg-warn-bg text-warn' : 'border-rule-strong bg-bg text-muted',
       )}
       title={low ? `Below the ${Math.round(floor * 100)}% confidence floor` : undefined}

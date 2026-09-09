@@ -36,7 +36,7 @@ export function ProcessingView({ record }: { record: ProcessingReview }) {
 
   return (
     <div className="settle mx-auto mt-[90px] max-w-[460px] text-center">
-      <p className="mb-[26px] font-mono text-[12px] text-faint">
+      <p className="mb-[26px] font-mono text-[0.75rem] text-faint">
         {record.documents.map((d) => d.fileName).join(' · ')}
       </p>
       {record.status === 'failed' ? (
@@ -45,20 +45,20 @@ export function ProcessingView({ record }: { record: ProcessingReview }) {
             eyebrow={s.failedEyebrow}
             message={record.error?.message ?? 'Processing failed.'}
           />
-          <Link to="/" className="mt-4 inline-block text-[12px] underline underline-offset-2">
+          <Link to="/" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
             {s.startAnother}
           </Link>
         </div>
       ) : record.status === 'cancelled' ? (
         <div>
           <p className="text-ui text-muted">{s.cancelled}</p>
-          <Link to="/" className="mt-4 inline-block text-[12px] underline underline-offset-2">
+          <Link to="/" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
             {s.startAnother}
           </Link>
         </div>
       ) : (
         <>
-          <h2 className="mb-[22px] font-display text-[19px] font-normal tracking-[0.01em] text-ink-soft italic">
+          <h2 className="mb-[22px] font-display text-[1.1875rem] font-normal tracking-[0.01em] text-ink-soft italic">
             {s.title}
           </h2>
           <div className="mb-3.5 h-[3px] overflow-hidden rounded-sm bg-rule" aria-hidden="true">
@@ -70,7 +70,7 @@ export function ProcessingView({ record }: { record: ProcessingReview }) {
           <p className="text-ui-sm text-muted" aria-live="polite">
             {record.statusLine}
           </p>
-          <p className="mt-[34px] text-[12px] leading-[1.6] text-faint">{s.away}</p>
+          <p className="mt-[34px] text-[0.75rem] leading-[1.6] text-faint">{s.away}</p>
           <div className="mt-[18px]">
             <Button variant="quiet" onClick={() => cancel.mutate()} disabled={cancel.isPending}>
               {s.cancel}

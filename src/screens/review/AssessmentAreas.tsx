@@ -39,7 +39,7 @@ function RatingPill({ rating }: { rating: AreaRating }) {
   return (
     <span
       className={cx(
-        'rounded-full border px-[9px] py-0.5 text-[10px] font-semibold tracking-[0.04em]',
+        'rounded-full border px-[9px] py-0.5 text-[0.625rem] font-semibold tracking-[0.04em]',
         PILL[rating],
       )}
     >
@@ -89,7 +89,7 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
                 {area.sectionRefs[0] !== undefined && (
                   <Link
                     to={`/review/${reviewId}#${sectionAnchor(area.sectionRefs[0])}`}
-                    className="text-[12px] text-ink underline underline-offset-2"
+                    className="text-[0.75rem] text-ink underline underline-offset-2"
                   >
                     {fmt(s.resolveLink, { n: area.sectionRefs[0] })}
                   </Link>
@@ -121,7 +121,7 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
                 <Link
                   key={n}
                   to={`/review/${reviewId}#${sectionAnchor(n)}`}
-                  className="text-[12px] text-ink underline underline-offset-2"
+                  className="text-[0.75rem] text-ink underline underline-offset-2"
                 >
                   {fmt(s.supportingLink, { n })}
                 </Link>
@@ -157,9 +157,9 @@ export function AssessmentAreas({ review }: { review: Review }) {
             open && 'rotate-90',
           )}
         />
-        <h3 className="text-[14px] font-semibold tracking-tight">{s.areasHeading}</h3>
+        <h3 className="text-[0.875rem] font-semibold tracking-tight">{s.areasHeading}</h3>
         {pending > 0 && <Badge tone="amber">{fmt(s.areasPendingBadge, { n: pending })}</Badge>}
-        <span className="text-[12px] text-faint">{tally(areas)}</span>
+        <span className="text-[0.75rem] text-faint">{tally(areas)}</span>
       </button>
       <Collapsible open={open} id="areas-body">
         <div>

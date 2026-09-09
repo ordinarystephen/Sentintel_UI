@@ -23,8 +23,11 @@
   --primary:#1c1917;
   --rail-bg:#f8f7f5; --rail-fg:#44403c; --rail-fg-muted:#8a837b; --rail-hover:#f1efec;
   --rail-rule:#e9e6e2; --rail-active-bg:#f1efec; --rail-active-fg:#1c1917; --rail-bar:#1c1917;
-  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
-  --font-display:"New York",ui-serif,Georgia,serif;
+  /* v1.2: the app bundles Inter Variable + Source Serif 4 Variable
+     (@fontsource, no external hosts). This standalone mockup ships no font
+     files, so it renders the system fallbacks that follow. */
+  --font-body:"Inter Variable",-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
+  --font-display:"Source Serif 4 Variable","New York",ui-serif,Georgia,serif;
   --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
 }
 body.dark{

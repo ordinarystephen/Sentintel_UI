@@ -23,8 +23,8 @@ import { fmt } from '@/lib/fmt'
 
 function Tag({ a }: { a: AttentionItem }) {
   const s = strings.review
-  if (a.state === 'reviewed') return <span className="text-[12px] text-success">✓</span>
-  if (a.state === 'dismissed') return <span className="text-[12px] text-faint">—</span>
+  if (a.state === 'reviewed') return <span className="text-[0.75rem] text-success">✓</span>
+  if (a.state === 'dismissed') return <span className="text-[0.75rem] text-faint">—</span>
   switch (a.kind) {
     case 'review_required':
       return <Chip>{s.reviewRequired}</Chip>
@@ -64,7 +64,7 @@ function NoteForm({
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder={a.notePlaceholder}
-        className="min-w-[240px] flex-1 rounded-md border border-rule-strong bg-bg px-2 py-1 text-[12px]"
+        className="min-w-[240px] flex-1 rounded-md border border-rule-strong bg-bg px-2 py-1 text-[0.75rem]"
       />
       <Button type="submit" variant="primary" small>
         {a.save}
@@ -105,7 +105,7 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
           </Link>
           <span
             className={cx(
-              'mt-0.5 block text-[12px] leading-[1.5]',
+              'mt-0.5 block text-[0.75rem] leading-[1.5]',
               a.state === 'reviewed' ? 'text-success' : 'text-muted',
             )}
           >

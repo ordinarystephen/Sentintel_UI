@@ -175,7 +175,7 @@ export function LeftRail() {
               collapsed={collapsed}
               trailing={
                 currentReview.openItems > 0 && (
-                  <span className="rounded-full border border-warn-line bg-warn-bg px-1.5 text-[10px] font-semibold text-warn">
+                  <span className="rounded-full border border-warn-line bg-warn-bg px-1.5 text-[0.625rem] font-semibold text-warn">
                     {currentReview.openItems}
                   </span>
                 )

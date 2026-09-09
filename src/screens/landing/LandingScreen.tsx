@@ -113,7 +113,7 @@ export function LandingScreen() {
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
-          <div className="text-[15px] font-semibold">{s.dropBig}</div>
+          <div className="text-[0.9375rem] font-semibold">{s.dropBig}</div>
           <div className="mt-[3px] text-ui-sm text-muted">
             {s.dropOr} <span className="text-ink underline underline-offset-2">{s.browse}</span>
           </div>
@@ -146,7 +146,7 @@ export function LandingScreen() {
                 className="flex items-center gap-[9px] rounded-lg border border-rule bg-bg px-[11px] py-[7px] text-ui-sm"
               >
                 <FileIcon className="h-[13px] w-[13px] flex-none text-faint" />
-                <span className="truncate font-mono text-[12px]">{f.name}</span>
+                <span className="truncate font-mono text-[0.75rem]">{f.name}</span>
                 <span className="flex-none text-micro text-faint">{formatBytes(f.size)}</span>
                 <button
                   type="button"
@@ -179,7 +179,7 @@ export function LandingScreen() {
           <Button variant="primary" onClick={begin} disabled={create.isPending}>
             {s.begin}
           </Button>
-          <span className="text-[12px] text-faint">
+          <span className="text-[0.75rem] text-faint">
             {plural(files.length, s.documentCountOne, s.documentCountOther)}
           </span>
           <Button
@@ -260,13 +260,13 @@ function Setting({
 }) {
   const id = `setting-${label.replace(/\s+/g, '-').toLowerCase()}`
   return (
-    <label htmlFor={id} className="flex items-center gap-2 text-[12px] text-muted">
+    <label htmlFor={id} className="flex items-center gap-2 text-[0.75rem] text-muted">
       {label}
       <select
         id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-[7px] border border-rule-strong bg-bg px-2 py-1 font-mono text-[12px] text-ink-soft"
+        className="rounded-[7px] border border-rule-strong bg-bg px-2 py-1 font-mono text-[0.75rem] text-ink-soft"
       >
         {options.map((o) => (
           <option key={o} value={o}>

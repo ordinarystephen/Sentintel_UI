@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               aria-label={strings.app.dismissToast}
               onClick={() => dismiss(t.id)}
-              className="text-[12px] opacity-70 hover:opacity-100"
+              className="text-[0.75rem] opacity-70 hover:opacity-100"
             >
               ✕
             </button>

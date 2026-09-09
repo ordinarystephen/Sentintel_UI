@@ -60,8 +60,15 @@
   --rail-active-bg: #f1efec;
   --rail-active-fg: #1c1917;
   --rail-bar: #1c1917;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
-  --font-display: 'New York', ui-serif, Georgia, serif;
+  --font-body:
+    'Inter Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI',
+    sans-serif;
+  --font-display: 'Source Serif 4 Variable', 'New York', ui-serif, Georgia, serif;
+  /* Root type size — the ONE knob the whole rem scale hangs off (base.css
+     sets html { font-size } from it). 108% ≈ 8% over the original px values;
+     the low-DPI media block below steps it up once more. */
+  --root-size: 108%;
+  --weight-small: 400;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 body.dark {
@@ -165,4 +172,38 @@ body.theme-cobalt.dark {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
   --overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Low-DPI adjustment (standard-resolution office panels, dPR ≈ 1) ──────
+   The Retina-calibrated hairlines and quiet inks wash out at 1x: one step
+   more base size, slightly heavier small text (the variable fonts make the
+   in-between weight free), rules and metadata inks darkened one step.
+   Token-level only — no component knows about this. */
+@media (max-resolution: 1.5dppx) {
+  :root {
+    --root-size: 115%;
+    --weight-small: 450;
+    --rule: #e0dcd7;
+    --rule-strong: #c9c4be;
+    --muted: #6b645d;
+    --faint: #7f786f;
+  }
+  body.dark {
+    --rule: #413c37;
+    --rule-strong: #554e47;
+    --muted: #ada79f;
+    --faint: #867f77;
+  }
+  body.theme-cobalt {
+    --rule: #d6dbe9;
+    --rule-strong: #b9c3da;
+    --muted: #525b6e;
+    --faint: #6b7891;
+  }
+  body.theme-cobalt.dark {
+    --rule: #31343b;
+    --rule-strong: #474b54;
+    --muted: #aab0bb;
+    --faint: #7a8191;
+  }
 }
