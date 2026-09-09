@@ -89,7 +89,7 @@ export interface SentinelApi {
   /**
    * Free-text direction on one work item. Records a `responded` disposition
    * with the text, then RE-RUNS THAT ITEM (scope: the single item — §9 Q1 is
-   * open; widen here if Steve says subsection/section). The item reports
+   * open; widen here if the design owner says subsection/section). The item reports
    * `reRunning: true` until the new value lands; re-fetch the review to see it.
    */
   respond(itemId: string, text: string): Promise<WorkItem>

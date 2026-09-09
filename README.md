@@ -132,7 +132,7 @@ The firm's development environment uses the internal Nexus package repository (c
 ## Conventions
 
 - Paths and names in the build spec are load-bearing; keep them.
-- User-facing copy lives in `src/strings.ts`. Left-nav and rail-tab names are placeholders Steve intends to rename.
+- User-facing copy lives in `src/strings.ts`. Left-nav and rail-tab names are placeholders pending a final naming pass.
 - No `fetch` outside `src/api/`. No raw color outside `tokens.css`. No disabled placeholder controls — if a control doesn't work, it doesn't ship.
 - There is no review "type" anywhere, and there is one export ("Export Review").
 - Failures are loud and specific: the API's `message` is shown verbatim.

@@ -1,6 +1,6 @@
 /**
  * In-memory implementation of SentinelApi (build-spec §7) — what `npm run
- * dev` runs against, what Steve demos, and what the dev team explores first.
+ * dev` runs against, what the demo mode demos, and what the dev team explores first.
  *
  * Semantics it deliberately mirrors from the real backend (§8):
  * - A review record exists from the moment of upload. Processing is derived
