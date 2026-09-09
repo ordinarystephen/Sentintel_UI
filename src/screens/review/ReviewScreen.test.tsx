@@ -79,7 +79,7 @@ describe('review page — read path', () => {
     await user.click(sec3)
     expect(sec3).toHaveAttribute('aria-expanded', 'true')
     expect(
-      screen.getByText('TO BE POPULATED. Feeders: credit agreement, underwriting file.'),
+      screen.getByText('TO BE POPULATED. Feeders: credit approval memo, facility documentation.'),
     ).toBeInTheDocument()
   })
 

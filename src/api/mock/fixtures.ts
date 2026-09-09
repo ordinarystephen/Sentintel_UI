@@ -262,14 +262,14 @@ export const MERIDIAN_SECTIONS: Section[] = [
     n: 3,
     title: 'Underwriting & Documentation',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: credit agreement, underwriting file.',
+    feederNote: 'TO BE POPULATED. Feeders: credit approval memo, facility documentation.',
     items: [],
   },
   {
     n: 4,
     title: 'Portfolio Management',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: monitoring history, covenant schedule.',
+    feederNote: 'TO BE POPULATED. Feeders: monitoring cadence, covenant schedule, review dates.',
     items: [],
   },
   {
@@ -283,7 +283,7 @@ export const MERIDIAN_SECTIONS: Section[] = [
     n: 6,
     title: 'Trading Activity & Exposure Analysis',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: trading lines, ISDA/CSA terms.',
+    feederNote: 'TO BE POPULATED. Feeders: traded products exposure, MtM data.',
     items: [],
   },
 ]
