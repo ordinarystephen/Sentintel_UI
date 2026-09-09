@@ -21,13 +21,15 @@
    - Light-theme contrast fix (ratified — decisions ledger): Stone light
      `--faint`/`--rail-fg-muted` #a8a29e → #8a837b; Cobalt light `--faint`
      #9aa3b8 → #76839d. Micro-labels and rail glyphs now sit at ≥ 3:1.
-     Dark themes unchanged (already passing).
+     Dark themes unchanged (already passing). Follow-up (2026-09-09): Stone
+     light `--muted` #78716c → #746d67, lifting 12.5px text on `--bg-subtle`
+     from 4.48:1 to ≥ 4.5:1.
    ============================================================ */
 :root {
   /* stone, not zinc — the neutral has temperature now */
   --ink: #1c1917;
   --ink-soft: #44403c;
-  --muted: #78716c;
+  --muted: #746d67;
   --faint: #8a837b;
   --bg: #fdfdfc;
   --bg-subtle: #f8f7f5;
