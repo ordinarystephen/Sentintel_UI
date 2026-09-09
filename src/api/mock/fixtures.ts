@@ -516,7 +516,7 @@ export const VEYLAND_PRIOR: PriorComparison = {
 
 export const POLICIES: Policy[] = [
   {
-    id: '1-G-007544 · §4.2',
+    id: 'PM-DEMO · §4.2',
     kind: 'standard',
     text: 'Valuation inputs must be verified against source documents before reliance.',
     itemIds: ['wi-2-wacc', 'wi-2-ev'],
@@ -528,7 +528,7 @@ export const POLICIES: Policy[] = [
     itemIds: ['wi-2-wacc'],
   },
   {
-    id: '1-G-007544 · §5.1',
+    id: 'PM-DEMO · §5.1',
     kind: 'standard',
     text: 'Liquidity adequacy assessed against 12-month obligations including LC utilization.',
     itemIds: ['wi-2-liq'],
@@ -540,7 +540,7 @@ export const POLICIES: Policy[] = [
     itemIds: ['wi-2-leverage-flag', 'wi-2-debt'],
   },
   {
-    id: '1-G-007544 · §2.1',
+    id: 'PM-DEMO · §2.1',
     kind: 'standard',
     text: 'Ownership and sponsor identity must be established from primary documents.',
     itemIds: ['wi-1-ownership', 'wi-1-company'],
@@ -560,7 +560,7 @@ export const DEBATES: DebatePosition[] = [
     itemId: 'wi-2-wacc',
     stance: 'dissent',
     text: 'The value cannot be verified at required confidence, and expected-case EV coverage is 1.46x — already below the 1.5x trigger. An unverified WACC materially weakens the EV-support conclusion in Section 2.',
-    citations: ['POLICY ib-lending/ev-support', '1-G-007544 §4.2'],
+    citations: ['POLICY ib-lending/ev-support', 'PM-DEMO §4.2'],
     at: '2026-08-28T09:42:00Z',
     runId: 'run-veyland-2026-08',
   },

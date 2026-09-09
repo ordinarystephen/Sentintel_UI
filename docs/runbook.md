@@ -70,7 +70,7 @@ The data is fictional. Every action below persists in your browser (survives ref
 **The context rail (right side)**
 
 11. The WACC item is already selected (accent stripe); the rail header reads **§2 Expected Case WACC**. Click the Liquidity paragraph and watch the rail follow it; click WACC again.
-12. **Why** tab — the resolution chain (template → matched table → flagged below the floor) and the applied policies (`1-G-007544 · §4.2`, `POLICY · ib-lending/ev-support`).
+12. **Why** tab — the resolution chain (template → matched table → flagged below the floor) and the applied policies (`PM-DEMO · §4.2`, `POLICY · ib-lending/ev-support`).
 13. **Respond** tab — type `Use 9.6% from the prior review` and click **Send & re-run**. The item shows a "re-running…" spinner for a moment, then the value becomes **9.6%**, `conf 93%`, the flag lifts, and the attention row resolves itself.
 14. **Debate** tab — advocate (green) and dissent (red) positions with citations, and the footnote: positions are advisory; the analyst's disposition decides.
 15. **Prior** tab — "Since the Feb 2026 review": deltas with worsening values in amber, and a link to the prior review. (Open a review with no prior — e.g. Ambervale Foods — and this tab isn't there at all.)

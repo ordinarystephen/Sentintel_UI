@@ -298,7 +298,7 @@ export interface PriorComparison {
 }
 
 export interface Policy {
-  /** mono id, e.g. "1-G-007544 · §4.2" or "POLICY · ib-lending/ev-support" */
+  /** mono id, e.g. "PM-DEMO · §4.2" or "POLICY · ib-lending/ev-support" */
   id: string
   kind: 'standard' | 'policy'
   text: string

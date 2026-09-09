@@ -316,7 +316,7 @@ describe('context rail data', () => {
 
   it('policies cite the items they touched', async () => {
     const pols = await make().getPolicies(VEYLAND_ID)
-    expect(pols.find((p) => p.id === '1-G-007544 · §4.2')?.itemIds).toContain('wi-2-wacc')
+    expect(pols.find((p) => p.id === 'PM-DEMO · §4.2')?.itemIds).toContain('wi-2-wacc')
     const other = await make().getPolicies('rev-ambervale-2026-08')
     expect(other.length).toBeGreaterThan(0)
   })

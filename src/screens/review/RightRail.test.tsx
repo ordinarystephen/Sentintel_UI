@@ -33,7 +33,7 @@ describe('right context rail', () => {
     await heading()
     await waitFor(() => expect(rail()).toHaveTextContent('How this got here'))
     expect(rail()).toHaveTextContent('OCR read 9.8% below the confidence floor')
-    await waitFor(() => expect(rail()).toHaveTextContent('1-G-007544 · §4.2'))
+    await waitFor(() => expect(rail()).toHaveTextContent('PM-DEMO · §4.2'))
     expect(rail()).toHaveTextContent('POLICY · ib-lending/ev-support')
   })
 
