@@ -60,7 +60,7 @@ describe('review page — read path', () => {
     expect(sec2).toHaveAttribute('aria-expanded', 'true')
     expect(within(sec2).getByText('1 review req.')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: /1.*Transaction & Company Overview/ }),
+      screen.getByRole('button', { name: /1.*Borrower \/ Counterparty & Relationship Overview/ }),
     ).toHaveAttribute('aria-expanded', 'false')
 
     expect(screen.getByText('conf 41% · low')).toBeInTheDocument()
@@ -75,11 +75,11 @@ describe('review page — read path', () => {
     expect(screen.getByText('6 retrieved snippet(s)')).toBeInTheDocument()
 
     // pending section shows its feeder note when expanded
-    const sec3 = screen.getByRole('button', { name: /3.*Capital Structure/ })
+    const sec3 = screen.getByRole('button', { name: /3.*Underwriting & Documentation/ })
     await user.click(sec3)
     expect(sec3).toHaveAttribute('aria-expanded', 'true')
     expect(
-      screen.getByText('TO BE POPULATED. Feeders: Financials, Capitalization.'),
+      screen.getByText('TO BE POPULATED. Feeders: credit agreement, underwriting file.'),
     ).toBeInTheDocument()
   })
 

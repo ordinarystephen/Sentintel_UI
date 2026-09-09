@@ -8,13 +8,19 @@ export interface SectionDef {
   short: string
 }
 
+/* Canonical titles (corrected 2026-09-09) — there is no "Recommendation"
+   section; adjudication lives in the areas of assessment. */
 export const SECTIONS: readonly SectionDef[] = [
-  { n: 1, title: 'Transaction & Company Overview', short: 'Transaction & Company' },
+  {
+    n: 1,
+    title: 'Borrower / Counterparty & Relationship Overview',
+    short: 'Borrower / Counterparty',
+  },
   { n: 2, title: 'Financials', short: 'Financials' },
-  { n: 3, title: 'Capital Structure & Terms', short: 'Capital Structure & Terms' },
-  { n: 4, title: 'Risk Rating Rationale', short: 'Risk Rating Rationale' },
-  { n: 5, title: 'Covenants & Monitoring', short: 'Covenants & Monitoring' },
-  { n: 6, title: 'Recommendation', short: 'Recommendation' },
+  { n: 3, title: 'Underwriting & Documentation', short: 'Underwriting & Documentation' },
+  { n: 4, title: 'Portfolio Management', short: 'Portfolio Management' },
+  { n: 5, title: 'Risk Rating Accuracy', short: 'Risk Rating Accuracy' },
+  { n: 6, title: 'Trading Activity & Exposure Analysis', short: 'Trading Activity & Exposure' },
 ]
 
 export const sectionAnchor = (n: number) => `sec-${n}`

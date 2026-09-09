@@ -38,7 +38,7 @@ describe('areas of assessment', () => {
     const pdRow = screen.getByRole('button', { name: /Probability of Default Assessment/ })
     expect(pdRow).toHaveAttribute('aria-expanded', 'false')
     await user.click(pdRow)
-    expect(screen.getAllByRole('link', { name: 'Supporting: Section 4 →' }).length).toBeGreaterThan(
+    expect(screen.getAllByRole('link', { name: 'Supporting: Section 5 →' }).length).toBeGreaterThan(
       0,
     )
 
@@ -82,7 +82,8 @@ describe('areas of assessment', () => {
     await screen.findByRole('heading', { level: 1, name: 'Crestline Logistics' })
     const header = screen.getByRole('button', { name: /Areas of assessment/ })
     expect(header).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a')
-    await user.click(screen.getByRole('button', { name: /Portfolio Management/ }))
+    // §4 is now also titled 'Portfolio Management' — target the AREA row (its name includes the rating)
+    await user.click(screen.getByRole('button', { name: /Portfolio Management satisfactory/ }))
     expect(
       screen.getByText(/Required monitoring practices are adequate and timely/),
     ).toBeInTheDocument()

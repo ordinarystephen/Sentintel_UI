@@ -64,7 +64,7 @@ The data is fictional. Every action below persists in your browser (survives ref
 6. Top: the sticky borrower bar (serif name, mono `CL6430`, **Export Review**). Scroll — the bar stays pinned; only the canvas scrolls.
 7. **The story** — narrative plus a "what changed" timeline (`prior 9.0% → current 6.5%`) comparing the documents within this run.
 8. **NEEDS YOUR ATTENTION** — click its header to collapse and reopen it (the "5 open" badge stays visible while collapsed). Rows deep-link: click **Section 2 →** on any row and the Financials section expands, scrolls into view, and flashes once.
-9. **Work paper** — click section headers to open and close them (they ease open; pending sections show their feeder note, e.g. "TO BE POPULATED. Feeders: covenant schedule."). In section 2, note the `conf 94%` / `conf 97%` mono chips, and the flagged row: **Expected Case WACC** with an amber stripe, `conf 41% · low`, and "⚠ review required — the Word export flags this value."
+9. **Work paper** — click section headers to open and close them (they ease open; pending sections show their feeder note, e.g. "TO BE POPULATED. Feeders: rating model output, Financials."). In section 2, note the `conf 94%` / `conf 97%` mono chips, and the flagged row: **Expected Case WACC** with an amber stripe, `conf 41% · low`, and "⚠ review required — the Word export flags this value."
 10. Click **View source** on the Liquidity quote: the source modal shows filename · section · page, a "section image" badge, and the quote. Press `Esc` to close.
 
 **The context rail (right side)**

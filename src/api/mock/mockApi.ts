@@ -104,9 +104,11 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * fixture shape changes (a new field counts!); on load, any payload whose
  * version differs is discarded and the fixtures win. History: 1 = through
  * v0.5; 2 = v1.0 (Review gained `areas` + `referenceData`); 3 = areas are
- * structural to every review (all fixtures seeded with rated zones).
+ * structural to every review (all fixtures seeded with rated zones); 4 =
+ * canonical workpaper section titles (fixture data changed under stored
+ * reviews — same scenario-A shadowing logic).
  */
-export const STATE_VERSION = 3
+export const STATE_VERSION = 4
 
 /** Processing timeline (ms since upload). */
 export const PROCESSING = {

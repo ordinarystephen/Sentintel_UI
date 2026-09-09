@@ -98,7 +98,7 @@ const MERIDIAN_DOC_Q3 = 'Meridian_Holdco_Q3_Update.pdf'
 export const MERIDIAN_SECTIONS: Section[] = [
   {
     n: 1,
-    title: 'Transaction & Company Overview',
+    title: 'Borrower / Counterparty & Relationship Overview',
     status: 'populated',
     items: [
       item({
@@ -260,30 +260,30 @@ export const MERIDIAN_SECTIONS: Section[] = [
   },
   {
     n: 3,
-    title: 'Capital Structure & Terms',
+    title: 'Underwriting & Documentation',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: Financials, Capitalization.',
+    feederNote: 'TO BE POPULATED. Feeders: credit agreement, underwriting file.',
     items: [],
   },
   {
     n: 4,
-    title: 'Risk Rating Rationale',
+    title: 'Portfolio Management',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: coverage ratios, Financials.',
+    feederNote: 'TO BE POPULATED. Feeders: monitoring history, covenant schedule.',
     items: [],
   },
   {
     n: 5,
-    title: 'Covenants & Monitoring',
+    title: 'Risk Rating Accuracy',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: covenant schedule.',
+    feederNote: 'TO BE POPULATED. Feeders: rating model output, Financials.',
     items: [],
   },
   {
     n: 6,
-    title: 'Recommendation',
+    title: 'Trading Activity & Exposure Analysis',
     status: 'pending',
-    feederNote: 'TO BE POPULATED. Feeders: Sections 2–5.',
+    feederNote: 'TO BE POPULATED. Feeders: trading lines, ISDA/CSA terms.',
     items: [],
   },
 ]
@@ -349,7 +349,7 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
     rating: 'satisfactory',
     reason:
       'The 2023 LBO financing and subsequent amendments were appropriately evaluated, documented and approved under the leveraged lending standards. Write-up quality acceptable; key risks and mitigants adequately identified.',
-    sectionRefs: [1],
+    sectionRefs: [3],
   },
   {
     id: 'aa-repay-primary',
@@ -374,7 +374,7 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
     rating: 'satisfactory',
     reason:
       'Required monitoring practices are adequate and timely: the annual review completed on schedule, covenant and liquidity monitoring current, and the Q3 update received within expected timeframes.',
-    sectionRefs: [5],
+    sectionRefs: [4],
   },
   {
     id: 'aa-reg-class',
@@ -382,7 +382,7 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
     rating: 'satisfactory',
     reason:
       'Pass classification appropriately assigned and supported by the leverage trajectory, consistent positive projected FCF, and repayment capacity over the projection period.',
-    sectionRefs: [4],
+    sectionRefs: [5],
   },
   {
     id: 'aa-pd',
@@ -390,7 +390,7 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
     rating: 'satisfactory',
     reason:
       'The PD rating applied was correctly derived using the appropriate rating model and standards.',
-    sectionRefs: [4],
+    sectionRefs: [5],
   },
   {
     id: 'aa-lgd',
@@ -398,14 +398,14 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
     rating: 'satisfactory',
     reason:
       "The LGD applied was correctly derived and is appropriate for the facility's position in the capital structure.",
-    sectionRefs: [4],
+    sectionRefs: [5],
   },
   {
     id: 'aa-traded',
     name: 'Traded Products',
     rating: 'na',
     reason: 'No traded products exposure to the counterparty.',
-    sectionRefs: [],
+    sectionRefs: [6],
   },
 ]
 
@@ -629,7 +629,7 @@ function completedAreas(reviewId: string): AssessmentArea[] {
       'aa-structure',
       'Transaction Structure / Underwriting',
       'The facility structure and subsequent amendments were appropriately evaluated, documented and approved under the applicable underwriting standards. Write-up quality acceptable; key risks and mitigants adequately identified.',
-      [1],
+      [3],
     ),
     mk(
       'aa-repay-primary',
@@ -647,31 +647,31 @@ function completedAreas(reviewId: string): AssessmentArea[] {
       'aa-portfolio',
       'Portfolio Management',
       'Required monitoring practices are adequate and timely: reviews completed on schedule, covenant and liquidity monitoring current.',
-      [5],
+      [4],
     ),
     mk(
       'aa-reg-class',
       'US Regulatory Classification',
       'Pass classification appropriately assigned and supported by the leverage trajectory and repayment capacity over the projection period.',
-      [4],
+      [5],
     ),
     mk(
       'aa-pd',
       'Probability of Default Assessment',
       'The PD rating applied was correctly derived using the appropriate rating model and standards.',
-      [4],
+      [5],
     ),
     mk(
       'aa-lgd',
       'Loss Given Default Assessment',
       "The LGD applied was correctly derived and is appropriate for the facility's position in the capital structure.",
-      [4],
+      [5],
     ),
     mk(
       'aa-traded',
       'Traded Products',
       'No traded products exposure to the counterparty.',
-      [],
+      [6],
       'na',
     ),
   ]

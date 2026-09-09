@@ -128,14 +128,14 @@ test('only the canvas scrolls', async ({ page }) => {
 test('deep links land expanded + scrolled with the neutral flash', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
   await page.goto('/review/rev-meridian-2026-08')
-  await page.getByRole('link', { name: '5 · Covenants & Monitoring' }).click()
+  await page.getByRole('link', { name: '5 · Risk Rating Accuracy' }).click()
   await expect(page).toHaveURL(/#sec-5$/)
   await expect
     .poll(() => page.evaluate(() => document.getElementById('canvas')!.scrollTop))
     .toBeGreaterThan(200)
   await expect(page.locator('#sec-5')).toHaveClass(/flash-once/)
   await expect(page.locator('#sec-5')).toBeInViewport()
-  await expect(page.getByRole('link', { name: '5 · Covenants & Monitoring' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: '5 · Risk Rating Accuracy' })).toHaveAttribute(
     'aria-current',
     'true',
   )

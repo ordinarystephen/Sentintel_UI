@@ -43,13 +43,13 @@ test('supporting links deep-link with the neutral flash; reference data expands 
   await page.goto(MERIDIAN)
   const pd = page.getByRole('button', { name: /Probability of Default Assessment/ })
   await pd.click()
-  await page.locator('#aa-pd-body').getByRole('link', { name: 'Supporting: Section 4 →' }).click()
-  await expect(page).toHaveURL(/#sec-4$/)
-  await expect(page.getByRole('button', { name: /4.*Risk Rating Rationale/ })).toHaveAttribute(
+  await page.locator('#aa-pd-body').getByRole('link', { name: 'Supporting: Section 5 →' }).click()
+  await expect(page).toHaveURL(/#sec-5$/)
+  await expect(page.getByRole('button', { name: /5.*Risk Rating Accuracy/ })).toHaveAttribute(
     'aria-expanded',
     'true',
   )
-  await expect(page.locator('#sec-4')).toHaveClass(/flash-once/)
+  await expect(page.locator('#sec-5')).toHaveClass(/flash-once/)
 
   const refToggle = page.getByRole('button', { name: /Reference data/ })
   await expect(refToggle).toContainText('as of 2026-08-15')
@@ -80,7 +80,11 @@ test('a read-only review renders the rated zone — ratings and reasons, no acti
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Crestline Logistics')
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
-  await page.getByRole('button', { name: /Portfolio Management/ }).click()
+  // §4 shares the name — scope to the areas zone
+  await page
+    .locator('#areas-body')
+    .getByRole('button', { name: /Portfolio Management/ })
+    .click()
   await expect(
     page.getByText(/Required monitoring practices are adequate and timely/),
   ).toBeVisible()

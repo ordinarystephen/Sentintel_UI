@@ -60,9 +60,9 @@ describe('routes', () => {
     const sec2 = within(zone).getByRole('link', { name: '2 · Financials' })
     expect(sec2).toHaveAttribute('href', `/review/${MERIDIAN}#sec-2`)
     expect(sec2).toHaveAttribute('aria-current', 'true')
-    expect(within(zone).getByRole('link', { name: '6 · Recommendation' })).not.toHaveAttribute(
-      'aria-current',
-    )
+    expect(
+      within(zone).getByRole('link', { name: '6 · Trading Activity & Exposure Analysis' }),
+    ).not.toHaveAttribute('aria-current')
     expect(within(zone).getByRole('link', { name: 'Overview' })).toHaveTextContent('4') // open items
     const rail = screen.getByRole('complementary', { name: 'Context' })
     await waitFor(() =>

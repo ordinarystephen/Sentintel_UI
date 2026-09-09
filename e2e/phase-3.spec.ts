@@ -129,7 +129,9 @@ test('attention row deep-links: expands the section and scrolls with the flash',
 }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
   await page.goto(MERIDIAN)
-  const sec1 = page.getByRole('button', { name: /1.*Transaction & Company Overview/ })
+  const sec1 = page.getByRole('button', {
+    name: /1.*Borrower \/ Counterparty & Relationship Overview/,
+  })
   await expect(sec1).toHaveAttribute('aria-expanded', 'false')
   await page.getByRole('link', { name: /Customer concentration/ }).click()
   await expect(page).toHaveURL(/#sec-1$/)
