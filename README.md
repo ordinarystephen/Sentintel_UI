@@ -17,8 +17,11 @@ _All company, person, and transaction data in this application is fictional; any
 The complete from-clone path (Node ≥ 22.12 — see `.nvmrc` — and Python 3 with pip):
 
 ```sh
+source .venv/bin/activate                 # Python venv for the Flask wrapper (create it once first: python3 -m venv .venv)
 make install && make build && make run    # → http://localhost:8082, served like the target environment will serve it
 ```
+
+Deploying behind the target environment's reverse proxy? The **confirmed working build** (verified in the live environment, 2026-09-09) is `VITE_BASE_PATH=./ VITE_ROUTER=hash make build` — a plain `make build` produces root-absolute asset paths that 404 behind the proxy prefix (blank page). See [docs/environment.md](docs/environment.md) → "Base path: plan A and plan B".
 
 To play around with hot reload instead, use the dev server:
 

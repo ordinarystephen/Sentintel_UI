@@ -95,6 +95,7 @@ python run.py                     # binds 0.0.0.0; port chain: PORT → FLASK_RU
 
 - **Plan A (default): history router + absolute prefix.** Build with `VITE_BASE_PATH=/proxy/8082/` — the *workspace* proxy path evidenced in the POC repo. **Verify the real prefix of a published app before hardcoding it** (publish once, inspect the URL); workspace and published prefixes are not guaranteed identical.
 - **Plan B (escape hatch): relative base + hash router.** If the published prefix proves unstable, build with `VITE_BASE_PATH=./ VITE_ROUTER=hash` — relative assets survive any prefix, and routes live in the URL fragment (`#/review/:id`), which no proxy touches. Section deep links still work (`#/review/x#sec-2`). Both modes are covered by the Playwright deep-link verification.
+- **Confirmed in the live target environment (2026-09-09): Plan B is the proven build.** `VITE_BASE_PATH=./ VITE_ROUTER=hash make build` renders correctly behind the proxy; the default-base build served a blank page (root-absolute `/assets/*` 404 under the prefix), and the absolute-prefix Plan A build was not what worked. Use Plan B as the day-one build command there.
 
 ## Running behind a proxy (verified)
 

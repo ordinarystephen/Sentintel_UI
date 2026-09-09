@@ -117,6 +117,8 @@ make build                        # produces dist/
 make run                          # → "Running on http://0.0.0.0:8082"
 ```
 
+> **Deploying behind the target environment's proxy?** Build with `VITE_BASE_PATH=./ VITE_ROUTER=hash make build` instead — confirmed working in the live environment (2026-09-09). A default `make build` bakes root-absolute asset paths that 404 behind the proxy prefix and the page renders blank.
+
 (`make install` already covered the Flask dependency.)
 
 Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/review/rev-veyland-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as the hosted-app entry point.
