@@ -250,7 +250,12 @@ export interface Review extends ReviewSummary {
   /** Always six, in order. */
   sections: Section[]
   attention: AttentionItem[]
-  /** Management-summary verdicts; empty when the template carries none (zone not rendered). */
+  /**
+   * Management-summary verdicts. STRUCTURAL: a well-formed review always
+   * carries assessment areas (completed reviews fully rated). The UI's
+   * empty/missing tolerance is a data-integrity guard for malformed or
+   * legacy records, never an expected product state.
+   */
   areas: AssessmentArea[]
   /**
    * Upstream/CRR reference snapshot. Absent → the disclosure is not rendered

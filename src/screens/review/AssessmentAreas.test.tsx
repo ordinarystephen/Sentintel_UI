@@ -67,10 +67,27 @@ describe('areas of assessment', () => {
     )
   })
 
-  it('absent areas render nothing; read-only reviews hide the verdict buttons', async () => {
+  it('a completed review renders its fully-rated zone: no pending badge, 7 sat + 1 n/a', async () => {
     renderAt('/review/rev-atlas-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Atlas Foods Group' })
-    expect(screen.queryByRole('button', { name: /Areas of assessment/ })).toBeNull()
+    const header = screen.getByRole('button', { name: /Areas of assessment/ })
+    expect(header).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a')
+    expect(header).not.toHaveTextContent('pending')
+    expect(screen.queryByRole('button', { name: 'Satisfactory' })).toBeNull()
+  })
+
+  it('a read-only review shows ratings and reasons but no action buttons', async () => {
+    const user = userEvent.setup()
+    renderAt('/review/rev-crestline-2026-08')
+    await screen.findByRole('heading', { level: 1, name: 'Crestline Logistics' })
+    const header = screen.getByRole('button', { name: /Areas of assessment/ })
+    expect(header).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a')
+    await user.click(screen.getByRole('button', { name: /Portfolio Management/ }))
+    expect(
+      screen.getByText(/Required monitoring practices are adequate and timely/),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Satisfactory' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Unsatisfactory' })).toBeNull()
   })
 })
 

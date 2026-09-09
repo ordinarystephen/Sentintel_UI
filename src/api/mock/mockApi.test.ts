@@ -362,7 +362,7 @@ describe('documents', () => {
 })
 
 describe('areas of assessment + reference data', () => {
-  it('Meridian carries the 8 areas and the reference snapshot; complete reviews carry none', async () => {
+  it('Meridian carries the 8 areas and the reference snapshot; complete reviews carry fully-rated zones', async () => {
     const api = make()
     const r = asReview(await api.getReview(MERIDIAN_ID))
     expect(r.areas).toHaveLength(8)
@@ -380,8 +380,12 @@ describe('areas of assessment + reference data', () => {
       source: 'crr',
     })
 
+    // areas are structural to every review: completed reviews are fully rated
     const atlas = asReview(await api.getReview('rev-atlas-2026-08'))
-    expect(atlas.areas).toEqual([])
+    expect(atlas.areas).toHaveLength(8)
+    expect(atlas.areas.filter((a) => a.rating === 'satisfactory')).toHaveLength(7)
+    expect(atlas.areas.filter((a) => a.rating === 'pending')).toHaveLength(0)
+    expect(atlas.areas[0].id).toBe('rev-atlas-2026-08-aa-structure') // ids namespaced per review
     expect(atlas.referenceData).toBeUndefined()
   })
 

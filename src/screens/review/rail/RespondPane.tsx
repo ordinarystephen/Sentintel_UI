@@ -82,7 +82,9 @@ export function RespondPane({
               ? strings.review.notApplicable
               : strings.review.incorrect}
           </span>
-          <span className="text-micro text-muted italic">“{item.cleared.note}”</span>
+          {item.cleared.note && (
+            <span className="text-micro text-muted italic">“{item.cleared.note}”</span>
+          )}
           <Button
             variant="quiet"
             disabled={actions.pending}

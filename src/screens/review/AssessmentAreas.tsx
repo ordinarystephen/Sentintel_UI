@@ -136,8 +136,9 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
 
 export function AssessmentAreas({ review }: { review: Review }) {
   const [open, setOpen] = useState(true)
-  // A missing field is an absent feature (e.g. a review persisted under an
-  // older schema): undefined and empty are both "no zone".
+  // Data-integrity guard ONLY: a well-formed review always carries areas
+  // (they are structural to every review). Missing/empty means a malformed
+  // or legacy record slipped through — render no zone rather than crash.
   const areas = review.areas ?? []
   const pending = areas.filter((a) => a.rating === 'pending').length
   if (areas.length === 0) return null

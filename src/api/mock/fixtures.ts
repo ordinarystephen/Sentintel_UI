@@ -603,6 +603,80 @@ interface SummarySeed {
   repeatIndex?: number
 }
 
+/**
+ * The fully-rated assessment set every completed review carries (areas are
+ * structural to every review — clarified 2026-09-09). Same voice as the
+ * Meridian set; ids namespaced per review so setAreaRating can never cross
+ * reviews. 7 satisfactory + Traded Products n/a → "8 areas · 7 satisfactory
+ * · 1 n/a", no pending badge.
+ */
+function completedAreas(reviewId: string): AssessmentArea[] {
+  const mk = (
+    key: string,
+    name: string,
+    reason: string,
+    sectionRefs: number[],
+    rating: AssessmentArea['rating'] = 'satisfactory',
+  ): AssessmentArea => ({
+    id: `${reviewId}-${key}`,
+    name,
+    rating,
+    reason,
+    sectionRefs,
+  })
+  return [
+    mk(
+      'aa-structure',
+      'Transaction Structure / Underwriting',
+      'The facility structure and subsequent amendments were appropriately evaluated, documented and approved under the applicable underwriting standards. Write-up quality acceptable; key risks and mitigants adequately identified.',
+      [1],
+    ),
+    mk(
+      'aa-repay-primary',
+      'Repayment Capacity — Primary Sources',
+      'Cash flow from operations correctly identified as the primary source of repayment. Expected-case coverage of debt service is adequate; model assumptions reasonable after challenge.',
+      [2],
+    ),
+    mk(
+      'aa-repay-secondary',
+      'Repayment Capacity — Secondary Sources',
+      'The identified secondary source is adequately supported at the expected case; no downgrade triggers are breached and the supporting valuation inputs are verified.',
+      [2],
+    ),
+    mk(
+      'aa-portfolio',
+      'Portfolio Management',
+      'Required monitoring practices are adequate and timely: reviews completed on schedule, covenant and liquidity monitoring current.',
+      [5],
+    ),
+    mk(
+      'aa-reg-class',
+      'US Regulatory Classification',
+      'Pass classification appropriately assigned and supported by the leverage trajectory and repayment capacity over the projection period.',
+      [4],
+    ),
+    mk(
+      'aa-pd',
+      'Probability of Default Assessment',
+      'The PD rating applied was correctly derived using the appropriate rating model and standards.',
+      [4],
+    ),
+    mk(
+      'aa-lgd',
+      'Loss Given Default Assessment',
+      "The LGD applied was correctly derived and is appropriate for the facility's position in the capital structure.",
+      [4],
+    ),
+    mk(
+      'aa-traded',
+      'Traded Products',
+      'No traded products exposure to the counterparty.',
+      [],
+      'na',
+    ),
+  ]
+}
+
 function completeReview(seed: SummarySeed): Review {
   const o = owner(seed.ownerId)
   const doc = `${seed.borrowerName.replace(/[^A-Za-z0-9]+/g, '_')}_Annual_Review.pdf`
@@ -663,7 +737,7 @@ function completeReview(seed: SummarySeed): Review {
     },
     sections,
     attention: [],
-    areas: [],
+    areas: completedAreas(seed.id),
     dispositions: [],
     confidenceFloor: CONFIDENCE_FLOOR,
     readOnly: o.id !== ME.id,

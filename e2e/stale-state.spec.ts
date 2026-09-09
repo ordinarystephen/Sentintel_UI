@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test'
 
 const MERIDIAN = '/review/rev-meridian-2026-08'
 // Keep in sync with STATE_VERSION in src/api/mock/mockApi.ts.
-const CURRENT_VERSION = 2
+const CURRENT_VERSION = 3
 
 /** A minimal pre-v1.0-shaped Meridian override: no `areas`, no `referenceData`. */
 const LEGACY_REVIEW = {

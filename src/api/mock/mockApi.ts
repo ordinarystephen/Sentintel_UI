@@ -103,9 +103,10 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * shape must never shadow current fixtures. BUMP THIS whenever the Review /
  * fixture shape changes (a new field counts!); on load, any payload whose
  * version differs is discarded and the fixtures win. History: 1 = through
- * v0.5; 2 = v1.0 (Review gained `areas` + `referenceData`).
+ * v0.5; 2 = v1.0 (Review gained `areas` + `referenceData`); 3 = areas are
+ * structural to every review (all fixtures seeded with rated zones).
  */
-export const STATE_VERSION = 2
+export const STATE_VERSION = 3
 
 /** Processing timeline (ms since upload). */
 export const PROCESSING = {

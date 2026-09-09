@@ -63,8 +63,27 @@ test('supporting links deep-link with the neutral flash; reference data expands 
   })
 })
 
-test('read-only review shows no verdict buttons anywhere', async ({ page }) => {
+test('a completed review renders its fully-rated zone (structural, not Meridian-only)', async ({
+  page,
+}) => {
+  await page.goto('/review/rev-atlas-2026-08')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Atlas Foods Group')
+  const header = page.getByRole('button', { name: /Areas of assessment/ })
+  await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
+  await expect(header).not.toContainText('pending')
+})
+
+test('a read-only review renders the rated zone — ratings and reasons, no action buttons', async ({
+  page,
+}) => {
   await page.goto('/review/rev-crestline-2026-08')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Crestline Logistics')
+  const header = page.getByRole('button', { name: /Areas of assessment/ })
+  await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
+  await page.getByRole('button', { name: /Portfolio Management/ }).click()
+  await expect(
+    page.getByText(/Required monitoring practices are adequate and timely/),
+  ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Satisfactory', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Unsatisfactory', exact: true })).toHaveCount(0)
 })
