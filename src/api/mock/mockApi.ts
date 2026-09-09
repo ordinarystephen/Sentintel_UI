@@ -13,7 +13,7 @@
  *   then lands an adjusted value.
  * - Reviews owned by others are read-only: mutations reject with a message.
  * - `exportReview` succeeds with a placeholder .docx blob, except for one
- *   fixture (Halcyon) that fails, to demonstrate the loud error path.
+ *   fixture (Seldwyn) that fails, to demonstrate the loud error path.
  *
  * Fixtures are the base layer; only mutated/created reviews are persisted
  * (`overrides`), keyed by STORAGE_KEY. Bump STATE_VERSION when fixtures change
@@ -54,10 +54,10 @@ import {
   EXPORT_FAILS_ID,
   flagsFor,
   ME,
-  MERIDIAN,
-  MERIDIAN_ID,
-  MERIDIAN_PRIOR,
-  MERIDIAN_PRIOR_ID,
+  VEYLAND,
+  VEYLAND_ID,
+  VEYLAND_PRIOR,
+  VEYLAND_PRIOR_ID,
   OWNERS,
   PASSAGES,
   POLICIES,
@@ -106,9 +106,10 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * v0.5; 2 = v1.0 (Review gained `areas` + `referenceData`); 3 = areas are
  * structural to every review (all fixtures seeded with rated zones); 4 =
  * canonical workpaper section titles (fixture data changed under stored
- * reviews — same scenario-A shadowing logic).
+ * reviews — same scenario-A shadowing logic); 5 = fictional-name hygiene
+ * (v1.1.2 — every borrower name, review/doc id, and filename changed).
  */
-export const STATE_VERSION = 4
+export const STATE_VERSION = 5
 
 /** Processing timeline (ms since upload). */
 export const PROCESSING = {
@@ -277,8 +278,8 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     const pages = documents.reduce((n, d) => n + (d.pages ?? 0), 0)
     const base: Omit<ProcessingReview, 'status' | 'phase' | 'statusLine'> = {
       id: seed.id,
-      borrowerName: detected ? MERIDIAN.borrowerName : null,
-      clId: detected ? MERIDIAN.clId : null,
+      borrowerName: detected ? VEYLAND.borrowerName : null,
+      clId: detected ? VEYLAND.clId : null,
       lob: 'IB Lending',
       ownerId: ME.id,
       ownerName: ME.name,
@@ -325,17 +326,17 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     return { ...base, status: 'processing', phase, statusLine }
   }
 
-  /** Turn a finished run into a ready Review (a copy of the Meridian fixture) — once. */
+  /** Turn a finished run into a ready Review (a copy of the Veyland fixture) — once. */
   function materialize(seed: ProcessingSeed, documents: ReviewDocument[]): Review {
     const existing = state.overrides[seed.id]
     if (existing) return existing
-    const r = clone(MERIDIAN)
+    const r = clone(VEYLAND)
     r.id = seed.id
     r.createdAt = new Date(seed.startedAt).toISOString()
     r.runCompletedAt = new Date(seed.startedAt + PROCESSING.total).toISOString()
     r.documents = documents
     r.story.docsLine = documents.map((d) => `${d.fileName} — ${d.kind}, ${d.date}`).join(' · ')
-    r.priorReviewId = MERIDIAN_ID
+    r.priorReviewId = VEYLAND_ID
     r.repeatIndex = 3
     r.dispositions = []
     r.attention = r.attention.filter((a) => a.kind !== 'question')
@@ -640,10 +641,10 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       if (!r) return fail(fmt(MESSAGES.noReview, { id: reviewId }))
       if (!r.priorReviewId) return delay(null)
       const prior = stored(r.priorReviewId)
-      const priorDate = (prior?.createdAt ?? MERIDIAN_PRIOR.priorDate).slice(0, 10)
+      const priorDate = (prior?.createdAt ?? VEYLAND_PRIOR.priorDate).slice(0, 10)
       const cmp: PriorComparison =
-        r.borrowerName === MERIDIAN.borrowerName
-          ? { ...clone(MERIDIAN_PRIOR), priorReviewId: r.priorReviewId, priorDate }
+        r.borrowerName === VEYLAND.borrowerName
+          ? { ...clone(VEYLAND_PRIOR), priorReviewId: r.priorReviewId, priorDate }
           : {
               priorReviewId: r.priorReviewId,
               priorDate,
@@ -808,4 +809,4 @@ export function createMockApi(options: MockOptions = {}): MockApi {
   }
 }
 
-export { CONFIDENCE_FLOOR, ME, MERIDIAN_ID, MERIDIAN_PRIOR_ID, EXPORT_FAILS_ID }
+export { CONFIDENCE_FLOOR, ME, VEYLAND_ID, VEYLAND_PRIOR_ID, EXPORT_FAILS_ID }

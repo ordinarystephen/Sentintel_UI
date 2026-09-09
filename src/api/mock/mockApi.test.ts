@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Review } from '../types'
-import { createMockApi, EXPORT_FAILS_ID, ME, MERIDIAN_ID, PROCESSING } from './mockApi'
+import { createMockApi, EXPORT_FAILS_ID, ME, VEYLAND_ID, PROCESSING } from './mockApi'
 
 const T0 = Date.UTC(2026, 7, 29, 12, 0, 0)
 const make = (storage: Storage | null = null) => createMockApi({ latencyMs: 0, storage })
@@ -20,10 +20,10 @@ describe('identity and lists', () => {
     expect(await make().me()).toEqual(ME)
   })
 
-  it('listMyReviews returns only my reviews, newest first, Meridian on top', async () => {
+  it('listMyReviews returns only my reviews, newest first, Veyland on top', async () => {
     const mine = await make().listMyReviews()
     expect(mine.every((r) => r.ownerId === ME.id)).toBe(true)
-    expect(mine[0].id).toBe(MERIDIAN_ID)
+    expect(mine[0].id).toBe(VEYLAND_ID)
     expect(mine[0].openItems).toBe(4)
     for (let i = 1; i < mine.length; i++)
       expect(mine[i - 1].createdAt >= mine[i].createdAt).toBe(true)
@@ -38,15 +38,13 @@ describe('identity and lists', () => {
     const wm = await api.listAllReviews({ lob: 'Wealth Management', period: 'all' })
     expect(wm.reviews.length).toBeGreaterThan(0)
     expect(wm.reviews.every((r) => r.lob === 'Wealth Management')).toBe(true)
-    expect(wm.reviews.map((r) => r.borrowerName)).toContain('Verdant AgriChem')
+    expect(wm.reviews.map((r) => r.borrowerName)).toContain('Verloway AgriChem')
 
     const chen = await api.listAllReviews({ ownerId: 'u-chen', period: 'all' })
     expect(chen.reviews.every((r) => r.ownerName === 'R. Chen')).toBe(true)
 
     const byCl = await api.listAllReviews({ query: 'cl6430', period: 'all' })
-    expect(byCl.reviews.map((r) => r.id).sort()).toEqual(
-      ['rev-meridian-2026-02', MERIDIAN_ID].sort(),
-    )
+    expect(byCl.reviews.map((r) => r.id).sort()).toEqual(['rev-veyland-2026-02', VEYLAND_ID].sort())
     expect(byCl.reviews[0].repeatIndex).toBe(2)
 
     const bySector = await api.listAllReviews({ query: 'marine', period: 'all' })
@@ -58,8 +56,8 @@ describe('identity and lists', () => {
 })
 
 describe('getReview', () => {
-  it('serves the Meridian fixture with the flag derived from the single floor', async () => {
-    const r = asReview(await make().getReview(MERIDIAN_ID))
+  it('serves the Veyland fixture with the flag derived from the single floor', async () => {
+    const r = asReview(await make().getReview(VEYLAND_ID))
     expect(r.status).toBe('ready')
     expect(r.sections).toHaveLength(6)
     expect(r.sectionsPopulated).toBe(2)
@@ -75,7 +73,7 @@ describe('getReview', () => {
 
   it("marks another owner's review read-only and rejects unknown ids with a message", async () => {
     const api = make()
-    expect(asReview(await api.getReview('rev-crestline-2026-08')).readOnly).toBe(true)
+    expect(asReview(await api.getReview('rev-farrowdale-2026-08')).readOnly).toBe(true)
     await expect(api.getReview('nope')).rejects.toMatchObject({
       message: 'No review with id nope.',
     })
@@ -83,7 +81,7 @@ describe('getReview', () => {
 })
 
 describe('createReview / processing', () => {
-  it('creates a durable record that names itself, then serves a Meridian copy', async () => {
+  it('creates a durable record that names itself, then serves a Veyland copy', async () => {
     const api = make()
     const { id } = await api.createReview(
       [file('Acme_Annual.pdf'), file('Acme_Q3.pdf')],
@@ -107,7 +105,7 @@ describe('createReview / processing', () => {
 
     vi.setSystemTime(T0 + PROCESSING.detectBorrowerAt + 100)
     mine = await api.listMyReviews()
-    expect(mine[0].borrowerName).toBe('Meridian US Holdco LLC')
+    expect(mine[0].borrowerName).toBe('Veyland US Holdco LLC')
     expect(mine[0].clId).toBe('CL6430')
 
     vi.setSystemTime(T0 + PROCESSING.indexing + 100)
@@ -130,7 +128,7 @@ describe('createReview / processing', () => {
       sectionN: 2,
     })
     expect(r.openItems).toBe(5)
-    expect(r.priorReviewId).toBe(MERIDIAN_ID)
+    expect(r.priorReviewId).toBe(VEYLAND_ID)
   })
 
   it('resumes from persisted state in a fresh instance (tab killed mid-processing)', async () => {
@@ -154,21 +152,21 @@ describe('createReview / processing', () => {
     const { id } = await api.createReview([file('Doc.pdf')], '')
     await api.cancelReview(id)
     expect(await api.getReview(id)).toMatchObject({ id, status: 'cancelled' })
-    await expect(api.cancelReview(MERIDIAN_ID)).rejects.toMatchObject({
+    await expect(api.cancelReview(VEYLAND_ID)).rejects.toMatchObject({
       message: expect.stringContaining('not processing'),
     })
   })
 
   it('a damaged file fails loudly with the specific message', async () => {
     const api = make()
-    const { id } = await api.createReview([file('Meridian_corrupt_scan.pdf')], '')
+    const { id } = await api.createReview([file('Veyland_corrupt_scan.pdf')], '')
     vi.setSystemTime(T0 + PROCESSING.failAt)
     const st = await api.getReviewStatus(id)
     expect(st).toMatchObject({
       status: 'failed',
       error: {
         message:
-          'Could not parse Meridian_corrupt_scan.pdf: the file is encrypted or damaged (parser: pdfplumber).',
+          'Could not parse Veyland_corrupt_scan.pdf: the file is encrypted or damaged (parser: pdfplumber).',
       },
     })
   })
@@ -184,7 +182,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
   it('attention: mark reviewed / unreview / edit note / dismiss flag', async () => {
     const api = make()
     await api.markReviewed('att-headroom', 'Headroom acceptable given prepayment cadence')
-    let r = asReview(await api.getReview(MERIDIAN_ID))
+    let r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.openItems).toBe(3)
     expect(r.attention.find((a) => a.id === 'att-headroom')).toMatchObject({
       state: 'reviewed',
@@ -199,7 +197,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
 
     await api.editNote('att-headroom', 'Revised note')
     await api.unreview('att-headroom')
-    r = asReview(await api.getReview(MERIDIAN_ID))
+    r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.attention.find((a) => a.id === 'att-headroom')?.state).toBe('open')
     expect(r.dispositions.map((d) => d.action).slice(-3)).toEqual([
       'reviewed',
@@ -211,7 +209,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
       message: 'Only flags can be dismissed.',
     })
     await api.dismissFlag('att-concentration')
-    r = asReview(await api.getReview(MERIDIAN_ID))
+    r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.attention.find((a) => a.id === 'att-concentration')?.state).toBe('dismissed')
     expect(r.openItems).toBe(3)
   })
@@ -229,7 +227,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
     })
     const restored = await api.undoClear('wi-2-liq')
     expect(restored.cleared).toBeUndefined()
-    const r = asReview(await api.getReview(MERIDIAN_ID))
+    const r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.dispositions.slice(-2).map((d) => d.action)).toEqual([
       'cleared_incorrect',
       'clear_undone',
@@ -243,7 +241,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
     const api = make()
     const item = await api.verify('wi-2-wacc')
     expect(item.verifiedAt).toBe(new Date(T0).toISOString())
-    const r = asReview(await api.getReview(MERIDIAN_ID))
+    const r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.attention.find((a) => a.id === 'att-wacc')).toMatchObject({
       state: 'reviewed',
       note: 'Marked verified',
@@ -259,13 +257,13 @@ describe('dispositions persist and are reflected in re-fetches', () => {
       action: 'responded',
       note: 'Use 9.6% from the prior review',
     })
-    let r = asReview(await api.getReview(MERIDIAN_ID))
+    let r = asReview(await api.getReview(VEYLAND_ID))
     let wacc = r.sections[1].items.find((i) => i.id === 'wi-2-wacc')!
     expect(wacc.reRunning).toBe(true)
     expect(wacc.flags).toEqual(['review_required'])
 
     vi.setSystemTime(T0 + PROCESSING.reRun)
-    r = asReview(await api.getReview(MERIDIAN_ID))
+    r = asReview(await api.getReview(VEYLAND_ID))
     wacc = r.sections[1].items.find((i) => i.id === 'wi-2-wacc')!
     expect(wacc.reRunning).toBe(false)
     expect(wacc.content).toEqual({ kind: 'keyValue', entries: [{ value: '9.6%' }] })
@@ -280,7 +278,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
   it("rejects mutations on another owner's review with a specific message", async () => {
     const api = make()
     await expect(
-      api.clear('rev-crestline-2026-08-wi-1', 'not_applicable', 'n/a'),
+      api.clear('rev-farrowdale-2026-08-wi-1', 'not_applicable', 'n/a'),
     ).rejects.toMatchObject({
       message:
         'This review belongs to R. Chen — you can read it, but editing stays with its owner.',
@@ -291,7 +289,7 @@ describe('dispositions persist and are reflected in re-fetches', () => {
     const a = make(localStorage)
     await a.markReviewed('att-headroom', 'ok')
     const b = make(localStorage)
-    expect(asReview(await b.getReview(MERIDIAN_ID)).openItems).toBe(3)
+    expect(asReview(await b.getReview(VEYLAND_ID)).openItems).toBe(3)
   })
 })
 
@@ -300,26 +298,26 @@ describe('context rail data', () => {
     const api = make()
     const d = await api.getDebate('wi-2-wacc')
     expect(d.map((p) => p.stance)).toEqual(['advocate', 'dissent'])
-    expect(d[0]).toMatchObject({ at: '2026-08-28T09:42:00Z', runId: 'run-meridian-2026-08' })
+    expect(d[0]).toMatchObject({ at: '2026-08-28T09:42:00Z', runId: 'run-veyland-2026-08' })
     expect(await api.getDebate('wi-2-debt')).toEqual([])
   })
 
   it('prior deltas only when the borrower has a prior review', async () => {
     const api = make()
-    const cmp = await api.getPriorDeltas(MERIDIAN_ID)
-    expect(cmp).toMatchObject({ priorReviewId: 'rev-meridian-2026-02', priorDate: '2026-02-14' })
+    const cmp = await api.getPriorDeltas(VEYLAND_ID)
+    expect(cmp).toMatchObject({ priorReviewId: 'rev-veyland-2026-02', priorDate: '2026-02-14' })
     expect(cmp!.deltas.find((d) => d.label === 'Gross leverage')).toMatchObject({
       prior: '5.6x',
       current: '5.9x',
       direction: 'worse',
     })
-    expect(await api.getPriorDeltas('rev-atlas-2026-08')).toBeNull()
+    expect(await api.getPriorDeltas('rev-ambervale-2026-08')).toBeNull()
   })
 
   it('policies cite the items they touched', async () => {
-    const pols = await make().getPolicies(MERIDIAN_ID)
+    const pols = await make().getPolicies(VEYLAND_ID)
     expect(pols.find((p) => p.id === '1-G-007544 · §4.2')?.itemIds).toContain('wi-2-wacc')
-    const other = await make().getPolicies('rev-atlas-2026-08')
+    const other = await make().getPolicies('rev-ambervale-2026-08')
     expect(other.length).toBeGreaterThan(0)
   })
 })
@@ -327,33 +325,30 @@ describe('context rail data', () => {
 describe('documents', () => {
   it('finds the revolver availability passages with marked terms', async () => {
     const res = await make().searchDocuments('revolver availability', {})
-    const liq = res.hits.find((h) => h.id === 'doc-meridian-q3-liq')!
+    const liq = res.hits.find((h) => h.id === 'doc-veyland-q3-liq')!
     expect(liq.snippetHtml).toContain('<mark>revolving</mark>')
     expect(liq.snippetHtml).toContain('<mark>availability</mark>')
-    expect(liq.usedInReviewId).toBe(MERIDIAN_ID)
-    expect(res.hits[0].id).toBe('doc-meridian-q3-liq') // most terms matched ranks first
+    expect(liq.usedInReviewId).toBe(VEYLAND_ID)
+    expect(res.hits[0].id).toBe('doc-veyland-q3-liq') // most terms matched ranks first
     expect(res.totalDocuments).toBeGreaterThanOrEqual(2)
-    expect(res.counterparties).toContain('Halcyon Marine Finance')
+    expect(res.counterparties).toContain('Seldwyn Marine Finance')
   })
 
   it('advanced syntax: "quoted phrases" must appear verbatim; -word excludes', async () => {
     const api = make()
     const phrase = await api.searchDocuments('"letters of credit"', {})
-    expect(phrase.hits.map((h) => h.id).sort()).toEqual([
-      'doc-halcyon-fa-72',
-      'doc-meridian-q3-liq',
-    ])
+    expect(phrase.hits.map((h) => h.id).sort()).toEqual(['doc-seldwyn-fa-72', 'doc-veyland-q3-liq'])
     expect(phrase.hits[0].snippetHtml).toMatch(/<mark>letters of credit<\/mark>/i)
     const minus = await api.searchDocuments('revolver -letters', {})
-    expect(minus.hits.map((h) => h.id)).not.toContain('doc-meridian-q3-liq')
-    expect(minus.hits.map((h) => h.id)).toContain('doc-meridian-annual-cov')
+    expect(minus.hits.map((h) => h.id)).not.toContain('doc-veyland-q3-liq')
+    expect(minus.hits.map((h) => h.id)).toContain('doc-veyland-annual-cov')
     expect(minus.hits[0].snippet).not.toContain('<mark>')
   })
 
   it('filters hit the seam', async () => {
     const api = make()
     const wm = await api.searchDocuments('', { lob: 'Wealth Management' })
-    expect(wm.hits.map((h) => h.counterparty)).toEqual(['Verdant AgriChem'])
+    expect(wm.hits.map((h) => h.counterparty)).toEqual(['Verloway AgriChem'])
     const fa = await api.searchDocuments('', { docType: 'facility agreement' })
     expect(fa.hits).toHaveLength(1)
     const none = await api.searchDocuments('zebra', {})
@@ -362,9 +357,9 @@ describe('documents', () => {
 })
 
 describe('areas of assessment + reference data', () => {
-  it('Meridian carries the 8 areas and the reference snapshot; complete reviews carry fully-rated zones', async () => {
+  it('Veyland carries the 8 areas and the reference snapshot; complete reviews carry fully-rated zones', async () => {
     const api = make()
-    const r = asReview(await api.getReview(MERIDIAN_ID))
+    const r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.areas).toHaveLength(8)
     const pending = r.areas.find((a) => a.rating === 'pending')!
     expect(pending).toMatchObject({
@@ -381,18 +376,18 @@ describe('areas of assessment + reference data', () => {
     })
 
     // areas are structural to every review: completed reviews are fully rated
-    const atlas = asReview(await api.getReview('rev-atlas-2026-08'))
-    expect(atlas.areas).toHaveLength(8)
-    expect(atlas.areas.filter((a) => a.rating === 'satisfactory')).toHaveLength(7)
-    expect(atlas.areas.filter((a) => a.rating === 'pending')).toHaveLength(0)
-    expect(atlas.areas[0].id).toBe('rev-atlas-2026-08-aa-structure') // ids namespaced per review
-    expect(atlas.referenceData).toBeUndefined()
+    const ambervale = asReview(await api.getReview('rev-ambervale-2026-08'))
+    expect(ambervale.areas).toHaveLength(8)
+    expect(ambervale.areas.filter((a) => a.rating === 'satisfactory')).toHaveLength(7)
+    expect(ambervale.areas.filter((a) => a.rating === 'pending')).toHaveLength(0)
+    expect(ambervale.areas[0].id).toBe('rev-ambervale-2026-08-aa-structure') // ids namespaced per review
+    expect(ambervale.referenceData).toBeUndefined()
   })
 
   it('setAreaRating records a disposition, updates the rating, and persists', async () => {
     const api = make(localStorage)
     await api.setAreaRating('aa-repay-secondary', 'satisfactory')
-    const r = asReview(await api.getReview(MERIDIAN_ID))
+    const r = asReview(await api.getReview(VEYLAND_ID))
     expect(r.areas.find((a) => a.id === 'aa-repay-secondary')?.rating).toBe('satisfactory')
     expect(r.dispositions.at(-1)).toMatchObject({
       itemId: 'aa-repay-secondary',
@@ -402,7 +397,7 @@ describe('areas of assessment + reference data', () => {
     })
     const fresh = make(localStorage)
     expect(
-      asReview(await fresh.getReview(MERIDIAN_ID)).areas.find((a) => a.id === 'aa-repay-secondary')
+      asReview(await fresh.getReview(VEYLAND_ID)).areas.find((a) => a.id === 'aa-repay-secondary')
         ?.rating,
     ).toBe('satisfactory')
     await expect(api.setAreaRating('nope', 'satisfactory')).rejects.toMatchObject({
@@ -414,8 +409,8 @@ describe('areas of assessment + reference data', () => {
 describe('document text and download', () => {
   it("returns the extracted text organized by the document's own sections", async () => {
     const api = make()
-    const text = await api.getDocumentText('doc-meridian-q3')
-    expect(text.fileName).toBe('Meridian_Holdco_Q3_Update.pdf')
+    const text = await api.getDocumentText('doc-veyland-q3')
+    expect(text.fileName).toBe('Veyland_Holdco_Q3_Update.pdf')
     expect(text.pages).toBe(15)
     expect(text.extracted).toBe(true)
     expect(text.sections).toHaveLength(5)
@@ -429,9 +424,9 @@ describe('document text and download', () => {
 
   it('rejects not-yet-extracted documents and unknown ids with messages', async () => {
     const api = make()
-    await expect(api.getDocumentText('doc-crestline-q2')).rejects.toMatchObject({
+    await expect(api.getDocumentText('doc-farrowdale-q2')).rejects.toMatchObject({
       message:
-        'Crestline_Logistics_Q2_Update.pdf has not been extracted yet — the preview arrives when parsing completes.',
+        'Farrowdale_Logistics_Q2_Update.pdf has not been extracted yet — the preview arrives when parsing completes.',
     })
     await expect(api.getDocumentText('nope')).rejects.toMatchObject({
       message: 'No document with id nope.',
@@ -439,22 +434,22 @@ describe('document text and download', () => {
   })
 
   it('downloads the original as a placeholder PDF', async () => {
-    const r = await make().downloadDocument('doc-meridian-annual')
-    expect(r.fileName).toBe('Meridian_Holdco_Annual_Review_FY25.pdf')
+    const r = await make().downloadDocument('doc-veyland-annual')
+    expect(r.fileName).toBe('Veyland_Holdco_Annual_Review_FY25.pdf')
     expect(r.blob.type).toBe('application/pdf')
     expect(r.blob.size).toBeGreaterThan(0)
   })
 
   it('search hits carry the document id', async () => {
     const res = await make().searchDocuments('revolver availability', {})
-    expect(res.hits.find((h) => h.id === 'doc-meridian-q3-liq')?.docId).toBe('doc-meridian-q3')
+    expect(res.hits.find((h) => h.id === 'doc-veyland-q3-liq')?.docId).toBe('doc-veyland-q3')
   })
 })
 
 describe('export', () => {
   it('downloads a placeholder .docx for a ready review', async () => {
-    const res = await make().exportReview(MERIDIAN_ID)
-    expect(res.fileName).toBe('CL6430_Meridian_US_Holdco_LLC_Review.docx')
+    const res = await make().exportReview(VEYLAND_ID)
+    expect(res.fileName).toBe('CL6430_Veyland_US_Holdco_LLC_Review.docx')
     expect(res.blob.type).toContain('wordprocessingml')
     expect(res.blob.size).toBeGreaterThan(0)
   })

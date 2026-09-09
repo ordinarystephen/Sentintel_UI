@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test'
 test.skip(!process.env.DOCS_SHOTS, 'run with DOCS_SHOTS=1 (npm run screenshots:docs)')
 
 const OUT = 'docs/screenshots'
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -31,18 +31,18 @@ test('stone-light: every screen', async ({ page }) => {
   test.setTimeout(90_000)
   await prep(page, 'stone', false)
   await page.goto('/')
-  await expect(page.getByRole('link', { name: /Meridian US Holdco LLC/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/01-landing.png` })
 
   await page.getByLabel('Choose PDF files').setInputFiles([
     {
-      name: 'Meridian_Holdco_Annual_Review_FY25.pdf',
+      name: 'Veyland_Holdco_Annual_Review_FY25.pdf',
       mimeType: 'application/pdf',
       buffer: Buffer.alloc(2_400_000, 1),
     },
     {
-      name: 'Meridian_Holdco_Q3_Update.pdf',
+      name: 'Veyland_Holdco_Q3_Update.pdf',
       mimeType: 'application/pdf',
       buffer: Buffer.alloc(1_100_000, 1),
     },
@@ -57,14 +57,14 @@ test('stone-light: every screen', async ({ page }) => {
   await settle(page)
   await page.screenshot({ path: `${OUT}/03-processing.png` })
 
-  await page.goto(`${MERIDIAN}#sec-2`)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
+  await page.goto(`${VEYLAND}#sec-2`)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
   await settle(page)
   await page.screenshot({ path: `${OUT}/04-review-top.png` })
   await page.evaluate(() => document.getElementById('canvas')!.scrollTo(0, 0))
   await settle(page)
   await page.screenshot({ path: `${OUT}/05-review-story-attention.png` })
-  await page.goto(`${MERIDIAN}#sec-2`)
+  await page.goto(`${VEYLAND}#sec-2`)
   await settle(page)
   const rail = page.getByRole('complementary', { name: 'Context' })
   await expect(rail).toContainText('How this got here')
@@ -96,7 +96,7 @@ test('stone-light: every screen', async ({ page }) => {
   await page.keyboard.press('Escape')
 
   await page.goto('/reviews')
-  await expect(page.getByRole('link', { name: /Meridian/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Veyland/ })).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/11-reviews-my.png` })
   await page.goto('/reviews/all')
@@ -107,12 +107,12 @@ test('stone-light: every screen', async ({ page }) => {
   await expect(page.getByText(/sorted by relevance/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/13-documents.png` })
-  await page.goto('/review/rev-halcyon-2026-08')
+  await page.goto('/review/rev-seldwyn-2026-08')
   await page.getByRole('button', { name: 'Export Review' }).click()
   await expect(page.getByRole('alert').first()).toContainText('Export failed')
   await settle(page)
   await page.screenshot({ path: `${OUT}/14-export-error.png` })
-  await page.goto('/review/rev-crestline-2026-08')
+  await page.goto('/review/rev-farrowdale-2026-08')
   await expect(page.getByText(/Read-only/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/15-read-only-review.png` })
@@ -121,8 +121,8 @@ test('stone-light: every screen', async ({ page }) => {
 for (const theme of THEMES.slice(1)) {
   test(`${theme.name}: review page + collapsed rail`, async ({ page }) => {
     await prep(page, theme.family, theme.dark)
-    await page.goto(`${MERIDIAN}#sec-2`)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
+    await page.goto(`${VEYLAND}#sec-2`)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
     await settle(page)
     await page.screenshot({ path: `${OUT}/16-review-${theme.name}.png` })
   })
@@ -130,8 +130,8 @@ for (const theme of THEMES.slice(1)) {
 test('cobalt-light: collapsed rail', async ({ page }) => {
   await prep(page, 'cobalt', false)
   await page.addInitScript(() => localStorage.setItem('sentinel.rail.collapsed', 'true'))
-  await page.goto(MERIDIAN)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
+  await page.goto(VEYLAND)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
   await settle(page)
   await page.screenshot({ path: `${OUT}/17-review-collapsed-rail-cobalt-light.png` })
 })

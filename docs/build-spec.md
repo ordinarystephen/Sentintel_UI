@@ -11,7 +11,7 @@ When sources conflict, this order wins: (1) Steve's direct instruction, (2) this
 2. **This spec** — behaviors, semantics, the API contract, phasing, and acceptance criteria a static mockup can't carry.
 3. **`docs/sentinel-ui-decisions.md`** — the running keep/cut ledger (copy it into the repo's `docs/`); the "why" behind decisions.
 
-All borrower data in the mockup (Meridian US Holdco, CL6430, etc.) is fictional. It becomes the fixture data (§7).
+All borrower data in the mockup (Veyland US Holdco, CL6430, etc.) is fictional. It becomes the fixture data (§7).
 
 **This repo contains no backend.** The existing Flask/React POC is a *separate* codebase; it is reference material for what the platform does, and nothing more. Do not import, port, or copy code from it. Where this spec says "the backend will…", that is a contract note for the developers who take over — in this repo it is satisfied by the mock API layer.
 
@@ -21,7 +21,7 @@ Sentinel is CRR's credit-review platform: a reviewer uploads the documents for o
 
 Non-negotiable domain rules:
 
-- **There is no review "type."** Annual/thematic/target distinctions do not exist anywhere in the UI — not as a tag, filter, header label, or surfaced data field. A review is identified by borrower name + ID (e.g. `Meridian US Holdco LLC · CL6430`). Only the supporting documentation differs between reviews.
+- **There is no review "type."** Annual/thematic/target distinctions do not exist anywhere in the UI — not as a tag, filter, header label, or surfaced data field. A review is identified by borrower name + ID (e.g. `Veyland US Holdco LLC · CL6430`). Only the supporting documentation differs between reviews.
 - **One export.** The rendered Word review, button label **"Export Review"**. There is no Excel export.
 - **Line of business** (IB Lending / Wealth Management / Counterparty Credit Risk) is a real dimension: filterable on review lists and document search.
 - Case-management-system integration is out of scope entirely. Do not build seams for it.
@@ -177,8 +177,8 @@ Rules: no `fetch` anywhere outside `src/api/`; all times ISO-8601 from the API, 
 
 `src/api/mock/` makes the whole app run with `npm run dev` and no backend — this is what Steve demos and what the dev team explores first.
 
-- Fixtures seeded from the mockup's content: **Meridian US Holdco (current, 4 open items, section 2 flagged WACC `conf 41%`, prior review 2026-02-14 → Prior tab populated)**, Atlas Foods Group, Halcyon Marine Finance, Beacon Health Partners (complete, owned by "you"), Crestline Logistics and Verdant AgriChem (other owners, read-only, one WM for the LOB filter), plus enough generated rows to make search/filter/count lines credible (~40 reviews). Document search fixtures include the "revolver availability" hits from the mockup.
-- `createReview` simulates processing with timers (phase updates over ~15s, borrower detected midway → rename event) and then serves a copy of the Meridian fixture. `cancelReview` works.
+- Fixtures seeded from the mockup's content: **Veyland US Holdco (current, 4 open items, section 2 flagged WACC `conf 41%`, prior review 2026-02-14 → Prior tab populated)**, Ambervale Foods Group, Seldwyn Marine Finance, Northgale Health Partners (complete, owned by "you"), Farrowdale Logistics and Verloway AgriChem (other owners, read-only, one WM for the LOB filter), plus enough generated rows to make search/filter/count lines credible (~40 reviews). Document search fixtures include the "revolver availability" hits from the mockup.
+- `createReview` simulates processing with timers (phase updates over ~15s, borrower detected midway → rename event) and then serves a copy of the Veyland fixture. `cancelReview` works.
 - Mutations (dispositions, clears, responses) persist in memory for the session and are reflected in re-fetches; a `respond` call flips the item into a brief "re-running" state and returns an adjusted value, so the UX is demonstrable.
 - `exportReview` in mock mode: succeed by downloading a tiny placeholder .docx blob, and expose one fixture that fails (to demonstrate the error path).
 

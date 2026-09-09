@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('sentinel.e2e.reset')) {
@@ -17,7 +17,7 @@ test.beforeEach(async ({ page }) => {
 test('zone folds with badge + tally intact; verdict updates live and survives reload', async ({
   page,
 }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('1 pending')
   await expect(header).toContainText('8 areas · 6 satisfactory · 1 n/a')
@@ -40,7 +40,7 @@ test('supporting links deep-link with the neutral flash; reference data expands 
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 800 })
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const pd = page.getByRole('button', { name: /Probability of Default Assessment/ })
   await pd.click()
   await page.locator('#aa-pd-body').getByRole('link', { name: 'Supporting: Section 5 →' }).click()
@@ -63,11 +63,11 @@ test('supporting links deep-link with the neutral flash; reference data expands 
   })
 })
 
-test('a completed review renders its fully-rated zone (structural, not Meridian-only)', async ({
+test('a completed review renders its fully-rated zone (structural, not Veyland-only)', async ({
   page,
 }) => {
-  await page.goto('/review/rev-atlas-2026-08')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Atlas Foods Group')
+  await page.goto('/review/rev-ambervale-2026-08')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ambervale Foods Group')
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
   await expect(header).not.toContainText('pending')
@@ -76,8 +76,8 @@ test('a completed review renders its fully-rated zone (structural, not Meridian-
 test('a read-only review renders the rated zone — ratings and reasons, no action buttons', async ({
   page,
 }) => {
-  await page.goto('/review/rev-crestline-2026-08')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Crestline Logistics')
+  await page.goto('/review/rev-farrowdale-2026-08')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Farrowdale Logistics')
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
   // §4 shares the name — scope to the areas zone

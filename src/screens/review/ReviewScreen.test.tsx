@@ -3,14 +3,14 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderAt } from '@/test/renderAt'
 
-const MERIDIAN = 'rev-meridian-2026-08'
-const HALCYON = 'rev-halcyon-2026-08'
+const VEYLAND = 'rev-veyland-2026-08'
+const HALCYON = 'rev-seldwyn-2026-08'
 
 describe('review page — read path', () => {
   it('renders sticky bar, sub line, story, attention and work paper from the seam', async () => {
-    renderAt(`/review/${MERIDIAN}`)
+    renderAt(`/review/${VEYLAND}`)
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Meridian US Holdco LLC' }),
+      await screen.findByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' }),
     ).toBeInTheDocument()
     expect(screen.getByText('CL6430')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export Review' })).toBeInTheDocument()
@@ -19,7 +19,7 @@ describe('review page — read path', () => {
     expect(screen.getByText('term loan B')).toBeInTheDocument()
     expect(screen.getByText(/Run completed \d\d:\d\d · 2 documents/)).toBeInTheDocument()
     expect(
-      screen.getByText(/Meridian is a sponsor-owned application-hosting platform/),
+      screen.getByText(/Veyland is a sponsor-owned application-hosting platform/),
     ).toBeInTheDocument()
     expect(screen.getByText('prior 5.6x → current 5.9x')).toBeInTheDocument()
     expect(screen.getByText('4 open')).toBeInTheDocument()
@@ -33,15 +33,15 @@ describe('review page — read path', () => {
   })
 
   it('attention rows deep-link to their sections and reviewed rows show the note', async () => {
-    renderAt(`/review/${MERIDIAN}`)
+    renderAt(`/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const waccLink = screen.getByRole('link', { name: /Expected Case WACC 9.8% was read below/ })
-    expect(waccLink).toHaveAttribute('href', `/review/${MERIDIAN}#sec-2`)
+    expect(waccLink).toHaveAttribute('href', `/review/${VEYLAND}#sec-2`)
     const waccRow = waccLink.closest('li')!
     expect(within(waccRow).getByText('review required')).toBeInTheDocument()
     expect(within(waccRow).getByRole('link', { name: 'Section 2 →' })).toHaveAttribute(
       'href',
-      `/review/${MERIDIAN}#sec-2`,
+      `/review/${VEYLAND}#sec-2`,
     )
     const headroomRow = screen
       .getByRole('link', { name: /Covenant headroom tightening/ })
@@ -54,7 +54,7 @@ describe('review page — read path', () => {
 
   it('work paper: Financials open by default with the flagged WACC, evidence with page on the quote line, stubbed factor', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${MERIDIAN}`)
+    renderAt(`/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const sec2 = screen.getByRole('button', { name: /2.*Financials/ })
     expect(sec2).toHaveAttribute('aria-expanded', 'true')
@@ -87,13 +87,13 @@ describe('review page — read path', () => {
 
   it('source modal opens from View source with provenance and closes on Esc', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${MERIDIAN}`)
+    renderAt(`/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const buttons = screen.getAllByRole('button', { name: 'View source' })
     await user.click(buttons[buttons.length - 1]) // Liquidity evidence
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveTextContent('Evidence — Liquidity Summary')
-    expect(dialog).toHaveTextContent('Meridian_Holdco_Q3_Update.pdf · Liquidity Summary')
+    expect(dialog).toHaveTextContent('Veyland_Holdco_Q3_Update.pdf · Liquidity Summary')
     expect(dialog).toHaveTextContent('page 14')
     expect(within(dialog).getByText('section image')).toBeInTheDocument()
     expect(within(dialog).getByRole('img', { name: 'Source image' })).toBeInTheDocument()
@@ -104,7 +104,7 @@ describe('review page — read path', () => {
 
   it('source modal degrades neutrally when no image is available', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${MERIDIAN}`)
+    renderAt(`/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getAllByRole('button', { name: 'View source' })[0]) // WACC evidence, no imageRef
     const dialog = screen.getByRole('dialog')
@@ -114,16 +114,16 @@ describe('review page — read path', () => {
 
   it('Export Review: success toasts the file name; the failing fixture shows the message in-app', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${MERIDIAN}`)
+    const first = renderAt(`/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Exported CL6430_Meridian_US_Holdco_LLC_Review.docx',
+      'Exported CL6430_Veyland_US_Holdco_LLC_Review.docx',
     )
     first.unmount()
 
     renderAt(`/review/${HALCYON}`)
-    await screen.findByRole('heading', { level: 1, name: 'Halcyon Marine Finance' })
+    await screen.findByRole('heading', { level: 1, name: 'Seldwyn Marine Finance' })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     const alerts = await screen.findAllByRole('alert')
     expect(
@@ -136,9 +136,9 @@ describe('review page — read path', () => {
   })
 
   it("another owner's review renders", async () => {
-    renderAt('/review/rev-crestline-2026-08')
+    renderAt('/review/rev-farrowdale-2026-08')
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Crestline Logistics' }),
+      await screen.findByRole('heading', { level: 1, name: 'Farrowdale Logistics' }),
     ).toBeInTheDocument()
     expect(screen.getByText('6 sections · 6 populated')).toBeInTheDocument()
   })

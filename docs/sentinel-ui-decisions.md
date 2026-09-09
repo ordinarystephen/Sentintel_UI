@@ -15,7 +15,7 @@ The new UI is a **greenfield standalone repo** (see build spec §2): Vite + Reac
 ## Keeping
 
 **Data model nuances (2026-08-28)**
-- There is no review "type": annual/thematic/target distinctions do not exist. A review is a review; only the supporting documentation differs, and that is not a tag, filter, or header label. The review header is borrower name + ID only (e.g. "Meridian US Holdco LLC · CL6430").
+- There is no review "type": annual/thematic/target distinctions do not exist. A review is a review; only the supporting documentation differs, and that is not a tag, filter, or header label. The review header is borrower name + ID only (e.g. "Veyland US Holdco LLC · CL6430").
 - One deliverable, one export: the rendered Word review, labeled **"Export Review"**. No Excel export.
 - **Line of business** is a real filter dimension (IB Lending / Wealth Management / Counterparty Credit Risk) on the All-reviews list and the Documents search.
 - Every extracted or input workpaper item carries an inline **confidence score** (quiet mono chip, e.g. `conf 94%`; amber below the floor, paired with the review-required flag — the same threshold the export enforces).
@@ -45,6 +45,7 @@ The new UI is a **greenfield standalone repo** (see build spec §2): Vite + Reac
 - Quiet motion: ~150ms stagger settle on screen content, easing accordions, neutral one-time flash on deep-link targets. All disabled under prefers-reduced-motion. Calm, never bouncy.
 - Theme selection on one token contract: Stone (default) and Cobalt (Steve's navy palette: primary #19398d, dark navy sidebar #001B3C, cool light ground #f3f5fb), each with a real dark variant; moon toggle flips dark within the chosen family.
 - Light-theme contrast fix (ratified 2026-08-28): `--faint` darkened to `#8a837b` in Stone light (also `--rail-fg-muted`) and `#76839d` in Cobalt light, bringing micro-labels, timestamps, and rail glyphs to ≥3:1. Dark themes unchanged (already passing). Mockup and repo tokens both updated.
+- Fictional-data hygiene (2026-09-09): all demo names are vetted-fictional, collision-checked; canonical set Veyland/Ambervale/Seldwyn/Northgale/Farrowdale/Verloway, sponsor Bramhurst; generated rows use coined non-colliding names; README and fixtures carry the fictional-data disclaimer.
 
 **Principles**
 - Screen = deliverable: whatever the exported DOCX flags (e.g. REVIEW REQUIRED on low-OCR values), the screen shows in place. The screen may additionally show working state (struck cleared content, dispositions) that the export omits — the export is always the clean rendered document.

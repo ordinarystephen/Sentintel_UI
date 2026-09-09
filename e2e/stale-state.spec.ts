@@ -9,14 +9,14 @@
  */
 import { expect, test } from '@playwright/test'
 
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 // Keep in sync with STATE_VERSION in src/api/mock/mockApi.ts.
-const CURRENT_VERSION = 4
+const CURRENT_VERSION = 5
 
-/** A minimal pre-v1.0-shaped Meridian override: no `areas`, no `referenceData`. */
+/** A minimal pre-v1.0-shaped Veyland override: no `areas`, no `referenceData`. */
 const LEGACY_REVIEW = {
-  id: 'rev-meridian-2026-08',
-  borrowerName: 'Meridian US Holdco LLC (stale copy)',
+  id: 'rev-veyland-2026-08',
+  borrowerName: 'Veyland US Holdco LLC (stale copy)',
   clId: 'CL6430',
   lob: 'IB Lending',
   ownerId: 'u-me',
@@ -49,7 +49,7 @@ const LEGACY_REVIEW = {
 function seed(version: number) {
   return JSON.stringify({
     version,
-    overrides: { 'rev-meridian-2026-08': LEGACY_REVIEW },
+    overrides: { 'rev-veyland-2026-08': LEGACY_REVIEW },
     processing: {},
     reRuns: {},
   })
@@ -64,11 +64,11 @@ test('A: old-shape review under the current version renders without zones and wi
     ([payload]) => localStorage.setItem('sentinel.mock.state', payload),
     [seed(CURRENT_VERSION)],
   )
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
 
   // the stale copy renders (proving it was NOT discarded), with both zones absent
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Meridian US Holdco LLC (stale copy)',
+    'Veyland US Holdco LLC (stale copy)',
   )
   await expect(page.getByRole('button', { name: /Areas of assessment/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Reference data/ })).toHaveCount(0)
@@ -94,8 +94,8 @@ test('B: an outdated version number is discarded on load — fixtures (with the 
     ([payload]) => localStorage.setItem('sentinel.mock.state', payload),
     [seed(CURRENT_VERSION - 1)],
   )
-  await page.goto(MERIDIAN)
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
+  await page.goto(VEYLAND)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
   await expect(page.getByRole('button', { name: /Areas of assessment/ })).toContainText('8 areas')
   await expect(page.getByRole('button', { name: /Reference data/ })).toBeVisible()
 })

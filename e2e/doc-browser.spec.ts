@@ -12,7 +12,7 @@ async function setTheme(page: Page, family: string, dark: boolean) {
   )
 }
 const q3Row = (page: Page) =>
-  page.getByRole('button', { name: 'Select document: Meridian_Holdco_Q3_Update.pdf' })
+  page.getByRole('button', { name: 'Select document: Veyland_Holdco_Q3_Update.pdf' })
 
 test('browse → select → action bar → preview modal → download; search switches to hit cards', async ({
   page,
@@ -30,7 +30,7 @@ test('browse → select → action bar → preview modal → download; search sw
 
   await page.getByRole('button', { name: 'Preview extracted text' }).click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog).toContainText('Meridian_Holdco_Q3_Update.pdf — extracted text')
+  await expect(dialog).toContainText('Veyland_Holdco_Q3_Update.pdf — extracted text')
   await expect(dialog).toContainText('15 pages')
   await expect(dialog).toContainText('5 sections')
   await expect(dialog.getByRole('button', { name: /Highlights/ })).toHaveAttribute(
@@ -45,7 +45,7 @@ test('browse → select → action bar → preview modal → download; search sw
 
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download original' }).click()
-  expect((await download).suggestedFilename()).toBe('Meridian_Holdco_Q3_Update.pdf')
+  expect((await download).suggestedFilename()).toBe('Veyland_Holdco_Q3_Update.pdf')
   await expect(page.getByRole('status').filter({ hasText: 'Downloaded' })).toBeVisible()
 
   await page.getByLabel('Search documents').fill('revolver availability')
@@ -57,12 +57,12 @@ test('browse → select → action bar → preview modal → download; search sw
 test('not-yet-extracted document: preview disabled, download still works', async ({ page }) => {
   await page.goto('/documents')
   await page
-    .getByRole('button', { name: 'Select document: Crestline_Logistics_Q2_Update.pdf' })
+    .getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' })
     .click()
   await expect(page.getByRole('button', { name: 'Preview extracted text' })).toBeDisabled()
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download original' }).click()
-  expect((await download).suggestedFilename()).toBe('Crestline_Logistics_Q2_Update.pdf')
+  expect((await download).suggestedFilename()).toBe('Farrowdale_Logistics_Q2_Update.pdf')
 })
 
 test('keyboard: rows are focusable, Enter selects, actions reachable', async ({ page }) => {

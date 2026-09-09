@@ -4,6 +4,8 @@ The front end for Sentinel, CRR's credit-review platform: an analyst drops the d
 
 This repository is **greenfield and standalone, with no backend**. The whole app runs against an in-memory mock of the API seam, so it can be cloned, started, and explored cold. The real backend is wired in one place — see [docs/api-handoff.md](docs/api-handoff.md).
 
+_All company, person, and transaction data in this application is fictional; any resemblance to real entities is coincidental._
+
 ## Start here
 
 **The development team inherits the `v1.1.1` tag** — clone `main` at that tag (patch over `v1.1-handoff`, which superseded `v1.0-handoff`).
@@ -113,10 +115,10 @@ Everything the UI knows about data is `SentinelApi` in [src/api/client.ts](src/a
 
 Mock mode ([src/api/mock/](src/api/mock/)):
 
-- Fixtures from the mockup: Meridian US Holdco (4 open items, WACC at `conf 41%` below the floor, a prior review so the Prior tab is populated), Atlas Foods, Halcyon Marine, Beacon Health (complete, yours), Crestline Logistics and Verdant AgriChem (other owners → read-only; one Wealth Management), plus ~34 generated rows. Document search includes the "revolver availability" passages.
-- `createReview` simulates processing over ~15 s (reading → indexing → policy checks; borrower detected midway so the row renames itself) and then serves a copy of the Meridian record. Processing is derived from elapsed time and persisted, so closing the tab and reopening `/review/:id` resumes. A file whose name contains `corrupt` fails loudly with a parser message.
+- Fixtures from the mockup: Veyland US Holdco (4 open items, WACC at `conf 41%` below the floor, a prior review so the Prior tab is populated), Ambervale Foods, Seldwyn Marine, Northgale Health (complete, yours), Farrowdale Logistics and Verloway AgriChem (other owners → read-only; one Wealth Management), plus ~34 generated rows. Document search includes the "revolver availability" passages.
+- `createReview` simulates processing over ~15 s (reading → indexing → policy checks; borrower detected midway so the row renames itself) and then serves a copy of the Veyland record. Processing is derived from elapsed time and persisted, so closing the tab and reopening `/review/:id` resumes. A file whose name contains `corrupt` fails loudly with a parser message.
 - Every disposition, clear, response and dismissal records actor + timestamp and survives reloads (`localStorage` key `sentinel.mock.state`; delete it to reset the demo). `respond` re-runs the item and lands 9.6% after 1.5 s.
-- `exportReview` downloads a placeholder `.docx`; Halcyon's export fails on purpose to show the error path.
+- `exportReview` downloads a placeholder `.docx`; Seldwyn's export fails on purpose to show the error path.
 
 ## Testing
 

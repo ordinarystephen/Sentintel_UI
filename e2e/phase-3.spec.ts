@@ -6,7 +6,7 @@
  */
 import { expect, test, type Page } from '@playwright/test'
 
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -34,8 +34,8 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
   await page
     .getByLabel('Choose PDF files')
     .setInputFiles([
-      PDF('Meridian_Holdco_Annual_Review_FY25.pdf'),
-      PDF('Meridian_Holdco_Q3_Update.pdf'),
+      PDF('Veyland_Holdco_Annual_Review_FY25.pdf'),
+      PDF('Veyland_Holdco_Q3_Update.pdf'),
     ])
   await expect(page.getByText('2 documents')).toBeVisible()
   await page
@@ -47,7 +47,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
   await expect(page).toHaveURL(/\/review\/rev-new-/)
   const url = page.url()
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('Reading the documents')
-  await expect(page.getByText(/^Reading Meridian_Holdco_Annual_Review_FY25.pdf…$/)).toBeVisible()
+  await expect(page.getByText(/^Reading Veyland_Holdco_Annual_Review_FY25.pdf…$/)).toBeVisible()
   await expect(page.getByText('New review — reading…')).toBeVisible() // rail contextual zone
   await page.screenshot({ path: 'e2e/screenshots/phase-3/processing-stone-light-1440.png' })
 
@@ -58,10 +58,10 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('Reading the documents')
 
   // borrower detected midway → renames itself in the rail; then completes at the same URL
-  await expect(page.getByRole('region', { name: 'Meridian US Holdco LLC' })).toBeVisible({
+  await expect(page.getByRole('region', { name: 'Veyland US Holdco LLC' })).toBeVisible({
     timeout: 15_000,
   })
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC', {
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC', {
     timeout: 20_000,
   })
   expect(page.url()).toBe(url)
@@ -72,17 +72,17 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
 
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Export Review' }).click()
-  expect((await download).suggestedFilename()).toBe('CL6430_Meridian_US_Holdco_LLC_Review.docx')
+  expect((await download).suggestedFilename()).toBe('CL6430_Veyland_US_Holdco_LLC_Review.docx')
   await expect(page.getByRole('status').filter({ hasText: 'Exported' })).toBeVisible()
 })
 
 test('export failure is loud and in-app', async ({ page }) => {
-  await page.goto('/review/rev-halcyon-2026-08')
+  await page.goto('/review/rev-seldwyn-2026-08')
   await page.getByRole('button', { name: 'Export Review' }).click()
   await expect(page.getByRole('alert').first()).toContainText(
     'Export failed: the render service returned no document for CL7712',
   )
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Halcyon Marine Finance')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Seldwyn Marine Finance')
   await page.screenshot({ path: 'e2e/screenshots/phase-3/export-error-stone-light-1440.png' })
 })
 
@@ -100,9 +100,9 @@ test('cancel keeps the record and says so', async ({ page }) => {
 test('a damaged file fails with the specific parser message', async ({ page }) => {
   test.setTimeout(30_000)
   await page.goto('/')
-  await page.getByLabel('Choose PDF files').setInputFiles([PDF('Meridian_corrupt_scan.pdf')])
+  await page.getByLabel('Choose PDF files').setInputFiles([PDF('Veyland_corrupt_scan.pdf')])
   await page.getByRole('button', { name: 'Begin review' }).click()
-  await expect(page.getByRole('alert')).toContainText('Could not parse Meridian_corrupt_scan.pdf', {
+  await expect(page.getByRole('alert')).toContainText('Could not parse Veyland_corrupt_scan.pdf', {
     timeout: 12_000,
   })
   await page.screenshot({ path: 'e2e/screenshots/phase-3/processing-failed-stone-light-1440.png' })
@@ -111,7 +111,7 @@ test('a damaged file fails with the specific parser message', async ({ page }) =
 test('source modal: View source → provenance, Esc closes, overlay click closes', async ({
   page,
 }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   await page.getByRole('button', { name: 'View source' }).last().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toContainText('Evidence — Liquidity Summary')
@@ -128,7 +128,7 @@ test('attention row deep-links: expands the section and scrolls with the flash',
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const sec1 = page.getByRole('button', {
     name: /1.*Borrower \/ Counterparty & Relationship Overview/,
   })
@@ -146,8 +146,8 @@ test.describe('screenshots', () => {
       test(`review · ${theme.name} · ${width}px`, async ({ page }) => {
         await setTheme(page, theme.family, theme.dark)
         await page.setViewportSize({ width, height: 1400 })
-        await page.goto(MERIDIAN)
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Meridian US Holdco LLC')
+        await page.goto(VEYLAND)
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
         await page.waitForTimeout(900)
         await page.screenshot({ path: `e2e/screenshots/phase-3/review-${theme.name}-${width}.png` })
       })
@@ -156,7 +156,7 @@ test.describe('screenshots', () => {
       await setTheme(page, theme.family, theme.dark)
       await page.setViewportSize({ width: 1440, height: 1000 })
       await page.goto('/')
-      await expect(page.getByRole('link', { name: /Meridian US Holdco LLC/ })).toBeVisible()
+      await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
       await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-3/landing-${theme.name}-1440.png` })
     })
@@ -165,7 +165,7 @@ test.describe('screenshots', () => {
 
 test('reduced motion: accordion and processing bar have no transition', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   const dur = await page
     .locator('#sec-2-body')

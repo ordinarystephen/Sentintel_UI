@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 
 test('screen content settles in with a stagger; reduced motion removes it', async ({ page }) => {
   await page.goto('/')
@@ -38,7 +38,7 @@ test('skip link is the first Tab stop and moves focus to the canvas', async ({ p
 })
 
 test('source modal traps focus and returns it on close', async ({ page }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const opener = page.getByRole('button', { name: 'View source' }).last()
   await opener.click()
   const close = page.getByRole('button', { name: 'Close' })
@@ -53,7 +53,7 @@ test('source modal traps focus and returns it on close', async ({ page }) => {
 })
 
 test('empty states are hand-written', async ({ page }) => {
-  await page.goto('/review/rev-atlas-2026-08')
+  await page.goto('/review/rev-ambervale-2026-08')
   await expect(
     page.getByText(
       'Nothing needs your attention. Every value was read above the confidence floor and no flags were raised.',

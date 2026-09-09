@@ -11,7 +11,8 @@
  * ═══════════════════════════════════════════════════════════════════════════
  *
  * Mock fixtures (build-spec §7), seeded from the mockup's content. All
- * borrowers, people and figures are fictional. The Meridian review is the
+ * company, person, and transaction data in this application is fictional;
+ * any resemblance to real entities is coincidental. The Veyland review is the
  * fully-worked record (4 open items, WACC at conf 41% below the floor, a
  * prior review → Prior tab); the other named reviews are complete; ~34
  * generated rows make search/filter/count lines credible.
@@ -46,10 +47,10 @@ const owner = (id: string): User => OWNERS.find((o) => o.id === id)!
 /** The ONE confidence floor (§8). Mirrors what the real backend would enforce. */
 export const CONFIDENCE_FLOOR = 0.6
 
-export const MERIDIAN_ID = 'rev-meridian-2026-08'
-export const MERIDIAN_PRIOR_ID = 'rev-meridian-2026-02'
-/** Halcyon's export fails — the demo of the loud error path (§7). */
-export const EXPORT_FAILS_ID = 'rev-halcyon-2026-08'
+export const VEYLAND_ID = 'rev-veyland-2026-08'
+export const VEYLAND_PRIOR_ID = 'rev-veyland-2026-02'
+/** Seldwyn's export fails — the demo of the loud error path (§7). */
+export const EXPORT_FAILS_ID = 'rev-seldwyn-2026-08'
 
 const VIA_LABEL: Record<WorkItem['via'], string> = {
   tier1: 'Tier 1 · section',
@@ -92,10 +93,10 @@ function item(seed: ItemSeed): WorkItem {
   }
 }
 
-const MERIDIAN_DOC_ANNUAL = 'Meridian_Holdco_Annual_Review_FY25.pdf'
-const MERIDIAN_DOC_Q3 = 'Meridian_Holdco_Q3_Update.pdf'
+const VEYLAND_DOC_ANNUAL = 'Veyland_Holdco_Annual_Review_FY25.pdf'
+const VEYLAND_DOC_Q3 = 'Veyland_Holdco_Q3_Update.pdf'
 
-export const MERIDIAN_SECTIONS: Section[] = [
+export const VEYLAND_SECTIONS: Section[] = [
   {
     n: 1,
     title: 'Borrower / Counterparty & Relationship Overview',
@@ -110,7 +111,7 @@ export const MERIDIAN_SECTIONS: Section[] = [
         confidence: 0.95,
         content: {
           kind: 'prose',
-          text: 'Meridian US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bellwether Capital in 2023 in a $2.1bn LBO…',
+          text: 'Veyland US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bramhurst Capital in 2023 in a $2.1bn LBO…',
         },
       }),
       item({
@@ -175,7 +176,7 @@ export const MERIDIAN_SECTIONS: Section[] = [
         evidence: [
           {
             quote: 'Expected case WACC 9.8% (see EV/DCF summary table).',
-            sourceDoc: MERIDIAN_DOC_ANNUAL,
+            sourceDoc: VEYLAND_DOC_ANNUAL,
             sectionName: 'EV/DCF summary',
             page: 12,
             imageKind: 'page',
@@ -216,11 +217,11 @@ export const MERIDIAN_SECTIONS: Section[] = [
           {
             quote:
               'The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit.',
-            sourceDoc: MERIDIAN_DOC_Q3,
+            sourceDoc: VEYLAND_DOC_Q3,
             sectionName: 'Liquidity Summary',
             page: 14,
             imageKind: 'section',
-            imageRef: 'img-meridian-q3-p14-liquidity',
+            imageRef: 'img-veyland-q3-p14-liquidity',
           },
         ],
         resolution: [
@@ -289,7 +290,7 @@ export const MERIDIAN_SECTIONS: Section[] = [
   },
 ]
 
-export const MERIDIAN_ATTENTION: AttentionItem[] = [
+export const VEYLAND_ATTENTION: AttentionItem[] = [
   {
     id: 'att-wacc',
     kind: 'review_required',
@@ -343,7 +344,7 @@ export const MERIDIAN_ATTENTION: AttentionItem[] = [
   },
 ]
 
-export const MERIDIAN_AREAS: AssessmentArea[] = [
+export const VEYLAND_AREAS: AssessmentArea[] = [
   {
     id: 'aa-structure',
     name: 'Transaction Structure / Underwriting',
@@ -410,7 +411,7 @@ export const MERIDIAN_AREAS: AssessmentArea[] = [
   },
 ]
 
-const MERIDIAN_DISPOSITIONS: Disposition[] = [
+const VEYLAND_DISPOSITIONS: Disposition[] = [
   {
     itemId: 'att-covenant-threshold',
     action: 'reviewed',
@@ -420,9 +421,9 @@ const MERIDIAN_DISPOSITIONS: Disposition[] = [
   },
 ]
 
-export const MERIDIAN: Review = {
-  id: MERIDIAN_ID,
-  borrowerName: 'Meridian US Holdco LLC',
+export const VEYLAND: Review = {
+  id: VEYLAND_ID,
+  borrowerName: 'Veyland US Holdco LLC',
   clId: 'CL6430',
   lob: 'IB Lending',
   ownerId: ME.id,
@@ -431,7 +432,7 @@ export const MERIDIAN: Review = {
   createdAt: '2026-08-28T09:31:00Z',
   openItems: 4,
   sectionsPopulated: 2,
-  priorReviewId: MERIDIAN_PRIOR_ID,
+  priorReviewId: VEYLAND_PRIOR_ID,
   repeatIndex: 2,
   sector: 'Software (application hosting)',
   ownership: 'sponsor-owned',
@@ -443,14 +444,14 @@ export const MERIDIAN: Review = {
   runCompletedAt: '2026-08-28T09:42:00Z',
   documents: [
     {
-      fileName: MERIDIAN_DOC_ANNUAL,
+      fileName: VEYLAND_DOC_ANNUAL,
       kind: 'annual review',
       date: '2026-03-31',
       pages: 21,
       sizeBytes: 2_516_582,
     },
     {
-      fileName: MERIDIAN_DOC_Q3,
+      fileName: VEYLAND_DOC_Q3,
       kind: 'quarterly update',
       date: '2026-07-15',
       pages: 12,
@@ -458,9 +459,9 @@ export const MERIDIAN: Review = {
     },
   ],
   story: {
-    docsLine: `${MERIDIAN_DOC_ANNUAL} — annual review, 2026-03-31 · ${MERIDIAN_DOC_Q3} — quarterly update, 2026-07-15`,
+    docsLine: `${VEYLAND_DOC_ANNUAL} — annual review, 2026-03-31 · ${VEYLAND_DOC_Q3} — quarterly update, 2026-07-15`,
     narrative:
-      'Meridian is a sponsor-owned application-hosting platform carrying a $1,240mm Term Loan B and an undrawn $150mm revolver. FY25 revenue grew 9% with EBITDA margins holding near 31%; leverage improved modestly on debt paydown but remains above the sector median. The Q3 update flags a delayed enterprise renewal cycle and revises the expected case downward.',
+      'Veyland is a sponsor-owned application-hosting platform carrying a $1,240mm Term Loan B and an undrawn $150mm revolver. FY25 revenue grew 9% with EBITDA margins holding near 31%; leverage improved modestly on debt paydown but remains above the sector median. The Q3 update flags a delayed enterprise renewal cycle and revises the expected case downward.',
     changes: [
       {
         date: '2026-07-15',
@@ -480,9 +481,9 @@ export const MERIDIAN: Review = {
       },
     ],
   },
-  sections: MERIDIAN_SECTIONS,
-  attention: MERIDIAN_ATTENTION,
-  areas: MERIDIAN_AREAS,
+  sections: VEYLAND_SECTIONS,
+  attention: VEYLAND_ATTENTION,
+  areas: VEYLAND_AREAS,
   referenceData: {
     asOf: '2026-08-15',
     fields: [
@@ -494,13 +495,13 @@ export const MERIDIAN: Review = {
       { label: 'Accrual status', value: 'Accruing', source: 'upstream' },
     ],
   },
-  dispositions: MERIDIAN_DISPOSITIONS,
+  dispositions: VEYLAND_DISPOSITIONS,
   confidenceFloor: CONFIDENCE_FLOOR,
   readOnly: false,
 }
 
-export const MERIDIAN_PRIOR: PriorComparison = {
-  priorReviewId: MERIDIAN_PRIOR_ID,
+export const VEYLAND_PRIOR: PriorComparison = {
+  priorReviewId: VEYLAND_PRIOR_ID,
   priorDate: '2026-02-14',
   deltas: [
     { label: 'Gross leverage', prior: '5.6x', current: '5.9x', direction: 'worse' },
@@ -553,7 +554,7 @@ export const DEBATES: DebatePosition[] = [
     text: "9.8% sits inside the sector range (9–11%) and one step from the prior review's 9.6%. The flag is a legibility problem, not a valuation problem — verify against p. 12 and move on.",
     citations: ['prior review 2026-02', 'sector comps table'],
     at: '2026-08-28T09:42:00Z',
-    runId: 'run-meridian-2026-08',
+    runId: 'run-veyland-2026-08',
   },
   {
     itemId: 'wi-2-wacc',
@@ -561,7 +562,7 @@ export const DEBATES: DebatePosition[] = [
     text: 'The value cannot be verified at required confidence, and expected-case EV coverage is 1.46x — already below the 1.5x trigger. An unverified WACC materially weakens the EV-support conclusion in Section 2.',
     citations: ['POLICY ib-lending/ev-support', '1-G-007544 §4.2'],
     at: '2026-08-28T09:42:00Z',
-    runId: 'run-meridian-2026-08',
+    runId: 'run-veyland-2026-08',
   },
   {
     itemId: 'wi-2-liq',
@@ -569,7 +570,7 @@ export const DEBATES: DebatePosition[] = [
     text: '~$144mm available against no near-term maturities — liquidity is a clear strength this cycle.',
     citations: ['Liquidity Summary p. 14'],
     at: '2026-08-28T09:42:00Z',
-    runId: 'run-meridian-2026-08',
+    runId: 'run-veyland-2026-08',
   },
   {
     itemId: 'wi-2-liq',
@@ -577,7 +578,7 @@ export const DEBATES: DebatePosition[] = [
     text: 'The $6mm LC figure appears only in a footnote; confirm utilization with the agent bank before calling availability clean.',
     citations: ['footnote 7, p. 14'],
     at: '2026-08-28T09:42:00Z',
-    runId: 'run-meridian-2026-08',
+    runId: 'run-veyland-2026-08',
   },
 ]
 
@@ -607,7 +608,7 @@ interface SummarySeed {
 /**
  * The fully-rated assessment set every completed review carries (areas are
  * structural to every review — clarified 2026-09-09). Same voice as the
- * Meridian set; ids namespaced per review so setAreaRating can never cross
+ * Veyland set; ids namespaced per review so setAreaRating can never cross
  * reviews. 7 satisfactory + Traded Products n/a → "8 areas · 7 satisfactory
  * · 1 n/a", no pending badge.
  */
@@ -682,7 +683,7 @@ function completeReview(seed: SummarySeed): Review {
   const o = owner(seed.ownerId)
   const doc = `${seed.borrowerName.replace(/[^A-Za-z0-9]+/g, '_')}_Annual_Review.pdf`
   const conf = [0.96, 0.91, 0.89, 0.93, 0.9, 0.94]
-  const sections: Section[] = MERIDIAN_SECTIONS.map((s, i) => ({
+  const sections: Section[] = VEYLAND_SECTIONS.map((s, i) => ({
     n: s.n,
     title: s.title,
     status: 'populated',
@@ -747,8 +748,8 @@ function completeReview(seed: SummarySeed): Review {
 
 const NAMED: SummarySeed[] = [
   {
-    id: 'rev-crestline-2026-08',
-    borrowerName: 'Crestline Logistics',
+    id: 'rev-farrowdale-2026-08',
+    borrowerName: 'Farrowdale Logistics',
     clId: 'CL8093',
     lob: 'IB Lending',
     ownerId: 'u-chen',
@@ -758,8 +759,8 @@ const NAMED: SummarySeed[] = [
     repeatIndex: 2,
   },
   {
-    id: 'rev-verdant-2026-08',
-    borrowerName: 'Verdant AgriChem',
+    id: 'rev-verloway-2026-08',
+    borrowerName: 'Verloway AgriChem',
     clId: 'CL2210',
     lob: 'Wealth Management',
     ownerId: 'u-alvarez',
@@ -767,8 +768,8 @@ const NAMED: SummarySeed[] = [
     sector: 'Agricultural chemicals',
   },
   {
-    id: 'rev-atlas-2026-08',
-    borrowerName: 'Atlas Foods Group',
+    id: 'rev-ambervale-2026-08',
+    borrowerName: 'Ambervale Foods Group',
     clId: 'CL5120',
     lob: 'IB Lending',
     ownerId: ME.id,
@@ -777,7 +778,7 @@ const NAMED: SummarySeed[] = [
   },
   {
     id: EXPORT_FAILS_ID,
-    borrowerName: 'Halcyon Marine Finance',
+    borrowerName: 'Seldwyn Marine Finance',
     clId: 'CL7712',
     lob: 'IB Lending',
     ownerId: ME.id,
@@ -787,8 +788,8 @@ const NAMED: SummarySeed[] = [
     repeatIndex: 2,
   },
   {
-    id: 'rev-beacon-2026-07',
-    borrowerName: 'Beacon Health Partners',
+    id: 'rev-northgale-2026-07',
+    borrowerName: 'Northgale Health Partners',
     clId: 'CL4488',
     lob: 'IB Lending',
     ownerId: ME.id,
@@ -796,8 +797,8 @@ const NAMED: SummarySeed[] = [
     sector: 'Healthcare services',
   },
   {
-    id: MERIDIAN_PRIOR_ID,
-    borrowerName: 'Meridian US Holdco LLC',
+    id: VEYLAND_PRIOR_ID,
+    borrowerName: 'Veyland US Holdco LLC',
     clId: 'CL6430',
     lob: 'IB Lending',
     ownerId: 'u-alvarez',
@@ -808,40 +809,40 @@ const NAMED: SummarySeed[] = [
 ]
 
 const GENERATED_NAMES: Array<[string, string, Lob]> = [
-  ['Northwind Aggregates', 'Building materials', 'IB Lending'],
-  ['Solstice Renewables', 'Power generation', 'IB Lending'],
-  ['Harbourline Shipping', 'Shipping', 'IB Lending'],
-  ['Cobalt Ridge Mining', 'Metals & mining', 'IB Lending'],
-  ['Pinecrest Senior Living', 'Senior housing', 'Wealth Management'],
-  ['Quill & Ledger Publishing', 'Publishing', 'IB Lending'],
-  ['Brightwater Utilities', 'Water utilities', 'IB Lending'],
-  ['Ironvale Steel', 'Steel', 'IB Lending'],
-  ['Larkspur Pharma', 'Pharmaceuticals', 'IB Lending'],
-  ['Tidewater Cold Storage', 'Cold-chain logistics', 'IB Lending'],
-  ['Summit Peak Resorts', 'Leisure', 'Wealth Management'],
-  ['Greyfield Real Estate Trust', 'Real estate', 'Wealth Management'],
-  ['Orion Freight Systems', 'Freight', 'IB Lending'],
-  ['Kestrel Aerospace Components', 'Aerospace', 'IB Lending'],
-  ['Maple & Main Grocers', 'Grocery retail', 'IB Lending'],
-  ['Vantage Payments', 'Payments', 'Counterparty Credit Risk'],
-  ['Redwood Timber Holdings', 'Forestry', 'IB Lending'],
-  ['Aurora Dental Group', 'Dental services', 'Wealth Management'],
-  ['Copperline Telecom', 'Telecom', 'IB Lending'],
-  ['Bluefin Seafood Co.', 'Food processing', 'IB Lending'],
-  ['Sterling Lakes Capital', 'Asset management', 'Counterparty Credit Risk'],
-  ['Halcyon Marine Finance', 'Marine finance', 'IB Lending'],
-  ['Crestline Logistics', 'Transportation & logistics', 'IB Lending'],
-  ['Amber Valley Vineyards', 'Wine', 'Wealth Management'],
-  ['Northgate Insurance Brokers', 'Insurance brokerage', 'Wealth Management'],
-  ['Silverstone Auto Parts', 'Auto parts', 'IB Lending'],
-  ['Fairhaven Hospitality', 'Hotels', 'Wealth Management'],
-  ['Delta Ridge Energy Partners', 'Oil & gas', 'IB Lending'],
-  ['Evergreen Waste Services', 'Waste management', 'IB Lending'],
-  ['Lumen Data Centres', 'Data centres', 'IB Lending'],
-  ['Wexford Chemicals', 'Specialty chemicals', 'IB Lending'],
-  ['Portside Container Leasing', 'Equipment leasing', 'Counterparty Credit Risk'],
-  ['Highland Craft Distillers', 'Spirits', 'Wealth Management'],
-  ['Meadowbrook Farms Cooperative', 'Agriculture', 'IB Lending'],
+  ['Torvane Aggregates', 'Building materials', 'IB Lending'],
+  ['Solmere Renewables', 'Power generation', 'IB Lending'],
+  ['Harbelin Shipping', 'Shipping', 'IB Lending'],
+  ['Corvale Ridge Mining', 'Metals & mining', 'IB Lending'],
+  ['Pallowmere Senior Living', 'Senior housing', 'Wealth Management'],
+  ['Quensbury Publishing', 'Publishing', 'IB Lending'],
+  ['Brindlewater Utilities', 'Water utilities', 'IB Lending'],
+  ['Ironmarsh Steel', 'Steel', 'IB Lending'],
+  ['Larkstone Pharma', 'Pharmaceuticals', 'IB Lending'],
+  ['Tidemoor Cold Storage', 'Cold-chain logistics', 'IB Lending'],
+  ['Summerlode Resorts', 'Leisure', 'Wealth Management'],
+  ['Greyfenn Real Estate Trust', 'Real estate', 'Wealth Management'],
+  ['Orvalon Freight Systems', 'Freight', 'IB Lending'],
+  ['Kestrelane Aerospace Components', 'Aerospace', 'IB Lending'],
+  ['Maldenbrook Grocers', 'Grocery retail', 'IB Lending'],
+  ['Vantorel Payments', 'Payments', 'Counterparty Credit Risk'],
+  ['Redfenn Timber Holdings', 'Forestry', 'IB Lending'],
+  ['Aurelock Dental Group', 'Dental services', 'Wealth Management'],
+  ['Copperfen Telecom', 'Telecom', 'IB Lending'],
+  ['Finmarrow Seafood Co.', 'Food processing', 'IB Lending'],
+  ['Sternvale Capital', 'Asset management', 'Counterparty Credit Risk'],
+  ['Seldwyn Marine Finance', 'Marine finance', 'IB Lending'],
+  ['Farrowdale Logistics', 'Transportation & logistics', 'IB Lending'],
+  ['Ambergill Vineyards', 'Wine', 'Wealth Management'],
+  ['Norvale Insurance Brokers', 'Insurance brokerage', 'Wealth Management'],
+  ['Silvermoor Auto Parts', 'Auto parts', 'IB Lending'],
+  ['Fairbeck Hospitality', 'Hotels', 'Wealth Management'],
+  ['Deltamere Energy Partners', 'Oil & gas', 'IB Lending'],
+  ['Everfen Waste Services', 'Waste management', 'IB Lending'],
+  ['Luxfell Data Centres', 'Data centres', 'IB Lending'],
+  ['Wexbourne Chemicals', 'Specialty chemicals', 'IB Lending'],
+  ['Portmaris Container Leasing', 'Equipment leasing', 'Counterparty Credit Risk'],
+  ['Highfell Distillers', 'Spirits', 'Wealth Management'],
+  ['Meadowvane Farms Cooperative', 'Agriculture', 'IB Lending'],
 ]
 
 function generated(): SummarySeed[] {
@@ -866,7 +867,7 @@ function generated(): SummarySeed[] {
 /** Every ready review in the system, keyed by id. */
 export function buildReviews(): Map<string, Review> {
   const map = new Map<string, Review>()
-  map.set(MERIDIAN.id, MERIDIAN)
+  map.set(VEYLAND.id, VEYLAND)
   for (const seed of [...NAMED, ...generated()]) map.set(seed.id, completeReview(seed))
   return map
 }
@@ -922,10 +923,10 @@ export interface DocumentRecord extends DocumentText {
 
 export const DOCUMENTS: DocumentRecord[] = [
   {
-    docId: 'doc-meridian-annual',
-    fileName: MERIDIAN_DOC_ANNUAL,
+    docId: 'doc-veyland-annual',
+    fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
-    counterparty: 'Meridian US Holdco',
+    counterparty: 'Veyland US Holdco',
     docType: 'annual review',
     date: '2026-03-31',
     pages: 21,
@@ -942,7 +943,7 @@ export const DOCUMENTS: DocumentRecord[] = [
         title: 'Company Overview',
         pageStart: 3,
         pageEnd: 5,
-        text: 'Meridian US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bellwether Capital in 2023 in a $2.1bn LBO. Contract terms average 2.4 years with annual escalators.',
+        text: 'Veyland US Holdco LLC operates a managed application-hosting platform serving ~420 mid-market enterprise customers across North America. The company was acquired by Bramhurst Capital in 2023 in a $2.1bn LBO. Contract terms average 2.4 years with annual escalators.',
       },
       {
         title: 'Financial Performance',
@@ -983,10 +984,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-meridian-q3',
-    fileName: MERIDIAN_DOC_Q3,
+    docId: 'doc-veyland-q3',
+    fileName: VEYLAND_DOC_Q3,
     lob: 'IB Lending',
-    counterparty: 'Meridian US Holdco',
+    counterparty: 'Veyland US Holdco',
     docType: 'quarterly update',
     date: '2026-07-15',
     pages: 15,
@@ -1026,10 +1027,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-halcyon-fa',
-    fileName: 'Halcyon_Marine_Facility_Agreement.pdf',
+    docId: 'doc-seldwyn-fa',
+    fileName: 'Seldwyn_Marine_Facility_Agreement.pdf',
     lob: 'IB Lending',
-    counterparty: 'Halcyon Marine Finance',
+    counterparty: 'Seldwyn Marine Finance',
     docType: 'facility agreement',
     date: '2026-05-02',
     pages: 68,
@@ -1063,10 +1064,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-atlas-annual',
-    fileName: 'Atlas_Foods_Annual_Review_FY25.pdf',
+    docId: 'doc-ambervale-annual',
+    fileName: 'Ambervale_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
-    counterparty: 'Atlas Foods Group',
+    counterparty: 'Ambervale Foods Group',
     docType: 'annual review',
     date: '2026-08-20',
     pages: 18,
@@ -1077,7 +1078,7 @@ export const DOCUMENTS: DocumentRecord[] = [
         title: 'Business Overview',
         pageStart: 1,
         pageEnd: 4,
-        text: 'Atlas Foods Group manufactures private-label packaged foods across three categories, with long-tenured grocery relationships and modest customer concentration.',
+        text: 'Ambervale Foods Group manufactures private-label packaged foods across three categories, with long-tenured grocery relationships and modest customer concentration.',
       },
       {
         title: 'Financial Summary',
@@ -1094,10 +1095,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-verdant-cs',
-    fileName: 'Verdant_AgriChem_Credit_Memo.pdf',
+    docId: 'doc-verloway-cs',
+    fileName: 'Verloway_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
-    counterparty: 'Verdant AgriChem',
+    counterparty: 'Verloway AgriChem',
     docType: 'credit submission',
     date: '2026-08-22',
     pages: 11,
@@ -1119,10 +1120,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-vantage-isda',
-    fileName: 'Vantage_Payments_ISDA_Schedule.pdf',
+    docId: 'doc-vantorel-isda',
+    fileName: 'Vantorel_Payments_ISDA_Schedule.pdf',
     lob: 'Counterparty Credit Risk',
-    counterparty: 'Vantage Payments',
+    counterparty: 'Vantorel Payments',
     docType: 'ISDA schedule',
     date: '2026-06-09',
     pages: 34,
@@ -1144,10 +1145,10 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
-    docId: 'doc-crestline-q2',
-    fileName: 'Crestline_Logistics_Q2_Update.pdf',
+    docId: 'doc-farrowdale-q2',
+    fileName: 'Farrowdale_Logistics_Q2_Update.pdf',
     lob: 'IB Lending',
-    counterparty: 'Crestline Logistics',
+    counterparty: 'Farrowdale Logistics',
     docType: 'quarterly update',
     date: '2026-08-01',
     pages: 9,
@@ -1162,11 +1163,11 @@ export type DocumentPassage = Omit<DocumentHit, 'snippetHtml'>
 
 export const PASSAGES: DocumentPassage[] = [
   {
-    id: 'doc-meridian-q3-liq',
-    docId: 'doc-meridian-q3',
-    fileName: MERIDIAN_DOC_Q3,
+    id: 'doc-veyland-q3-liq',
+    docId: 'doc-veyland-q3',
+    fileName: VEYLAND_DOC_Q3,
     lob: 'IB Lending',
-    counterparty: 'Meridian US Holdco',
+    counterparty: 'Veyland US Holdco',
     docType: 'quarterly update',
     date: '2026-07-15',
     extracted: true,
@@ -1174,17 +1175,17 @@ export const PASSAGES: DocumentPassage[] = [
       'The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit, leaving availability of approximately $144 million.',
     sectionName: 'Liquidity Summary',
     page: 14,
-    imageRef: 'img-meridian-q3-p14-liquidity',
-    usedInReviewId: MERIDIAN_ID,
-    usedInBorrower: 'Meridian',
+    imageRef: 'img-veyland-q3-p14-liquidity',
+    usedInReviewId: VEYLAND_ID,
+    usedInBorrower: 'Veyland',
     usedInSectionN: 2,
   },
   {
-    id: 'doc-meridian-annual-cov',
-    docId: 'doc-meridian-annual',
-    fileName: MERIDIAN_DOC_ANNUAL,
+    id: 'doc-veyland-annual-cov',
+    docId: 'doc-veyland-annual',
+    fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
-    counterparty: 'Meridian US Holdco',
+    counterparty: 'Veyland US Holdco',
     docType: 'annual review',
     date: '2026-03-31',
     extracted: true,
@@ -1194,11 +1195,11 @@ export const PASSAGES: DocumentPassage[] = [
     page: 10,
   },
   {
-    id: 'doc-halcyon-fa-72',
-    docId: 'doc-halcyon-fa',
-    fileName: 'Halcyon_Marine_Facility_Agreement.pdf',
+    id: 'doc-seldwyn-fa-72',
+    docId: 'doc-seldwyn-fa',
+    fileName: 'Seldwyn_Marine_Facility_Agreement.pdf',
     lob: 'IB Lending',
-    counterparty: 'Halcyon Marine Finance',
+    counterparty: 'Seldwyn Marine Finance',
     docType: 'facility agreement',
     date: '2026-05-02',
     extracted: true,
@@ -1208,11 +1209,11 @@ export const PASSAGES: DocumentPassage[] = [
     page: 41,
   },
   {
-    id: 'doc-meridian-annual-wacc',
-    docId: 'doc-meridian-annual',
-    fileName: MERIDIAN_DOC_ANNUAL,
+    id: 'doc-veyland-annual-wacc',
+    docId: 'doc-veyland-annual',
+    fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
-    counterparty: 'Meridian US Holdco',
+    counterparty: 'Veyland US Holdco',
     docType: 'annual review',
     date: '2026-03-31',
     extracted: true,
@@ -1220,16 +1221,16 @@ export const PASSAGES: DocumentPassage[] = [
       'Expected case WACC 9.8%; downside case WACC 10.6%. EV/LTM EBITDA of 8.6x under the expected case.',
     sectionName: 'EV/DCF summary',
     page: 12,
-    usedInReviewId: MERIDIAN_ID,
-    usedInBorrower: 'Meridian',
+    usedInReviewId: VEYLAND_ID,
+    usedInBorrower: 'Veyland',
     usedInSectionN: 2,
   },
   {
-    id: 'doc-atlas-annual-lev',
-    docId: 'doc-atlas-annual',
-    fileName: 'Atlas_Foods_Annual_Review_FY25.pdf',
+    id: 'doc-ambervale-annual-lev',
+    docId: 'doc-ambervale-annual',
+    fileName: 'Ambervale_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
-    counterparty: 'Atlas Foods Group',
+    counterparty: 'Ambervale Foods Group',
     docType: 'annual review',
     date: '2026-08-20',
     extracted: true,
@@ -1237,16 +1238,16 @@ export const PASSAGES: DocumentPassage[] = [
       'Gross leverage of 3.1x remains comfortably inside the 4.5x maintenance covenant; the revolver was undrawn throughout the year.',
     sectionName: 'Financial Summary',
     page: 6,
-    usedInReviewId: 'rev-atlas-2026-08',
-    usedInBorrower: 'Atlas Foods',
+    usedInReviewId: 'rev-ambervale-2026-08',
+    usedInBorrower: 'Ambervale Foods',
     usedInSectionN: 2,
   },
   {
-    id: 'doc-verdant-cs-passage',
-    docId: 'doc-verdant-cs',
-    fileName: 'Verdant_AgriChem_Credit_Memo.pdf',
+    id: 'doc-verloway-cs-passage',
+    docId: 'doc-verloway-cs',
+    fileName: 'Verloway_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
-    counterparty: 'Verdant AgriChem',
+    counterparty: 'Verloway AgriChem',
     docType: 'credit submission',
     date: '2026-08-22',
     extracted: true,
@@ -1256,11 +1257,11 @@ export const PASSAGES: DocumentPassage[] = [
     page: 3,
   },
   {
-    id: 'doc-vantage-isda-passage',
-    docId: 'doc-vantage-isda',
-    fileName: 'Vantage_Payments_ISDA_Schedule.pdf',
+    id: 'doc-vantorel-isda-passage',
+    docId: 'doc-vantorel-isda',
+    fileName: 'Vantorel_Payments_ISDA_Schedule.pdf',
     lob: 'Counterparty Credit Risk',
-    counterparty: 'Vantage Payments',
+    counterparty: 'Vantorel Payments',
     docType: 'ISDA schedule',
     date: '2026-06-09',
     extracted: true,
@@ -1269,11 +1270,11 @@ export const PASSAGES: DocumentPassage[] = [
     page: 22,
   },
   {
-    id: 'doc-crestline-q2-passage',
-    docId: 'doc-crestline-q2',
-    fileName: 'Crestline_Logistics_Q2_Update.pdf',
+    id: 'doc-farrowdale-q2-passage',
+    docId: 'doc-farrowdale-q2',
+    fileName: 'Farrowdale_Logistics_Q2_Update.pdf',
     lob: 'IB Lending',
-    counterparty: 'Crestline Logistics',
+    counterparty: 'Farrowdale Logistics',
     docType: 'quarterly update',
     date: '2026-08-01',
     extracted: false,

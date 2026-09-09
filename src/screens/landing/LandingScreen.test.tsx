@@ -13,9 +13,9 @@ describe('landing', () => {
     expect(screen.getByRole('button', { name: 'Upload documents' })).toBeInTheDocument()
     expect(screen.getByLabelText('Anything Sentinel should know?')).toBeInTheDocument()
     expect(screen.queryByLabelText(/borrower/i)).toBeNull()
-    const recent = await screen.findByRole('link', { name: /Meridian US Holdco LLC/ })
+    const recent = await screen.findByRole('link', { name: /Veyland US Holdco LLC/ })
     expect(within(recent).getByText('4 open')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Atlas Foods Group/ })).toHaveTextContent(
+    expect(screen.getByRole('link', { name: /Ambervale Foods Group/ })).toHaveTextContent(
       '6/6 sections',
     )
   })
@@ -25,16 +25,16 @@ describe('landing', () => {
     renderAt('/')
     const input = screen.getByLabelText('Choose PDF files')
     await user.upload(input, [
-      pdf('Meridian_Holdco_Annual_Review_FY25.pdf', 2_516_582),
+      pdf('Veyland_Holdco_Annual_Review_FY25.pdf', 2_516_582),
       new File(['x'], 'notes.txt', { type: 'text/plain' }),
     ])
     const list = screen.getByRole('list', { name: 'Documents to review' })
-    expect(within(list).getByText('Meridian_Holdco_Annual_Review_FY25.pdf')).toBeInTheDocument()
+    expect(within(list).getByText('Veyland_Holdco_Annual_Review_FY25.pdf')).toBeInTheDocument()
     expect(within(list).getByText('2.4 MB')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('notes.txt')
     expect(screen.getByText('1 document')).toBeInTheDocument()
     await user.click(
-      screen.getByRole('button', { name: 'Remove file Meridian_Holdco_Annual_Review_FY25.pdf' }),
+      screen.getByRole('button', { name: 'Remove file Veyland_Holdco_Annual_Review_FY25.pdf' }),
     )
     expect(screen.queryByRole('list', { name: 'Documents to review' })).toBeNull()
   })

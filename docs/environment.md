@@ -106,7 +106,7 @@ Two independent knobs; both documented in `.env.example`.
 VITE_BASE_PATH=/sentinel/ npm run build
 ```
 
-Vite rewrites all asset URLs and exposes the prefix as `import.meta.env.BASE_URL`; the router picks it up as its `basename` (`src/app/router.tsx`). Verified end-to-end on a build served under `/sentinel/`: direct deep-link entry (`/sentinel/review/rev-meridian-2026-08#sec-2`) renders with the section expanded and flashed, client-side navigation and reload keep the prefix, and zero requests 404. To sanity-check locally: `VITE_BASE_PATH=/sentinel/ npm run preview` (preview needs the same env var so it serves at the prefix).
+Vite rewrites all asset URLs and exposes the prefix as `import.meta.env.BASE_URL`; the router picks it up as its `basename` (`src/app/router.tsx`). Verified end-to-end on a build served under `/sentinel/`: direct deep-link entry (`/sentinel/review/rev-veyland-2026-08#sec-2`) renders with the section expanded and flashed, client-side navigation and reload keep the prefix, and zero requests 404. To sanity-check locally: `VITE_BASE_PATH=/sentinel/ npm run preview` (preview needs the same env var so it serves at the prefix).
 
 **Dev server, proxied / non-localhost**:
 

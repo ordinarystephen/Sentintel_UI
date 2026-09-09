@@ -5,7 +5,7 @@
  */
 import { expect, test, type Page } from '@playwright/test'
 
-const MERIDIAN = '/review/rev-meridian-2026-08'
+const VEYLAND = '/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -30,7 +30,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('selection drives the rail; default is the first flagged item', async ({ page }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const rail = page.getByRole('complementary', { name: 'Context' })
   await expect(rail).toContainText('§2Expected Case WACC')
   await expect(
@@ -49,7 +49,7 @@ test('selection drives the rail; default is the first flagged item', async ({ pa
 test('clear → struck in place with rationale → undo; the state survives a reload', async ({
   page,
 }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const rail = page.getByRole('complementary', { name: 'Context' })
   await page.getByRole('button', { name: 'Select this item: Liquidity' }).click()
   await rail.getByRole('tab', { name: 'Respond' }).click()
@@ -79,7 +79,7 @@ test('clear → struck in place with rationale → undo; the state survives a re
 
 test('respond → re-running → adjusted value; attention dispositions persist', async ({ page }) => {
   test.setTimeout(30_000)
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const rail = page.getByRole('complementary', { name: 'Context' })
   await rail.getByRole('tab', { name: 'Respond' }).click()
   await rail
@@ -104,7 +104,7 @@ test('respond → re-running → adjusted value; attention dispositions persist'
 })
 
 test('keyboard: Tab to an item, Enter selects; arrows move rail tabs', async ({ page }) => {
-  await page.goto(MERIDIAN)
+  await page.goto(VEYLAND)
   const liq = page.getByRole('button', { name: 'Select this item: Liquidity' })
   await liq.focus()
   await page.keyboard.press('Enter')
@@ -121,7 +121,7 @@ test.describe('screenshots', () => {
     test(`rail · ${theme.name}`, async ({ page }) => {
       await setTheme(page, theme.family, theme.dark)
       await page.setViewportSize({ width: 1440, height: 1100 })
-      await page.goto(`${MERIDIAN}#sec-2`)
+      await page.goto(`${VEYLAND}#sec-2`)
       const rail = page.getByRole('complementary', { name: 'Context' })
       await expect(rail).toContainText('How this got here')
       await page.waitForTimeout(900)
@@ -147,7 +147,7 @@ test.describe('screenshots', () => {
   }
   test('read-only review · stone-light', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/review/rev-crestline-2026-08')
+    await page.goto('/review/rev-farrowdale-2026-08')
     await page
       .getByRole('complementary', { name: 'Context' })
       .getByRole('tab', { name: 'Respond' })

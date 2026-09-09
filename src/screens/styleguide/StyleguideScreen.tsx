@@ -24,7 +24,7 @@ export function StyleguideScreen() {
         <p className="micro">Names of things · font-display</p>
         <div className="flex flex-wrap items-baseline gap-3">
           <span className="font-display text-borrower font-semibold tracking-display">
-            Meridian US Holdco LLC
+            Veyland US Holdco LLC
           </span>
           <span className="micro text-faint">CL6430</span>
         </div>
@@ -65,7 +65,7 @@ export function StyleguideScreen() {
       <section className="flex flex-col gap-2 border-t border-rule pt-5">
         <p className="micro">Identifiers · font-mono</p>
         <p className="font-mono text-[12px] text-ink-soft">
-          Meridian_10K_FY2025.pdf · 2026-02-14 · p. 12 · POL-CR-014 · §2.3
+          Veyland_10K_FY2025.pdf · 2026-02-14 · p. 12 · POL-CR-014 · §2.3
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded border border-rule-strong bg-bg-subtle px-[7px] font-mono text-[10px] text-muted">

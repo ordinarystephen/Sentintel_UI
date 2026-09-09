@@ -4,14 +4,14 @@ import { describe, expect, it } from 'vitest'
 import { renderAt } from '@/test/renderAt'
 
 const q3Row = () =>
-  screen.getByRole('button', { name: 'Select document: Meridian_Holdco_Q3_Update.pdf' })
+  screen.getByRole('button', { name: 'Select document: Veyland_Holdco_Q3_Update.pdf' })
 
 describe('documents — browse state (no query)', () => {
   it('shows document rows only: filename, extraction badge, LOB, date — no preview text', async () => {
     renderAt('/documents')
     expect(await screen.findByText('7 documents · newest first')).toBeInTheDocument()
     const row = q3Row()
-    expect(within(row).getByText('Meridian_Holdco_Q3_Update.pdf')).toBeInTheDocument()
+    expect(within(row).getByText('Veyland_Holdco_Q3_Update.pdf')).toBeInTheDocument()
     expect(within(row).getByText('extracted')).toBeInTheDocument()
     expect(within(row).getByText('IB')).toBeInTheDocument()
     expect(within(row).getByText('2026-07-15')).toBeInTheDocument()
@@ -19,10 +19,10 @@ describe('documents — browse state (no query)', () => {
     expect(screen.queryByText(/revolving credit facility remains undrawn/)).toBeNull()
     expect(document.querySelector('mark')).toBeNull()
     expect(screen.queryByRole('button', { name: 'View source' })).toBeNull()
-    const crestline = screen.getByRole('button', {
-      name: 'Select document: Crestline_Logistics_Q2_Update.pdf',
+    const farrowdale = screen.getByRole('button', {
+      name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf',
     })
-    expect(within(crestline).getByText('not yet extracted')).toBeInTheDocument()
+    expect(within(farrowdale).getByText('not yet extracted')).toBeInTheDocument()
   })
 
   it('selects a single row and reveals the action bar; deep link included when the document fed a review', async () => {
@@ -33,19 +33,19 @@ describe('documents — browse state (no query)', () => {
     expect(q3Row()).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Preview extracted text' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Download original' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Used in Meridian review →' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Used in Veyland review →' })).toHaveAttribute(
       'href',
-      '/review/rev-meridian-2026-08#sec-2',
+      '/review/rev-veyland-2026-08#sec-2',
     )
 
     // single-select: choosing another row moves the selection and the bar
-    const halcyon = screen.getByRole('button', {
-      name: 'Select document: Halcyon_Marine_Facility_Agreement.pdf',
+    const seldwyn = screen.getByRole('button', {
+      name: 'Select document: Seldwyn_Marine_Facility_Agreement.pdf',
     })
-    await user.click(halcyon)
-    expect(halcyon).toHaveAttribute('aria-pressed', 'true')
+    await user.click(seldwyn)
+    expect(seldwyn).toHaveAttribute('aria-pressed', 'true')
     expect(q3Row()).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.queryByRole('link', { name: 'Used in Meridian review →' })).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Used in Veyland review →' })).toBeNull()
   })
 
   it('not-yet-extracted documents show the preview action disabled', async () => {
@@ -53,7 +53,7 @@ describe('documents — browse state (no query)', () => {
     renderAt('/documents')
     await screen.findByText('7 documents · newest first')
     await user.click(
-      screen.getByRole('button', { name: 'Select document: Crestline_Logistics_Q2_Update.pdf' }),
+      screen.getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' }),
     )
     const previewBtn = screen.getByRole('button', { name: 'Preview extracted text' })
     expect(previewBtn).toBeDisabled()
@@ -68,7 +68,7 @@ describe('documents — browse state (no query)', () => {
     await user.click(q3Row())
     await user.click(screen.getByRole('button', { name: 'Preview extracted text' }))
     const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveTextContent('Meridian_Holdco_Q3_Update.pdf — extracted text')
+    expect(dialog).toHaveTextContent('Veyland_Holdco_Q3_Update.pdf — extracted text')
     await waitFor(() => expect(dialog).toHaveTextContent('15 pages')) // seam data arrives async
     expect(dialog).toHaveTextContent('parsed 2026-08-28')
     expect(within(dialog).getByText('extracted')).toBeInTheDocument()
@@ -98,7 +98,7 @@ describe('documents — search state (query non-empty)', () => {
       ).toBeInTheDocument(),
     )
     await waitFor(() =>
-      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Meridian_Holdco_Q3_Update.pdf'),
+      expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Veyland_Holdco_Q3_Update.pdf'),
     )
     expect(screen.queryByRole('button', { name: /^Select document:/ })).toBeNull()
     const first = screen.getAllByRole('listitem')[0]
@@ -106,9 +106,9 @@ describe('documents — search state (query non-empty)', () => {
       expect.arrayContaining(['revolving', 'availability']),
     )
     expect(within(first).getByText(/Liquidity Summary ·/)).toHaveTextContent('p. 14')
-    expect(within(first).getByRole('link', { name: 'Used in Meridian review →' })).toHaveAttribute(
+    expect(within(first).getByRole('link', { name: 'Used in Veyland review →' })).toHaveAttribute(
       'href',
-      '/review/rev-meridian-2026-08#sec-2',
+      '/review/rev-veyland-2026-08#sec-2',
     )
     expect(within(first).getByRole('button', { name: 'View source' })).toBeInTheDocument()
   })
@@ -117,11 +117,11 @@ describe('documents — search state (query non-empty)', () => {
     const user = userEvent.setup()
     renderAt('/documents?lob=Wealth+Management')
     await waitFor(() => expect(screen.getByText('1 document · newest first')).toBeInTheDocument())
-    expect(screen.getByText('Verdant_AgriChem_Credit_Memo.pdf')).toBeInTheDocument()
+    expect(screen.getByText('Verloway_AgriChem_Credit_Memo.pdf')).toBeInTheDocument()
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
     await user.selectOptions(screen.getByLabelText('Document type'), 'facility agreement')
     await waitFor(() =>
-      expect(screen.getByText('Halcyon_Marine_Facility_Agreement.pdf')).toBeInTheDocument(),
+      expect(screen.getByText('Seldwyn_Marine_Facility_Agreement.pdf')).toBeInTheDocument(),
     )
     expect(screen.getAllByRole('button', { name: /^Select document:/ })).toHaveLength(1)
 
