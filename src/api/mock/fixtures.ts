@@ -989,7 +989,7 @@ export const DOCUMENTS: DocumentRecord[] = [
   },
   {
     docId: 'doc-atlas-annual',
-    fileName: 'Atlas_Foods_Group_Annual_Review.pdf',
+    fileName: 'Atlas_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
     counterparty: 'Atlas Foods Group',
     docType: 'annual review',
@@ -1020,7 +1020,7 @@ export const DOCUMENTS: DocumentRecord[] = [
   },
   {
     docId: 'doc-verdant-cs',
-    fileName: 'Verdant_AgriChem_Credit_Submission.pdf',
+    fileName: 'Verdant_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
     counterparty: 'Verdant AgriChem',
     docType: 'credit submission',
@@ -1152,7 +1152,7 @@ export const PASSAGES: DocumentPassage[] = [
   {
     id: 'doc-atlas-annual-lev',
     docId: 'doc-atlas-annual',
-    fileName: 'Atlas_Foods_Group_Annual_Review.pdf',
+    fileName: 'Atlas_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
     counterparty: 'Atlas Foods Group',
     docType: 'annual review',
@@ -1169,7 +1169,7 @@ export const PASSAGES: DocumentPassage[] = [
   {
     id: 'doc-verdant-cs-passage',
     docId: 'doc-verdant-cs',
-    fileName: 'Verdant_AgriChem_Credit_Submission.pdf',
+    fileName: 'Verdant_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
     counterparty: 'Verdant AgriChem',
     docType: 'credit submission',

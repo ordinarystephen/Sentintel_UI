@@ -18,7 +18,7 @@ test('browse → select → action bar → preview modal → download; search sw
   page,
 }) => {
   await page.goto('/documents')
-  await expect(page.getByText('7 documents · most recent first')).toBeVisible()
+  await expect(page.getByText('7 documents · newest first')).toBeVisible()
   await expect(page.locator('mark')).toHaveCount(0)
 
   await q3Row(page).click()
@@ -78,7 +78,7 @@ test('cobalt-dark screenshots', async ({ page }) => {
   await setTheme(page, 'cobalt', true)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/documents')
-  await expect(page.getByText('7 documents · most recent first')).toBeVisible()
+  await expect(page.getByText('7 documents · newest first')).toBeVisible()
   await q3Row(page).click()
   await page.getByRole('button', { name: 'Preview extracted text' }).click()
   await expect(page.getByRole('dialog')).toContainText('extracted text')

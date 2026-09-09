@@ -9,7 +9,7 @@ const q3Row = () =>
 describe('documents — browse state (no query)', () => {
   it('shows document rows only: filename, extraction badge, LOB, date — no preview text', async () => {
     renderAt('/documents')
-    expect(await screen.findByText('7 documents · most recent first')).toBeInTheDocument()
+    expect(await screen.findByText('7 documents · newest first')).toBeInTheDocument()
     const row = q3Row()
     expect(within(row).getByText('Meridian_Holdco_Q3_Update.pdf')).toBeInTheDocument()
     expect(within(row).getByText('extracted')).toBeInTheDocument()
@@ -28,7 +28,7 @@ describe('documents — browse state (no query)', () => {
   it('selects a single row and reveals the action bar; deep link included when the document fed a review', async () => {
     const user = userEvent.setup()
     renderAt('/documents')
-    await screen.findByText('7 documents · most recent first')
+    await screen.findByText('7 documents · newest first')
     await user.click(q3Row())
     expect(q3Row()).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Preview extracted text' })).toBeEnabled()
@@ -51,7 +51,7 @@ describe('documents — browse state (no query)', () => {
   it('not-yet-extracted documents show the preview action disabled', async () => {
     const user = userEvent.setup()
     renderAt('/documents')
-    await screen.findByText('7 documents · most recent first')
+    await screen.findByText('7 documents · newest first')
     await user.click(
       screen.getByRole('button', { name: 'Select document: Crestline_Logistics_Q2_Update.pdf' }),
     )
@@ -64,7 +64,7 @@ describe('documents — browse state (no query)', () => {
   it('preview modal: title, meta row, collapsible sections with page ranges, first open; Esc closes', async () => {
     const user = userEvent.setup()
     renderAt('/documents')
-    await screen.findByText('7 documents · most recent first')
+    await screen.findByText('7 documents · newest first')
     await user.click(q3Row())
     await user.click(screen.getByRole('button', { name: 'Preview extracted text' }))
     const dialog = screen.getByRole('dialog')
@@ -90,7 +90,7 @@ describe('documents — search state (query non-empty)', () => {
   it('hit cards with matched passages and marked terms replace the browse rows', async () => {
     const user = userEvent.setup()
     renderAt('/documents')
-    await screen.findByText('7 documents · most recent first')
+    await screen.findByText('7 documents · newest first')
     await user.type(screen.getByLabelText('Search documents'), 'revolver availability')
     await waitFor(() =>
       expect(
@@ -116,10 +116,8 @@ describe('documents — search state (query non-empty)', () => {
   it('filters hit the seam in browse state too, and live in the URL; advanced help toggles', async () => {
     const user = userEvent.setup()
     renderAt('/documents?lob=Wealth+Management')
-    await waitFor(() =>
-      expect(screen.getByText('1 document · most recent first')).toBeInTheDocument(),
-    )
-    expect(screen.getByText('Verdant_AgriChem_Credit_Submission.pdf')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('1 document · newest first')).toBeInTheDocument())
+    expect(screen.getByText('Verdant_AgriChem_Credit_Memo.pdf')).toBeInTheDocument()
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
     await user.selectOptions(screen.getByLabelText('Document type'), 'facility agreement')
     await waitFor(() =>
