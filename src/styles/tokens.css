@@ -68,6 +68,10 @@
      sets html { font-size } from it). 108% ≈ 8% over the original px values;
      the low-DPI media block below steps it up once more. */
   --root-size: 108%;
+  /* User text-size choice (masthead S/M/L) — a SEPARATE knob multiplied
+     with --root-size in base.css, so it compounds with the low-DPI step.
+     Set via html.text-size-s / html.text-size-l (src/app/textSize.ts). */
+  --user-scale: 1;
   --weight-small: 400;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -172,6 +176,14 @@ body.theme-cobalt.dark {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
   --overlay: rgba(0, 0, 0, 0.65);
+}
+
+/* User text-size classes (on <html>, where the font-size calc can see them) */
+html.text-size-s {
+  --user-scale: 0.92;
+}
+html.text-size-l {
+  --user-scale: 1.1;
 }
 
 /* ── Low-DPI adjustment (standard-resolution office panels, dPR ≈ 1) ──────

@@ -1,5 +1,6 @@
 /**
- * 48px masthead: brand, health badge, theme select, dark toggle (build-spec §4).
+ * 48px masthead: brand, health badge, text-size control, theme select, dark
+ * toggle (build-spec §4).
  */
 import { Badge } from '@/components/Badge'
 import { strings } from '@/strings'

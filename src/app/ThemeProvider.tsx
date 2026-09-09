@@ -5,14 +5,21 @@
 import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from 'react'
 import { ThemeContext, type ThemeContextValue } from './ThemeContext'
 import { applyTheme, readTheme, writeTheme, type ThemeFamily, type ThemePref } from './theme'
+import { applyTextSize, readTextSize, writeTextSize, type TextSize } from './textSize'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [pref, setPref] = useState<ThemePref>(readTheme)
+  const [textSize, setTextSizeState] = useState<TextSize>(readTextSize)
 
   useLayoutEffect(() => {
     applyTheme(pref)
     writeTheme(pref)
   }, [pref])
+
+  useLayoutEffect(() => {
+    applyTextSize(textSize)
+    writeTextSize(textSize)
+  }, [textSize])
 
   const setFamily = useCallback((family: ThemeFamily) => {
     setPref((p) => ({ ...p, family }))
@@ -20,10 +27,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleDark = useCallback(() => {
     setPref((p) => ({ ...p, dark: !p.dark }))
   }, [])
+  const setTextSize = useCallback((size: TextSize) => {
+    setTextSizeState(size)
+  }, [])
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ ...pref, setFamily, toggleDark }),
-    [pref, setFamily, toggleDark],
+    () => ({ ...pref, setFamily, toggleDark, textSize, setTextSize }),
+    [pref, setFamily, toggleDark, textSize, setTextSize],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

@@ -9,7 +9,7 @@ Every word the app shows lives in one of three files — never in a component. C
 | What you see on screen | Edit it in |
 | --- | --- |
 | Brand name, "ready" badge, skip link | `src/strings.ts` › **app** |
-| Theme names, dark-mode toggle | `src/strings.ts` › **theme** |
+| Theme names, dark-mode toggle, the text-size control (S/M/L labels + their spoken names) | `src/strings.ts` › **theme** |
 | Left-rail items (Home, My reviews, All reviews, Documents, Policy library, Overview, Collapse sidebar) | `src/strings.ts` › **nav** |
 | Landing page — "Start a review", the drop-zone wording, "Anything Sentinel should know?", "Begin review", Advanced extraction settings, "Recent", "New review — reading…" | `src/strings.ts` › **landing** |
 | Processing screen — "Reading the documents", the "you can leave" line, "Cancel this review" | `src/strings.ts` › **processing** |

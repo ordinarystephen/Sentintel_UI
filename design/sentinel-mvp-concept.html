@@ -158,6 +158,9 @@ body.rail-collapsed .rail-ctx .nav-item{padding:5px 0}
 .searchbar input{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:8px 11px 8px 30px;font-size:13px;background:var(--bg)}
 .searchbar svg{position:absolute;left:10px;top:10px;width:13px;height:13px;color:var(--faint)}
 select.ctl{border:1px solid var(--rule-strong);border-radius:7px;padding:7px 9px;font-size:12px;background:var(--bg);color:var(--ink-soft)}
+.seg{display:inline-flex;gap:2px;background:var(--bg-subtle);border-radius:8px;padding:2px}
+.seg button{border:none;background:none;border-radius:6px;padding:3px 9px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--font-body)}
+.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:var(--shadow-sm)}
 .hit-count{font-size:11.5px;color:var(--faint);margin:10px 0 12px}
 .hit{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:12px 14px;margin-bottom:10px}
 .hit .fname{font-family:var(--font-mono);font-size:12.5px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -500,6 +503,7 @@ body.ctx-collapsed .rail-right{display:none}
     <span class="brand">Sentinel</span>
     <span class="badge"><span class="dot"></span> ready</span>
     <span class="spacer"></span>
+    <div class="seg" id="text-size" role="group" aria-label="Text size"><button aria-label="Small text" data-size="0.92" aria-pressed="false">S</button><button aria-label="Medium text (default)" data-size="1" aria-pressed="true">M</button><button aria-label="Large text" data-size="1.1" aria-pressed="false">L</button></div>
     <select class="ctl" id="theme-select" aria-label="Theme" style="padding:4px 8px;font-size:11.5px"><option value="">Stone</option><option value="theme-cobalt">Cobalt</option></select>
     <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <span class="pin" style="top:14px;right:44px" data-pin>1<span class="pin-pop"><span class="eyebrow">Note 1 · pick your theme</span>Themes are now a choice, not a toggle: pick a palette family (Stone is the default; Cobalt maps Steve's navy palette — deep-navy rail, #19398d primary — onto the same token contract) and the moon flips its dark variant. Four looks, one token layer, zero component changes. That's the whole argument for tokens.</span></span>
@@ -1079,6 +1083,15 @@ body.ctx-collapsed .rail-right{display:none}
   tt.addEventListener('click', function(){
     var on=document.body.classList.toggle('dark');
     tt.setAttribute('aria-pressed', on?'true':'false');
+  });
+  // Text size S/M/L — the mockup approximates the app's --user-scale knob
+  // with CSS zoom on the frame; the real app recomputes the rem scale.
+  document.querySelectorAll('#text-size button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#text-size button').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      b.setAttribute('aria-pressed','true');
+      document.querySelector('.frame').style.zoom = b.dataset.size;
+    });
   });
   document.getElementById('theme-select').addEventListener('change', function(e){
     document.body.classList.remove('theme-cobalt');

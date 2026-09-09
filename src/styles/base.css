@@ -150,10 +150,11 @@
   #root {
     height: 100%;
   }
-  /* The one type-size knob (tokens.css): 108% default, stepped up under
-     low-DPI. Every rem in the app scales from here. */
+  /* Two type-size knobs (tokens.css): --root-size (environment: 108%
+     default, stepped up under low-DPI) × --user-scale (masthead S/M/L).
+     Every rem in the app scales from here. */
   html {
-    font-size: var(--root-size);
+    font-size: calc(var(--root-size) * var(--user-scale));
   }
   /* Small text takes --weight-small (400; 450 under low-DPI — the variable
      fonts make the in-between weight free). Base layer, so explicit

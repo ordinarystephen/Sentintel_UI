@@ -1,20 +1,50 @@
 /**
- * Masthead theme controls: palette-family select + moon (dark) toggle.
- * Matches the mockup's `#theme-select` / `#theme-toggle` pair.
+ * Masthead theme controls: text-size segmented control (S/M/L),
+ * palette-family select + moon (dark) toggle.
+ * Matches the mockup's `#text-size` / `#theme-select` / `#theme-toggle` set.
  */
+import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
 import { useTheme } from './ThemeContext'
 import type { ThemeFamily } from './theme'
+import type { TextSize } from './textSize'
 
 const FAMILY_LABELS: Record<ThemeFamily, string> = {
   stone: strings.theme.stone,
   cobalt: strings.theme.cobalt,
 }
 
+const SIZE_OPTIONS: ReadonlyArray<{ id: TextSize; label: string; aria: string }> = [
+  { id: 's', label: strings.theme.textSizeS, aria: strings.theme.textSizeSmall },
+  { id: 'm', label: strings.theme.textSizeM, aria: strings.theme.textSizeMedium },
+  { id: 'l', label: strings.theme.textSizeL, aria: strings.theme.textSizeLarge },
+]
+
 export function ThemeControls() {
-  const { family, dark, setFamily, toggleDark } = useTheme()
+  const { family, dark, setFamily, toggleDark, textSize, setTextSize } = useTheme()
   return (
     <div className="flex items-center gap-2">
+      <div
+        role="group"
+        aria-label={strings.theme.textSizeLabel}
+        className="inline-flex gap-0.5 rounded-lg bg-bg-subtle p-0.5"
+      >
+        {SIZE_OPTIONS.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            aria-label={o.aria}
+            aria-pressed={textSize === o.id}
+            onClick={() => setTextSize(o.id)}
+            className={cx(
+              'rounded-md px-[9px] py-[3px] text-[0.75rem] text-muted',
+              textSize === o.id && 'bg-bg font-medium text-ink shadow-sm',
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
       <select
         aria-label={strings.theme.selectLabel}
         value={family}

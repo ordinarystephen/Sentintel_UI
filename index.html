@@ -17,8 +17,13 @@
           if (pref.family === 'cobalt') document.body.classList.add('theme-cobalt')
           if (pref.dark) document.body.classList.add('dark')
         }
+        // Pre-paint text-size apply. Mirrors src/app/textSize.ts (same key,
+        // same html classes) so a persisted S/L choice never flashes M.
+        var size = localStorage.getItem('sentinel.textSize')
+        if (size === 's') document.documentElement.classList.add('text-size-s')
+        if (size === 'l') document.documentElement.classList.add('text-size-l')
       } catch (_) {
-        /* storage unavailable: fall through to Stone light */
+        /* storage unavailable: fall through to Stone light, medium text */
       }
     </script>
     <div id="root"></div>

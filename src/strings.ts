@@ -35,6 +35,13 @@ export const strings = {
     stone: 'Stone',
     cobalt: 'Cobalt',
     toggleDark: 'Toggle dark mode',
+    textSizeLabel: 'Text size',
+    textSizeS: 'S',
+    textSizeM: 'M',
+    textSizeL: 'L',
+    textSizeSmall: 'Small text',
+    textSizeMedium: 'Medium text (default)',
+    textSizeLarge: 'Large text',
   },
 
   /* ════════ Left rail (app navigation) ════════ */
