@@ -24,9 +24,9 @@ PLACEHOLDER_BODY = (
 )
 PLACEHOLDER_COMMANDS = (
     "npm ci\nnpm run build            "
-    "# add VITE_BASE_PATH=/proxy/8082/ for a published Domino App"
+    "# add VITE_BASE_PATH=/proxy/8082/ for a published app"
 )
-PLACEHOLDER_FOOTER = 'See <code>docs/environment.md</code> ("Domino day one") for the full sequence.'
+PLACEHOLDER_FOOTER = 'See <code>docs/environment.md</code> ("Target environment: day one") for the full sequence.'
 
 _PLACEHOLDER_HTML = f"""<!doctype html>
 <html lang="en">

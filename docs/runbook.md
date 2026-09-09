@@ -108,9 +108,9 @@ The data is fictional. Every action below persists in your browser (survives ref
 
 28. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
 
-## 5. Serving the built app (Domino-style)
+## 5. Serving the built app (target-environment style)
 
-The repo ships a minimal Flask wrapper (`server/` + `run.py` + `app.sh`) that serves the production build the way it will be served on Domino — one process, SPA fallback included (deep-link refresh works, unlike a bare static server). You need Python 3 with Flask:
+The repo ships a minimal Flask wrapper (`server/` + `run.py` + `app.sh`) that serves the production build the way it will be served in the target environment — one process, SPA fallback included (deep-link refresh works, unlike a bare static server). You need Python 3 with Flask:
 
 ```sh
 make build                        # produces dist/
@@ -119,7 +119,7 @@ make run                          # → "Running on http://0.0.0.0:8082"
 
 (`make install` already covered the Flask dependency.)
 
-Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/review/rev-veyland-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as a Domino App entry point.
+Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/review/rev-veyland-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as the hosted-app entry point.
 
 ## 6. Environment variables
 
@@ -130,8 +130,8 @@ Copy `.env.example` to `.env` to set any of these (all optional):
 | `VITE_API`           | `mock`  | Which API implementation the app uses. Only `mock` exists in this repo; `http` is the dev team's.      |
 | `VITE_BASE_PATH`     | `/`     | Build-time path prefix for reverse-proxy hosting — see docs/environment.md → "Running behind a proxy". |
 | `VITE_ALLOWED_HOSTS` | —       | Dev server only: comma-separated hostnames to accept when proxied.                                     |
-| `VITE_ROUTER`        | `browser` | `hash` = Domino fallback routing in the URL fragment; pair with `VITE_BASE_PATH=./` (docs/environment.md). |
-| `PORT`               | `8082`  | Flask wrapper only (`run.py`); injected by Domino on a published App.                                   |
+| `VITE_ROUTER`        | `browser` | `hash` = target-environment fallback routing in the URL fragment; pair with `VITE_BASE_PATH=./` (docs/environment.md). |
+| `PORT`               | `8082`  | Flask wrapper only (`run.py`); platform-injected on a published app.                                   |
 
 ## 7. Troubleshooting
 

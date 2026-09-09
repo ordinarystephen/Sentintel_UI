@@ -1,4 +1,4 @@
-"""Flask serving wrapper for the built Sentinel UI (Domino-style).
+"""Flask serving wrapper for the built Sentinel UI (target-environment style).
 
 Pattern inherited verbatim from the parent POC — see
 docs/poc-serving-patterns.md §3: one process serves the static build and

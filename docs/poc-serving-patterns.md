@@ -4,7 +4,7 @@ Investigated 2026-08-31 against the actual files in this repo (not conventions).
 Every claim cites a file; where the POC's behavior is a workaround rather than a
 pattern, it is marked **inherit** or **do better** with reasoning. Audience: the
 team porting the successor UI (Vite + React + TS, static `dist/`, mock API,
-`VITE_BASE_PATH`) into the same Domino environment.
+`VITE_BASE_PATH`) into the same target environment.
 
 ---
 
@@ -47,14 +47,14 @@ grep -o '"resolved": "https\?://[^/]*' web/package-lock.json | sort | uniq -c
 e.g. `"resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz"`.
 Zero Nexus/Artifactory URLs. Yet the deployment target is described as offline:
 
-> `docs/PROCESS_FLOW.md:35` — "runs inside the bank's Domino environment ·
+> `docs/PROCESS_FLOW.md:35` — "runs inside the bank's target environment ·
 > **no public internet / no CDNs** · all auth via Azure AD credential chain"
 
 And the built SPA is **not** shipped in git (`web/.gitignore:1-2` is
 `node_modules` / `dist`; `git ls-files web/dist` is empty), so `npm install`
 *must* succeed on the target. Whatever makes that work today — presumably an
 npm group-proxy on the same internal **Nexus** that serves pip — is configured
-**ambiently in the Domino compute environment** (image-level npm config or
+**ambiently in the target compute environment** (image-level npm config or
 env vars) and is captured nowhere in this repository.
 
 The Python side has the same shape, but at least documented in prose: no
@@ -72,7 +72,7 @@ an internal bank package that does not exist on public PyPI.
 rewrites/permits registry access. The successor should carry a committed
 `.npmrc` with the actual internal registry URL (see §5) so the install
 contract is visible in the repo — get the URL from the platform team or read
-it out of the Domino workspace with `npm config get registry`.
+it out of the hosting workspace with `npm config get registry`.
 
 ### 1.3 Env vars needed for `npm install` — none defined anywhere
 
@@ -102,17 +102,17 @@ this down, which is a gap, not a proof it's unnecessary.
 
   With no `.npmrc` (hence no `engine-strict=true`), npm treats this as a
   warning at most.
-- **How Node gets onto Domino is documented nowhere in the repo.** The house
+- **How Node gets onto the platform is documented nowhere in the repo.** The house
   pattern is admin-provisioned base-image tooling — cf.
   `server/parsing/parsers.py:143` on system binaries: "installed separately by
-  Domino admins" (about Poppler/Tesseract, but it establishes the model).
+  platform admins" (about Poppler/Tesseract, but it establishes the model).
 - Effective requirement: the toolchain is `vite ^6.0.5` / `typescript ^5.7.2`
   (`web/package.json` devDependencies), so Node 18+ is the real floor. Python,
   by contrast, is pinned explicitly (`pyproject.toml:6`:
   `requires-python = ">=3.11"`) — the asymmetry is itself a finding.
 
 **Verdict: do better.** Run `node --version && npm --version` in the actual
-Domino workspace, and pin what you find in a committed `.nvmrc`.
+hosting workspace, and pin what you find in a committed `.nvmrc`.
 
 ---
 
@@ -131,7 +131,7 @@ Domino workspace, and pin what you find in a committed `.nvmrc`.
 - **Command:** `make build` → `cd web && npm run build` (`Makefile:10-12`).
 - **Output:** `web/dist/` (`web/vite.config.ts` `build: { outDir: "dist", sourcemap: false, target: "es2022" }`).
 - **Where it runs:** **manually, in whatever environment serves the app** —
-  i.e. inside the Domino workspace before launch. There is no CI of any kind
+  i.e. inside the hosting workspace before launch. There is no CI of any kind
   (no `.github/`, `.gitlab-ci.yml`, `Jenkinsfile`, `domino.yml`), and built
   assets are **not committed** (`web/.gitignore:2`). The README codifies the
   sequence (`README.md:29-31`):
@@ -162,7 +162,7 @@ and the asset base is relative (`web/vite.config.ts:13-17`):
 
 ```ts
 // `base: "./"` — emit relative asset paths in index.html so the build
-// survives Domino's `/proxy/<port>/` prefix. Absolute `/assets/...` paths
+// survives the platform's `/proxy/<port>/` prefix. Absolute `/assets/...` paths
 // would resolve against the origin and miss the proxy.
 export default defineConfig({
   base: "./",
@@ -186,21 +186,21 @@ def main() -> None:
     # so a misconfigured environment surfaces immediately instead of deep inside a later request.
     preflight_or_exit()
     app = create_app()
-    host = os.getenv("FLASK_RUN_HOST", "0.0.0.0")  # noqa: S104 - Domino proxies the bind
+    host = os.getenv("FLASK_RUN_HOST", "0.0.0.0")  # noqa: S104 - the platform proxies the bind
     # why: 8081 by default so the rebuild coexists with the parent app on 8080.
     port = int(os.getenv("PORT", os.getenv("FLASK_RUN_PORT", "8081")))
     debug = os.getenv("FLASK_DEBUG", "").lower() in {"1", "true", "yes"}
     app.run(host=host, port=port, debug=debug)
 ```
 
-Binding: `0.0.0.0`, port chain **`PORT` (Domino-injected) → `FLASK_RUN_PORT` →
+Binding: `0.0.0.0`, port chain **`PORT` (platform-injected) → `FLASK_RUN_PORT` →
 `8081`**. This is the Werkzeug dev server — there is no gunicorn/waitress in
 `requirements.txt` (the "# Web" block is just `Flask>=3.0,<4.0` +
 `python-dotenv>=1.0`). Single-process is *load-bearing* here: jobs, prompt
 overrides, and the resource registry are in-memory module singletons
 (`pyproject.toml:44` even disables the lint: `"PLW0603", # module-level
 singletons use global by design`). **Inherit for a POC-grade app behind
-Domino's proxy; do better if the successor ever needs >1 worker** — with
+the platform's proxy; do better if the successor ever needs >1 worker** — with
 multiple workers this pattern silently breaks any in-memory state.
 
 **Static serving** — Flask's own static handler is disabled outright
@@ -244,19 +244,19 @@ makes an *unknown* `/api/...` path 404 as JSON-territory instead of returning
 HTML (asserted by `tests/test_spa_routes.py:19-22`). **Inherit** — including
 the guard and the test.
 
-### 3.2 How Domino launches it
+### 3.2 How the platform launches it
 
 **There is no `app.sh`** — no launch script of any kind exists in the repo.
 The launch contract lives in prose:
 
-> `run.py:3-4` — "Domino runs the app under its own HTTP proxy and injects
-> ``PORT``; tests and Domino share the same ``create_app()`` factory."
+> `run.py:3-4` — "The target environment runs the app under its own HTTP proxy and injects
+> ``PORT``; tests and the platform share the same ``create_app()`` factory."
 
 > `docs/ARCHITECTURE.md:91-94` — "Default port 8081 (parent runs 8080), its
-> own `doc_store/`, and identical env var names so the same Domino
+> own `doc_store/`, and identical env var names so the same hosting
 > environment serves both."
 
-So: Domino expects the process to honor the injected `PORT`; the app is
+So: the platform expects the process to honor the injected `PORT`; the app is
 started by running `python run.py` (after `make install && make build`) from
 the repo root — the repo-root requirement is real, because tests/scripts
 `sys.path`-insert the root (`tests/conftest.py:17-21`) and the SPA dir is
@@ -269,7 +269,7 @@ you emit a redirect or absolute URL.
 
 ### 3.3 Surviving the proxy prefix — "relative by construction"
 
-Domino serves the app under a prefix — the code names it as
+The platform serves the app under a prefix — the code names it as
 `/proxy/<port>/` (`web/vite.config.ts:14`, `web/src/api/client.ts:4-6`,
 `docs/PROCESS_FLOW.md:29`). The POC survives it with **four independent
 relative-path decisions and one load-bearing invariant**:
@@ -324,12 +324,12 @@ about CORS.
 
 ## 4. Gotchas — the ones that cost (or will cost) time
 
-1. **`.env` beats Domino, deliberately — and it can shadow rotating
+1. **`.env` beats the platform env, deliberately — and it can shadow rotating
    credentials.** `server/config.py:3-11`: the `.env` loads with
-   `override=True` ("DELIBERATELY REVERSES the prior 'Domino env wins'
-   behaviour … Domino's ephemeral environment drops vars on rebuild"). The
+   `override=True` ("DELIBERATELY REVERSES the prior 'platform env wins'
+   behaviour … the platform's ephemeral environment drops vars on rebuild"). The
    sharp edge is spelled out in `.env.example:22-32`: never put
-   `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` in the `.env` — Domino
+   `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_AD_TOKEN` in the `.env` — the platform
    injects rotating values into the process env, and with `override=True` a
    stale pinned value **shadows the fresh one** ("a stale
    `AZURE_OPENAI_AD_TOKEN` … BYPASSES the rotating credential entirely").
@@ -366,13 +366,13 @@ about CORS.
 4. **The pin authority does not exist.** `requirements.txt:3`,
    `pyproject.toml:27,30`, `server/config.py:5`, `server/core/azure_auth.py:4`
    and `server/parsing/doc_intelligence.py:3` all cite `docs/CONSTRAINTS.md`
-   ("Domino runtime #6", "Azure authentication #4") — **the file is not in the
+   ("platform runtime #6", "Azure authentication #4") — **the file is not in the
    repo**. Similarly `docs/PHASE1_PLAN.md` is cited by committed code but
    gitignored. **Do better:** commit the constraint docs your code cites.
 
 5. **Azure egress is proxy-only.** Document Intelligence goes through
-   Domino's local nginx proxy exclusively —
-   `server/parsing/doc_intelligence.py:3-6`: "endpoint is Domino's local
+   the platform's local nginx proxy exclusively —
+   `server/parsing/doc_intelligence.py:3-6`: "endpoint is the platform's local
    nginx proxy (`https://127.0.0.1:8443`) — never
    `*.cognitiveservices.azure.com` directly"; auth is `DefaultAzureCredential`
    only, one credential per process (`server/core/azure_auth.py:1-6`).
@@ -384,7 +384,7 @@ about CORS.
    (`run.py:23` comment); the "deep" service handoff also showed 8080
    (`docs/DEEP_INTEGRATION_PROMPT.md:88-90` warns to verify). The successor
    needs its own port. Also note the env-var-sharing contract: identical var
-   names so **one** Domino environment serves parent + POC
+   names so **one** target environment serves parent + POC
    (`docs/ARCHITECTURE.md:93-94`) — and one residue trap:
    the log-level var is still `LISA_LOG_LEVEL` (`server/config.py:172`);
    setting `LOG_LEVEL` does nothing.
@@ -397,7 +397,7 @@ about CORS.
 8. **Manifests are frozen (Nexus).** "never edit `requirements.txt` /
    `pyproject.toml` to work around sandbox install issues — flag instead"
    (`docs/DEEP_INTEGRATION_PROMPT.md:34`). A sandbox/laptop install failure is
-   not evidence a dep is missing on Domino. Assume the same discipline will
+   not evidence a dep is missing in the target environment. Assume the same discipline will
    apply to the successor's `package.json` once an internal registry is in the
    loop. One undocumented residue: `web/package.json` carries
    `"overrides": { "brace-expansion": "^2.0.2" }` with no stated reason
@@ -405,14 +405,14 @@ about CORS.
    can't hold comments (README or a `# why` in the lockfile-adjacent docs).
 
 9. **System binaries are admin-installed.** Poppler/Tesseract "installed
-   separately by Domino admins" (`server/parsing/parsers.py:140-144`), probed
+   separately by platform admins" (`server/parsing/parsers.py:140-144`), probed
    for real at `/api/health`. Model for anything the successor needs beyond
    npm: file a platform request, don't script an install.
 
 10. **Tests must defend against the real `.env`.** Because config loads at
     import with `override=True`, both harnesses point `SENTINEL_DOTENV_PATH`
     at a nonexistent file to load nothing (`tests/conftest.py:23-26`,
-    `tests/smoke/e2e_smoke.py:46-49`) — otherwise a test run *in Domino*
+    `tests/smoke/e2e_smoke.py:46-49`) — otherwise a test run *in the target environment*
     would write into the live `/mnt` doc store. If the successor adopts the
     dotenv pattern, adopt the off-switch with it.
 
@@ -422,25 +422,25 @@ about CORS.
 
 | POC finding (evidence) | Successor setting |
 |---|---|
-| No in-repo npm registry config; installs work via an **ambient** environment-level mirror; lockfile is 100% `registry.npmjs.org` (`web/package-lock.json`; Makefile:8) — *do better* | Commit an `.npmrc` in the successor repo: `registry=https://<nexus-host>/repository/npm-proxy/` (read the real URL in a Domino workspace via `npm config get registry`; get auth/`cafile`/`strict-ssl` lines from the platform team if `npm ping` fails bare). Also add `engine-strict=true` to make the Node floor enforced. |
-| Committed `package-lock.json`, lockfileVersion 3; bare `npm install` (Makefile:8) — *inherit the lockfile, do better on the command* | Commit `package-lock.json`; install with **`npm ci`** on Domino (reproducible, prunes, fails loud on lockfile drift). |
-| No Node pin; advisory `"node": ">=18.0.0"` only (`web/package.json:7-10`); Node provisioning undocumented — *do better* | Run `node --version` in the target Domino workspace and pin exactly that in **`.nvmrc`** (expect a v18/v20 line, since Vite builds there today). If Node is absent/old, it's a platform-team request — the base image provides it (cf. `parsers.py:143` pattern), not nvm-in-repo. |
-| Build runs **manually in the Domino workspace**; `dist/` untracked; no CI (Makefile:10-12, `web/.gitignore:2`) — *inherit* | Same flow: `npm ci && npm run build` in the workspace before launch. Keep `dist/` untracked; add the POC's placeholder-page fallback so a missing build renders instructions, not a 500 (`server/api/spa.py:16-37`). |
+| No in-repo npm registry config; installs work via an **ambient** environment-level mirror; lockfile is 100% `registry.npmjs.org` (`web/package-lock.json`; Makefile:8) — *do better* | Commit an `.npmrc` in the successor repo: `registry=https://<nexus-host>/repository/npm-proxy/` (read the real URL in a hosting workspace via `npm config get registry`; get auth/`cafile`/`strict-ssl` lines from the platform team if `npm ping` fails bare). Also add `engine-strict=true` to make the Node floor enforced. |
+| Committed `package-lock.json`, lockfileVersion 3; bare `npm install` (Makefile:8) — *inherit the lockfile, do better on the command* | Commit `package-lock.json`; install with **`npm ci`** in the target environment (reproducible, prunes, fails loud on lockfile drift). |
+| No Node pin; advisory `"node": ">=18.0.0"` only (`web/package.json:7-10`); Node provisioning undocumented — *do better* | Run `node --version` in the target hosting workspace and pin exactly that in **`.nvmrc`** (expect a v18/v20 line, since Vite builds there today). If Node is absent/old, it's a platform-team request — the base image provides it (cf. `parsers.py:143` pattern), not nvm-in-repo. |
+| Build runs **manually in the hosting workspace**; `dist/` untracked; no CI (Makefile:10-12, `web/.gitignore:2`) — *inherit* | Same flow: `npm ci && npm run build` in the workspace before launch. Keep `dist/` untracked; add the POC's placeholder-page fallback so a missing build renders instructions, not a 500 (`server/api/spa.py:16-37`). |
 | Zero build-time env vars; API base is the hardcoded relative `const BASE = "api"` (`client.ts:9`) — *inherit the relative-API rule* | Keep all API calls relative (`api/...`, never `/api/...`). This is the rule that makes the proxy prefix free. |
-| `base: "./"` + **no router** — relative assets survive `/proxy/<port>/` only because the app never leaves the proxy root (`vite.config.ts:13-17`) — *inherit the idea, not the value: the successor has deep links* | Set **`VITE_BASE_PATH=/proxy/<PORT>/`** for the Domino build (e.g. `/proxy/8082/`) so assets get absolute prefix-aware paths and deep links like `/proxy/8082/reports/42` load working assets via the Flask fallback. Two caveats: (1) the `/proxy/<port>/` form is the *workspace* proxy path evidenced in this repo (`vite.config.ts:14`, `PROCESS_FLOW.md:29`) — verify the prefix of a *published* Domino App in the target env before hardcoding; (2) if the prefix turns out unstable, fall back to the POC combo: `base: "./"` + a **hash router**, which keeps deep links in the fragment and relative assets valid. |
+| `base: "./"` + **no router** — relative assets survive `/proxy/<port>/` only because the app never leaves the proxy root (`vite.config.ts:13-17`) — *inherit the idea, not the value: the successor has deep links* | Set **`VITE_BASE_PATH=/proxy/<PORT>/`** for the hosted build (e.g. `/proxy/8082/`) so assets get absolute prefix-aware paths and deep links like `/proxy/8082/reports/42` load working assets via the Flask fallback. Two caveats: (1) the `/proxy/<port>/` form is the *workspace* proxy path evidenced in this repo (`vite.config.ts:14`, `PROCESS_FLOW.md:29`) — verify the prefix of a *published* app in the target env before hardcoding; (2) if the prefix turns out unstable, fall back to the POC combo: `base: "./"` + a **hash router**, which keeps deep links in the fragment and relative assets valid. |
 | SPA fallback: catch-all blueprint registered **last**, three-tier file→`index.html`→placeholder, `startswith("api/")` guard, `Flask(static_folder=None)` (`server/api/spa.py`, `server/api/__init__.py`, `server/__init__.py:56-58`) — *inherit verbatim* | Wrap the successor's `dist/` in the same pattern: API blueprints under `/api` first, then `@bp.route("/", defaults={"path": ""})` + `@bp.route("/<path:path>")` serving `dist/<path>` if it's a file else `dist/index.html`; keep the `api/` 404 guard and the `test_api_paths_not_intercepted` test (`tests/test_spa_routes.py:19-22`). |
 | Server-minted URLs are relative — `image_url=f"api/documents/..."`, no leading slash (`ib_lending.py:498,556`) — *inherit* | Mock-API responses that embed URLs must emit them relative too. One absolute path breaks only behind the proxy — the worst kind of bug. |
 | Same-origin, zero CORS (`requirements.txt`, no `Access-Control-*` anywhere) — *inherit* | Serve mock API and `dist/` from one Flask process on one port. No CORS config, ever. |
-| No `app.sh` exists; launch contract = `python run.py`, honoring Domino-injected `PORT`, bind `0.0.0.0`, run from repo root (`run.py:22-26`) — *inherit the contract, do better by writing it down* | Ship an `app.sh`: `#!/usr/bin/env bash`, `cd "$(dirname "$0")"`, `exec python run.py` — with `run.py` doing `host = os.getenv("FLASK_RUN_HOST", "0.0.0.0")`, `port = int(os.getenv("PORT", "<default>"))`. Pick a default port that is neither 8080 (parent) nor 8081 (this POC) — e.g. **8082** — and keep `PORT` winning so Domino stays in control. |
-| Werkzeug dev server, single process; in-memory state is load-bearing (`run.py:26`, `pyproject.toml:44`) — *inherit only with the constraint* | `app.run()` is fine behind Domino's proxy for a mock-API UI. If you add gunicorn later, `workers=1` unless all state is external. |
-| Persistent config on `/mnt`, `.env` wins with `override=True`, but injected rotating credentials must never be pinned (`server/config.py:3-11,33`, `.env.example:22-32`) — *inherit pattern + warning together* | If the successor needs any surviving config, put it at `/mnt/private/<successor>/.env` with the same `override=True` + explicit-path off-switch (`SENTINEL_DOTENV_PATH` analogue) — and copy the "never pin Domino-injected credentials" comment block into its `.env.example`. |
-| Domino env vars the POC actually depends on: injected `PORT` at runtime; six `required_env` for the backend; **nothing** for npm/build (`server/config.py:137-145`, `run.py:24`) — *inherit* | Domino environment for the successor needs: `PORT` (injected by Domino — just honor it), plus whatever registry/CA vars §1.3/§5-row-1 discovery turns up. `VITE_BASE_PATH` is **build-time** — set it in the workspace shell (or a committed `.env.production`) before `npm run build`, not in the Domino app env. |
+| No `app.sh` exists; launch contract = `python run.py`, honoring platform-injected `PORT`, bind `0.0.0.0`, run from repo root (`run.py:22-26`) — *inherit the contract, do better by writing it down* | Ship an `app.sh`: `#!/usr/bin/env bash`, `cd "$(dirname "$0")"`, `exec python run.py` — with `run.py` doing `host = os.getenv("FLASK_RUN_HOST", "0.0.0.0")`, `port = int(os.getenv("PORT", "<default>"))`. Pick a default port that is neither 8080 (parent) nor 8081 (this POC) — e.g. **8082** — and keep `PORT` winning so the platform stays in control. |
+| Werkzeug dev server, single process; in-memory state is load-bearing (`run.py:26`, `pyproject.toml:44`) — *inherit only with the constraint* | `app.run()` is fine behind the platform's proxy for a mock-API UI. If you add gunicorn later, `workers=1` unless all state is external. |
+| Persistent config on `/mnt`, `.env` wins with `override=True`, but injected rotating credentials must never be pinned (`server/config.py:3-11,33`, `.env.example:22-32`) — *inherit pattern + warning together* | If the successor needs any surviving config, put it at `/mnt/private/<successor>/.env` with the same `override=True` + explicit-path off-switch (`SENTINEL_DOTENV_PATH` analogue) — and copy the "never pin platform-injected credentials" comment block into its `.env.example`. |
+| Platform env vars the POC actually depends on: injected `PORT` at runtime; six `required_env` for the backend; **nothing** for npm/build (`server/config.py:137-145`, `run.py:24`) — *inherit* | target environment for the successor needs: `PORT` (platform-injected — just honor it), plus whatever registry/CA vars §1.3/§5-row-1 discovery turns up. `VITE_BASE_PATH` is **build-time** — set it in the workspace shell (or a committed `.env.production`) before `npm run build`, not in the published-app env. |
 | Rebuild wipes repo-tree state; app must never write into its own checkout (dev_overrides counterexample, `prompt_manager.py:27-28`) — *do better* | Any runtime-written state (mock-API fixtures included, if editable) goes under `/mnt/private/<successor>/`, never inside the git checkout. |
 
 ---
 
 *Method note: every quoted line was read from this repo at commit `242ee9f`
 (working tree, 2026-08-31). The two ambient unknowns that cannot be answered
-from the repo — the internal npm registry URL and the Domino image's Node
-version — are marked above with the exact command to run in a Domino
+from the repo — the internal npm registry URL and the hosting image's Node
+version — are marked above with the exact command to run in a hosting
 workspace to resolve them.*

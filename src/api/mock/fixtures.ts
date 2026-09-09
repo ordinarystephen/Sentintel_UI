@@ -34,7 +34,7 @@ import type {
   WorkItem,
 } from '../types'
 
-export const ME: User = { id: 'u-me', name: 'Costello, Stephen' }
+export const ME: User = { id: 'u-me', name: 'Stark, Tony' }
 export const OWNERS: User[] = [
   ME,
   { id: 'u-chen', name: 'R. Chen' },

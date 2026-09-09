@@ -65,18 +65,18 @@ Signatures are in `client.ts`; this table is the behaviour the UI expects.
 
 ## Relative-URL discipline (hard rules for `http/`)
 
-Inherited from the parent POC, where these rules are what make Domino's proxy prefix free ([poc-serving-patterns.md](poc-serving-patterns.md) §3.3):
+Inherited from the parent POC, where these rules are what make the platform's proxy prefix free ([poc-serving-patterns.md](poc-serving-patterns.md) §3.3):
 
 1. **All client API calls are relative**: the base constant is `api` — `fetch(`api/...`)` — **never** `/api/...`. A leading slash resolves against the origin, silently escaping the proxy prefix; it breaks *only* behind the proxy, the worst kind of bug.
 2. **Any server-minted URL in a response body is relative too** (image refs, export links, pagination cursors): `api/documents/...`, no leading slash. The client fetches them verbatim.
 3. **Same origin, no CORS, ever.** The API mounts under `/api` on the same Flask process that serves `dist/` (see `server/`); there is no CORS knob and there must never need to be one.
 
-## Domino runtime conventions
+## Target-environment runtime conventions
 
 Also inherited from the POC report, credited there with file-level evidence:
 
-- **Persistence lives on `/mnt`, never in the checkout.** A Domino environment rebuild wipes the repo tree (`node_modules`, `dist/`, anything gitignored). Any state the app must keep — uploads, a persistent `.env`, editable fixtures if that ever exists — goes under `/mnt/private/<app>/...` with a repo fallback. The app must never write inside its own git checkout.
-- **A persistent `.env` may load with `override=True`** (so config survives rebuilds that drop Domino's env), **but never pin Domino-injected rotating credentials in it** — with `override=True` a stale pinned token silently shadows the fresh injected one and bypasses credential rotation entirely. Copy the POC's warning block into any `.env.example` that gains credential fields, and keep an explicit-path off-switch so tests can load nothing.
+- **Persistence lives on `/mnt`, never in the checkout.** A hosting-image rebuild wipes the repo tree (`node_modules`, `dist/`, anything gitignored). Any state the app must keep — uploads, a persistent `.env`, editable fixtures if that ever exists — goes under `/mnt/private/<app>/...` with a repo fallback. The app must never write inside its own git checkout.
+- **A persistent `.env` may load with `override=True`** (so config survives rebuilds that drop the platform's env), **but never pin platform-injected rotating credentials in it** — with `override=True` a stale pinned token silently shadows the fresh injected one and bypasses credential rotation entirely. Copy the POC's warning block into any `.env.example` that gains credential fields, and keep an explicit-path off-switch so tests can load nothing.
 
 ## Polling and caching
 

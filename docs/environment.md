@@ -1,6 +1,6 @@
 # Environment audit
 
-Portability audit for hosting environments (Domino-style): what this project needs, what it downloads, what is native, and how it behaves offline and behind a proxy. Verified on 2026-08-31 against the committed lockfile (`lockfileVersion: 3`).
+Portability audit for target hosting environments: what this project needs, what it downloads, what is native, and how it behaves offline and behind a proxy. Verified on 2026-08-31 against the committed lockfile (`lockfileVersion: 3`).
 
 ## Runtime versions
 
@@ -60,9 +60,9 @@ A scan of every package in `node_modules` (install scripts, `binding.gyp`, `gypf
 - `GET /` → 200, `GET /assets/index-*.js` → 200 — the app runs from any dumb static file server; no Node server is required at runtime.
 - **One caveat, inherent to client-side routing**: `GET /review/x` → **404** on a server without SPA fallback. Navigation *within* the app works fine from `/`; only hard refresh/direct entry on deep URLs needs the server to rewrite unknown paths to `index.html` (one line in nginx: `try_files $uri /index.html;`). `npm run preview` and virtually every real hosting frontend do this; bare `python -m http.server` does not.
 
-## Domino day one
+## Target environment: day one
 
-Run these in the Domino workspace **before anything else**; each answer lands in a committed file. (Patterns inherited from the parent POC — [poc-serving-patterns.md](poc-serving-patterns.md).)
+Run these in the target environment’s workspace **before anything else**; each answer lands in a committed file. (Patterns inherited from the parent POC — [poc-serving-patterns.md](poc-serving-patterns.md).)
 
 ```sh
 node --version            # → compare with .nvmrc
@@ -73,13 +73,13 @@ npm run build             # → dist/  (add VITE_BASE_PATH=... for a published A
 ```
 
 - **`node --version`** — we require **≥ 22.12** (Vite 6 toolchain floor; `.nvmrc` pins 24). **FLAG: if the image is older, this is a platform-team request** — the base image provides Node (the POC's admin-provisioned-tooling model); do not script around it with nvm-in-repo and do not lower the floor.
-- **`npm config get registry`** — the internal registry URL is ambient in the Domino image and captured nowhere in the POC repo; committing it to `.npmrc` makes the install contract visible. If `npm ping` fails bare, get the auth/`cafile`/`strict-ssl` lines from the platform team (expect `NODE_EXTRA_CA_CERTS` if TLS is intercepted).
+- **`npm config get registry`** — the internal registry URL is ambient in the hosting image and captured nowhere in the POC repo; committing it to `.npmrc` makes the install contract visible. If `npm ping` fails bare, get the auth/`cafile`/`strict-ssl` lines from the platform team (expect `NODE_EXTRA_CA_CERTS` if TLS is intercepted).
 
 ### The committed `.npmrc`
 
-`.npmrc` ships with `engine-strict=true` (the Node floor is enforced, not advisory) and a **commented placeholder** registry line marked `TODO`. **Public npm remains correct for local development and this repo's CI until the Domino value is known** (ratified decision); uncomment and fill the registry line only with the value read from the Domino workspace.
+`.npmrc` ships with `engine-strict=true` (the Node floor is enforced, not advisory) and a **commented placeholder** registry line marked `TODO`. **Public npm remains correct for local development and this repo's CI until the target-environment value is known** (ratified decision); uncomment and fill the registry line only with the value read from the target environment's workspace.
 
-## Serving with the Flask wrapper (Domino-style)
+## Serving with the Flask wrapper
 
 `server/` + `run.py` + `app.sh` wrap `dist/` in the parent POC's serving pattern, inherited verbatim ([poc-serving-patterns.md](poc-serving-patterns.md) §3): `Flask(static_folder=None)`; a catch-all blueprint registered last with three-tier resolution — real file from `dist/` → `index.html` (SPA fallback: deep-link refresh works) → a styled placeholder page carrying the build commands when the frontend hasn't been built; and a `startswith("api/")` 404 guard so unknown API paths stay JSON-territory (future-proofs the seam even though today's mock is client-side).
 
@@ -89,11 +89,11 @@ npm run build
 python run.py                     # binds 0.0.0.0; port chain: PORT → FLASK_RUN_PORT → 8082
 ```
 
-`app.sh` is the Domino App entry point (`cd` to the repo root, `exec python run.py`). Default port **8082** — 8080 is the parent app, 8081 the POC; Domino's injected `PORT` always wins. Single-process Werkzeug is fine here (the app is static + client-side mock); if a real API ever runs in this process with >1 worker, revisit. `python -m pytest tests/ -q` runs the serving tests, including the ported `test_api_paths_not_intercepted`.
+`app.sh` is the hosted-app entry point (`cd` to the repo root, `exec python run.py`). Default port **8082** — 8080 is the parent app, 8081 the POC; the platform-injected `PORT` always wins. Single-process Werkzeug is fine here (the app is static + client-side mock); if a real API ever runs in this process with >1 worker, revisit. `python -m pytest tests/ -q` runs the serving tests, including the ported `test_api_paths_not_intercepted`.
 
-## Base path on Domino: plan A and plan B
+## Base path: plan A and plan B
 
-- **Plan A (default): history router + absolute prefix.** Build with `VITE_BASE_PATH=/proxy/8082/` — the *workspace* proxy path evidenced in the POC repo. **Verify the real prefix of a published Domino App before hardcoding it** (publish once, inspect the URL); workspace and published prefixes are not guaranteed identical.
+- **Plan A (default): history router + absolute prefix.** Build with `VITE_BASE_PATH=/proxy/8082/` — the *workspace* proxy path evidenced in the POC repo. **Verify the real prefix of a published app before hardcoding it** (publish once, inspect the URL); workspace and published prefixes are not guaranteed identical.
 - **Plan B (escape hatch): relative base + hash router.** If the published prefix proves unstable, build with `VITE_BASE_PATH=./ VITE_ROUTER=hash` — relative assets survive any prefix, and routes live in the URL fragment (`#/review/:id`), which no proxy touches. Section deep links still work (`#/review/x#sec-2`). Both modes are covered by the Playwright deep-link verification.
 
 ## Running behind a proxy (verified)

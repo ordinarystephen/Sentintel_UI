@@ -17,7 +17,7 @@ _All company, person, and transaction data in this application is fictional; any
 The complete from-clone path (Node ≥ 22.12 — see `.nvmrc` — and Python 3 with pip):
 
 ```sh
-make install && make build && make run    # → http://localhost:8082, served like Domino will serve it
+make install && make build && make run    # → http://localhost:8082, served like the target environment will serve it
 ```
 
 To play around with hot reload instead, use the dev server:
@@ -30,11 +30,11 @@ make dev                                  # → http://localhost:5173 — mock A
 
 Then read, in this order:
 
-1. [docs/build-spec.md](docs/build-spec.md) — the implementation brief (behaviours, the API contract, acceptance criteria).
+1. [docs/build-spec-handoff.md](docs/build-spec-handoff.md) — the implementation brief (behaviours, the API contract, acceptance criteria). ([docs/build-spec.md](docs/build-spec.md) is the internal original.)
 2. [design/sentinel-mvp-concept.html](design/sentinel-mvp-concept.html) — the interactive mockup: open it in a browser. It is the source of truth for layout, tokens and copy. The pink numbered pins are design rationale and are mockup-only.
 3. [docs/sentinel-ui-decisions.md](docs/sentinel-ui-decisions.md) — the keep/cut ledger: the "why" behind the decisions.
 4. [docs/api-handoff.md](docs/api-handoff.md) — how to replace the mock with the real API, method by method.
-5. [docs/poc-serving-patterns.md](docs/poc-serving-patterns.md) — how the parent POC installs, builds, and serves on Domino; the patterns this repo inherits (`.npmrc`, the Flask wrapper in `server/`, the relative-URL rules).
+5. [docs/poc-serving-patterns.md](docs/poc-serving-patterns.md) — how the parent POC installs, builds, and serves in the target environment; the patterns this repo inherits (`.npmrc`, the Flask wrapper in `server/`, the relative-URL rules).
 
 [docs/screenshots/](docs/screenshots/) has every screen in Stone light plus the review page in the other three themes (`npm run screenshots:docs` regenerates them).
 

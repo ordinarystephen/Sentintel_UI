@@ -48,7 +48,7 @@ export const routes: RouteObject[] = [
  * BASE_URL comes from Vite's `base` (VITE_BASE_PATH at build time), so the
  * same bundle works at '/' or under a proxy prefix like '/proxy/8082/'.
  *
- * VITE_ROUTER=hash is the Domino escape hatch (docs/poc-serving-patterns.md
+ * VITE_ROUTER=hash is the target-environment escape hatch (docs/poc-serving-patterns.md
  * §3.3/§5): if the published-App proxy prefix proves unstable, build with
  * `VITE_BASE_PATH=./ VITE_ROUTER=hash` — relative assets plus routes in the
  * URL fragment (`#/review/:id`), which no proxy rewrites. Section anchors

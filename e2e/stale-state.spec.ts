@@ -20,7 +20,7 @@ const LEGACY_REVIEW = {
   clId: 'CL6430',
   lob: 'IB Lending',
   ownerId: 'u-me',
-  ownerName: 'Costello, Stephen',
+  ownerName: 'Stark, Tony',
   status: 'ready',
   createdAt: '2026-08-28T09:31:00Z',
   openItems: 0,
