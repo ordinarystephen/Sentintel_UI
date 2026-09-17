@@ -132,7 +132,7 @@ hosting workspace, and pin what you find in a committed `.nvmrc`.
 - **Output:** `web/dist/` (`web/vite.config.ts` `build: { outDir: "dist", sourcemap: false, target: "es2022" }`).
 - **Where it runs:** **manually, in whatever environment serves the app** —
   i.e. inside the hosting workspace before launch. There is no CI of any kind
-  (no `.github/`, `.gitlab-ci.yml`, `Jenkinsfile`, `domino.yml`), and built
+  (no `.github/`, `.gitlab-ci.yml`, `Jenkinsfile`, or platform CI config), and built
   assets are **not committed** (`web/.gitignore:2`). The README codifies the
   sequence (`README.md:29-31`):
 
