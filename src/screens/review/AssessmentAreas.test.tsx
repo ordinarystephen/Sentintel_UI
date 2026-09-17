@@ -9,7 +9,7 @@ const zoneHeader = () => screen.getByRole('button', { name: /Areas of assessment
 describe('areas of assessment', () => {
   it('renders between attention and work paper with badge + tally; folding keeps the header line', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' })
     expect(zoneHeader()).toHaveTextContent('1 pending')
     expect(zoneHeader()).toHaveTextContent('8 areas · 6 satisfactory · 1 n/a')
@@ -21,7 +21,7 @@ describe('areas of assessment', () => {
 
   it('pending row opens by default, names its blocker, links to the section, and takes a verdict that updates badge + tally live', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const pendingRow = screen.getByRole('button', {
       name: /Repayment Capacity — Secondary Sources/,
@@ -31,7 +31,7 @@ describe('areas of assessment', () => {
     expect(screen.getByText(/Expected Case WACC input remains unverified/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Resolve in Section 2 →' })).toHaveAttribute(
       'href',
-      `/review/${VEYLAND}#sec-2`,
+      `/crr/review/${VEYLAND}#sec-2`,
     )
 
     // a satisfactory row is closed; expanding shows its supporting link
@@ -55,12 +55,12 @@ describe('areas of assessment', () => {
 
   it('the verdict survives a fresh mount (recorded like any disposition)', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${VEYLAND}`)
+    const first = renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getByRole('button', { name: 'Unsatisfactory' }))
     await waitFor(() => expect(zoneHeader()).toHaveTextContent('1 unsatisfactory'))
     first.unmount()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await waitFor(() =>
       expect(zoneHeader()).toHaveTextContent('8 areas · 6 satisfactory · 1 unsatisfactory · 1 n/a'),
@@ -68,7 +68,7 @@ describe('areas of assessment', () => {
   })
 
   it('a completed review renders its fully-rated zone: no pending badge, 7 sat + 1 n/a', async () => {
-    renderAt('/review/rev-ambervale-2026-08')
+    renderAt('/crr/review/rev-ambervale-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Ambervale Foods Group' })
     const header = screen.getByRole('button', { name: /Areas of assessment/ })
     expect(header).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a')
@@ -78,7 +78,7 @@ describe('areas of assessment', () => {
 
   it('a read-only review shows ratings and reasons but no action buttons', async () => {
     const user = userEvent.setup()
-    renderAt('/review/rev-farrowdale-2026-08')
+    renderAt('/crr/review/rev-farrowdale-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Farrowdale Logistics' })
     const header = screen.getByRole('button', { name: /Areas of assessment/ })
     expect(header).toHaveTextContent('8 areas · 7 satisfactory · 1 n/a')
@@ -121,7 +121,7 @@ describe('older-schema guard', () => {
 describe('reference data', () => {
   it('collapsed disclosure under the sub line; expands to the grid with origin chips; absent when a review has none', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${VEYLAND}`)
+    const first = renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const toggle = screen.getByRole('button', { name: /Reference data/ })
     expect(toggle).toHaveTextContent('upstream · as of 2026-08-15')
@@ -135,7 +135,7 @@ describe('reference data', () => {
     expect(screen.getByText(/TLB 71834/)).toBeInTheDocument()
     first.unmount()
 
-    renderAt('/review/rev-ambervale-2026-08')
+    renderAt('/crr/review/rev-ambervale-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Ambervale Foods Group' })
     expect(screen.queryByRole('button', { name: /Reference data/ })).toBeNull()
   })

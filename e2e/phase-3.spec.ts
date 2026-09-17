@@ -6,7 +6,7 @@
  */
 import { expect, test, type Page } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -30,7 +30,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
   page,
 }) => {
   test.setTimeout(60_000)
-  await page.goto('/')
+  await page.goto('/crr')
   await page
     .getByLabel('Choose PDF files')
     .setInputFiles([
@@ -52,7 +52,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
   await page.screenshot({ path: 'e2e/screenshots/phase-3/processing-stone-light-1440.png' })
 
   // kill the tab mid-processing: a fresh load of the same URL resumes
-  await page.goto('/')
+  await page.goto('/crr')
   await expect(page.getByRole('link', { name: /New review — reading…/ })).toBeVisible()
   await page.goto(url)
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('Reading the documents')
@@ -77,7 +77,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
 })
 
 test('export failure is loud and in-app', async ({ page }) => {
-  await page.goto('/review/rev-seldwyn-2026-08')
+  await page.goto('/crr/review/rev-seldwyn-2026-08')
   await page.getByRole('button', { name: 'Export Review' }).click()
   await expect(page.getByRole('alert').first()).toContainText(
     'Export failed: the render service returned no document for CL7712',
@@ -87,7 +87,7 @@ test('export failure is loud and in-app', async ({ page }) => {
 })
 
 test('cancel keeps the record and says so', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/crr')
   await page.getByLabel('Choose PDF files').setInputFiles([PDF('Doc.pdf')])
   await page.getByRole('button', { name: 'Begin review' }).click()
   await expect(page).toHaveURL(/\/review\/rev-new-/)
@@ -99,7 +99,7 @@ test('cancel keeps the record and says so', async ({ page }) => {
 
 test('a damaged file fails with the specific parser message', async ({ page }) => {
   test.setTimeout(30_000)
-  await page.goto('/')
+  await page.goto('/crr')
   await page.getByLabel('Choose PDF files').setInputFiles([PDF('Veyland_corrupt_scan.pdf')])
   await page.getByRole('button', { name: 'Begin review' }).click()
   await expect(page.getByRole('alert')).toContainText('Could not parse Veyland_corrupt_scan.pdf', {
@@ -155,7 +155,7 @@ test.describe('screenshots', () => {
     test(`landing · ${theme.name} · 1440px`, async ({ page }) => {
       await setTheme(page, theme.family, theme.dark)
       await page.setViewportSize({ width: 1440, height: 1000 })
-      await page.goto('/')
+      await page.goto('/crr')
       await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
       await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-3/landing-${theme.name}-1440.png` })

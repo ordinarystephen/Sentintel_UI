@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel — landing concept</title>
+<style>
+/* ============================================================
+   SENTINEL · suite landing concept
+   The front door above the applications. Same token contract as
+   sentinel-mvp-concept.html — Stone default, Cobalt + dark variants.
+   Fictional data.
+   ============================================================ */
+:root{ --root-size:108%; }
+@media (max-resolution:1.5dppx){ :root{ --root-size:115%; } }
+html{ font-size:var(--root-size); }
+
+body{
+  --ink:#1c1917; --ink-soft:#44403c; --muted:#746d67; --faint:#8a837b;
+  --bg:#fdfdfc; --bg-subtle:#f8f7f5; --bg-hover:#f1efec;
+  --rule:#e9e6e2; --rule-strong:#d8d4cf;
+  --on-ink:#fdfdfc;
+  --success:#15803d; --success-bg:#f0fdf4; --success-line:#bbf7d0;
+  --shadow-sm:0 1px 2px rgba(28,25,23,.06);
+  --shadow-md:0 4px 16px rgba(28,25,23,.10);
+  --primary:#1c1917;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
+  --font-display:"New York",ui-serif,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+body.dark{
+  --ink:#f3f1ee; --ink-soft:#d9d5d0; --muted:#a49e97; --faint:#7b746d;
+  --bg:#242120; --bg-subtle:#1c1a19; --bg-hover:#2d2a28;
+  --rule:#38342f; --rule-strong:#4b453f;
+  --on-ink:#1c1a19;
+  --success:#66c188; --success-bg:#17251b; --success-line:#2c5138;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+  --shadow-md:0 4px 16px rgba(0,0,0,.55);
+  --primary:#f3f1ee;
+}
+body.theme-cobalt{
+  --ink:#0b0f1d; --ink-soft:#39415a; --muted:#5b6478; --faint:#76839d;
+  --bg:#ffffff; --bg-subtle:#f3f5fb; --bg-hover:#e9edf7;
+  --rule:#e2e6f0; --rule-strong:#c9d1e4;
+  --on-ink:#f3f5f9;
+  --primary:#19398d;
+  --shadow-sm:0 1px 2px rgba(26,33,55,.05);
+  --shadow-md:0 4px 16px rgba(26,33,55,.12);
+}
+body.theme-cobalt.dark{
+  --ink:#fafafa; --ink-soft:#d4d7de; --muted:#a1a7b3; --faint:#6d7484;
+  --bg:#121316; --bg-subtle:#050505; --bg-hover:#1d1f24;
+  --rule:#282a30; --rule-strong:#3d4048;
+  --on-ink:#0a0a0a;
+  --success:#66c188; --success-bg:#17251b; --success-line:#2c5138;
+  --primary:#6a8dd8;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.5);
+  --shadow-md:0 4px 16px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font-body);color:var(--ink);background:var(--bg-subtle);
+  font-size:.875rem;line-height:1.5;-webkit-font-smoothing:antialiased;
+  min-height:100vh;display:flex;flex-direction:column;
+  transition:background .2s ease,color .2s ease;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* top strip — brand left, identity + theme right; deliberately sparse */
+.topbar{display:flex;align-items:center;gap:12px;height:56px;padding:0 28px;flex:none}
+.topbar .brand{font-family:var(--font-display);font-weight:600;font-size:1.125rem;letter-spacing:-.01em}
+.topbar .spacer{flex:1}
+.theme-cycle{font-size:.6875rem;color:var(--muted);border:1px solid var(--rule-strong);border-radius:6px;padding:3px 9px;background:var(--bg)}
+.theme-cycle:hover{background:var(--bg-hover)}
+
+/* the door */
+.door{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px 64px}
+.door-inner{width:100%;max-width:620px;margin:0 auto}
+
+@keyframes settle{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.apps > *,.foot{animation:settle .3s ease both}
+.apps > *:nth-child(2){animation-delay:.08s}
+.apps > *:nth-child(3){animation-delay:.16s}
+.foot{animation-delay:.24s}
+
+/* application cards — wide rows, serif names, hairline accent on hover */
+.apps{display:flex;flex-direction:column;gap:12px;list-style:none}
+.app-card{position:relative;display:flex;align-items:center;gap:18px;border:1px solid var(--rule);border-radius:12px;background:var(--bg);padding:20px 24px;text-decoration:none;color:inherit;box-shadow:var(--shadow-sm);transition:box-shadow .15s ease,transform .15s ease,border-color .15s ease}
+.app-card::before{content:"";position:absolute;left:-1px;top:14px;bottom:14px;width:3px;border-radius:0 2px 2px 0;background:var(--primary);opacity:0;transition:opacity .15s ease}
+.app-card.live:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);border-color:var(--rule-strong)}
+.app-card.live:hover::before{opacity:1}
+.app-body{flex:1;min-width:0}
+.app-name{font-family:var(--font-display);font-weight:600;font-size:1.25rem;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.app-name .full{font-family:var(--font-body);font-weight:400;font-size:.75rem;color:var(--faint);letter-spacing:.02em}
+.app-desc{font-size:.8125rem;color:var(--muted);margin-top:4px;max-width:56ch}
+.app-side{display:flex;align-items:center;gap:14px;flex:none}
+.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rule-strong);border-radius:999px;padding:1px 9px;font-size:.6875rem;color:var(--ink-soft);background:var(--bg)}
+.badge.slate{border-color:var(--rule-strong);color:var(--muted);background:var(--bg-subtle)}
+.go{color:var(--faint);transition:color .15s ease,transform .15s ease}
+.open-btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:7px 15px;font-size:.8125rem;font-weight:500;background:var(--primary);color:var(--on-ink);transition:filter .15s ease}
+.open-btn svg{transition:transform .15s ease}
+.app-card.live:hover .open-btn{filter:brightness(1.15)}
+.app-card.live:hover .open-btn svg{transform:translateX(2px)}
+.app-card.soon{cursor:default}
+.app-card.soon .app-name{color:var(--ink-soft)}
+.app-card.soon .go{visibility:hidden}
+
+.foot{font-size:.6875rem;color:var(--faint);margin-top:34px;border-top:1px solid var(--rule);padding-top:12px;display:flex;gap:14px;flex-wrap:wrap}
+.foot .mono{font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">Sentinel</span>
+  <span class="spacer"></span>
+</header>
+
+<main class="door">
+  <div class="door-inner">
+    <nav class="apps" aria-label="Applications">
+      <a class="app-card live" href="sentinel-mvp-concept.html">
+        <div class="app-body">
+          <div class="app-name">CRR <span class="full">Credit Risk Review</span></div>
+          <p class="app-desc">Deep-dive credit review files, purpose-built for CRR.</p>
+        </div>
+        <div class="app-side">
+          <span class="open-btn">Open<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </a>
+
+      <div class="app-card soon" aria-disabled="true">
+        <div class="app-body">
+          <div class="app-name">ERM <span class="full">Enterprise Risk Management</span></div>
+          <p class="app-desc">Portfolio-level insights and analysis.</p>
+        </div>
+        <div class="app-side">
+          <span class="badge slate">In design</span>
+          <svg class="go" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
+      </div>
+
+      <div class="app-card soon" aria-disabled="true">
+        <div class="app-body">
+          <div class="app-name">Vantage <span class="full">P&amp;C</span></div>
+          <p class="app-desc">Generic document extraction and insights.</p>
+        </div>
+        <div class="app-side">
+          <span class="badge slate">In design</span>
+          <svg class="go" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
+      </div>
+    </nav>
+
+    <p class="foot"><span>All data in this demonstration build is fictional.</span><span class="mono">landing concept · r4</span><span class="spacer" style="flex:1"></span><button class="theme-cycle" id="themer" type="button">Theme: Stone</button></p>
+  </div>
+</main>
+
+<script>
+/* theme cycle: Stone → Stone dark → Cobalt → Cobalt dark */
+(function(){
+  const states=[
+    {cls:"",label:"Stone"},
+    {cls:"dark",label:"Stone dark"},
+    {cls:"theme-cobalt",label:"Cobalt"},
+    {cls:"theme-cobalt dark",label:"Cobalt dark"}
+  ];
+  let i=0;
+  const btn=document.getElementById("themer");
+  btn.addEventListener("click",()=>{
+    i=(i+1)%states.length;
+    document.body.className=states[i].cls;
+    btn.textContent="Theme: "+states[i].label;
+  });
+})();
+</script>
+</body>
+</html>

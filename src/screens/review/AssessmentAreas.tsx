@@ -88,7 +88,7 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
               <>
                 {area.sectionRefs[0] !== undefined && (
                   <Link
-                    to={`/review/${reviewId}#${sectionAnchor(area.sectionRefs[0])}`}
+                    to={`/crr/review/${reviewId}#${sectionAnchor(area.sectionRefs[0])}`}
                     className="text-[0.75rem] text-ink underline underline-offset-2"
                   >
                     {fmt(s.resolveLink, { n: area.sectionRefs[0] })}
@@ -120,7 +120,7 @@ function AreaRow({ area, reviewId }: { area: AssessmentArea; reviewId: string })
               area.sectionRefs.map((n) => (
                 <Link
                   key={n}
-                  to={`/review/${reviewId}#${sectionAnchor(n)}`}
+                  to={`/crr/review/${reviewId}#${sectionAnchor(n)}`}
                   className="text-[0.75rem] text-ink underline underline-offset-2"
                 >
                   {fmt(s.supportingLink, { n })}

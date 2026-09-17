@@ -16,6 +16,8 @@ export const LOBS: readonly Lob[] = ['IB Lending', 'Wealth Management', 'Counter
 export interface User {
   id: string
   name: string
+  /** Which Sentinel applications this user can enter (suite round). */
+  entitlements: import('@/apps').AppId[]
 }
 
 /**

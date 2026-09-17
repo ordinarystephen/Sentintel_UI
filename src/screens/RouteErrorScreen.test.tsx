@@ -28,7 +28,7 @@ describe('route error boundary', () => {
     )
     expect(screen.getByRole('link', { name: 'Back to My reviews' })).toHaveAttribute(
       'href',
-      '/reviews',
+      '/crr/reviews',
     )
     spy.mockRestore()
   })

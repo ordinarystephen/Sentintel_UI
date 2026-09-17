@@ -6,10 +6,11 @@
  * borrower has a prior review). Reads the review from the same query the
  * screen uses, so nothing is passed through props.
  */
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { useDebate, usePriorDeltas, useReview } from '@/api/hooks'
 import type { Review, WorkItem } from '@/api/types'
 import { cx } from '@/lib/cx'
+import { usePersistedState } from '@/lib/usePersistedState'
 import { DebatePane } from '@/screens/review/rail/DebatePane'
 import { PriorPane } from '@/screens/review/rail/PriorPane'
 import { RespondPane } from '@/screens/review/rail/RespondPane'
@@ -26,16 +27,91 @@ function findItem(review: Review, id: string | null): WorkItem | null {
   return null
 }
 
+/* Drag-resize contract (suite round, 2026-09-17; mirrors the mockup's
+   .ctx-resizer): min 260 / max 560 / default 312, dbl-click resets, width
+   persists as sentinel.ctxWidth, ≥420 turns the rail into a reading pane
+   (`ctx-wide`: type steps up one size, Debate goes side-by-side — base.css). */
+export const CTX_MIN = 260
+export const CTX_MAX = 560
+export const CTX_DEFAULT = 312
+export const CTX_WIDE = 420
+const KEY_STEP = 16
+const clamp = (w: number) => Math.max(CTX_MIN, Math.min(CTX_MAX, w))
+const isCtxWidth = (v: unknown): v is number =>
+  typeof v === 'number' && Number.isFinite(v) && clamp(v) === v
+
+function ResizeHandle({ width, onResize }: { width: number; onResize: (w: number) => void }) {
+  const drag = useRef<{ startX: number; startW: number } | null>(null)
+  const [dragging, setDragging] = useState(false)
+
+  function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    drag.current = { startX: e.clientX, startW: width }
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragging(true)
+    document.body.style.userSelect = 'none'
+  }
+  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (!drag.current) return
+    // The rail sits right of the handle: dragging left grows it.
+    onResize(clamp(drag.current.startW + (drag.current.startX - e.clientX)))
+  }
+  function endDrag() {
+    drag.current = null
+    setDragging(false)
+    document.body.style.userSelect = ''
+  }
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'ArrowLeft') onResize(clamp(width + KEY_STEP))
+    else if (e.key === 'ArrowRight') onResize(clamp(width - KEY_STEP))
+    else if (e.key === 'Home') onResize(CTX_MIN)
+    else if (e.key === 'End') onResize(CTX_MAX)
+    else return
+    e.preventDefault()
+  }
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={strings.contextRail.resizeHandle}
+      aria-valuemin={CTX_MIN}
+      aria-valuemax={CTX_MAX}
+      aria-valuenow={width}
+      tabIndex={0}
+      title={strings.contextRail.resizeHint}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onDoubleClick={() => onResize(CTX_DEFAULT)}
+      onKeyDown={onKeyDown}
+      className={cx(
+        'absolute top-0 bottom-0 -left-[3px] z-10 w-[6px] cursor-col-resize',
+        (dragging || undefined) && 'ctx-resizing',
+        'hover:[background:linear-gradient(to_right,transparent_2px,var(--rule-strong)_2px,var(--rule-strong)_4px,transparent_4px)]',
+        dragging &&
+          '[background:linear-gradient(to_right,transparent_2px,var(--rule-strong)_2px,var(--rule-strong)_4px,transparent_4px)]',
+      )}
+    />
+  )
+}
+
 export function RightRail() {
   const { currentReview, selectedItemId } = useShell()
   const reviewId = currentReview?.id ?? ''
   const q = useReview(reviewId)
   const review = q.data?.status === 'ready' ? q.data : null
+  const [ctxWidth, setCtxWidth] = usePersistedState('ctxWidth', CTX_DEFAULT, isCtxWidth)
   return (
     <aside
       aria-label={strings.contextRail.header}
-      className="flex min-h-0 w-[312px] flex-none flex-col border-l border-rule bg-bg-subtle max-[1120px]:hidden"
+      style={{ width: ctxWidth }}
+      className={cx(
+        'relative flex min-h-0 flex-none flex-col border-l border-rule bg-bg-subtle max-[1120px]:hidden',
+        ctxWidth >= CTX_WIDE && 'ctx-wide',
+      )}
     >
+      <ResizeHandle width={ctxWidth} onResize={setCtxWidth} />
       {review ? (
         <RailBody review={review} item={findItem(review, selectedItemId)} />
       ) : (

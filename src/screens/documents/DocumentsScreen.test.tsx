@@ -8,7 +8,7 @@ const q3Row = () =>
 
 describe('documents — browse state (no query)', () => {
   it('shows document rows only: filename, extraction badge, LOB, date — no preview text', async () => {
-    renderAt('/documents')
+    renderAt('/crr/documents')
     expect(await screen.findByText('7 documents · newest first')).toBeInTheDocument()
     const row = q3Row()
     expect(within(row).getByText('Veyland_Holdco_Q3_Update.pdf')).toBeInTheDocument()
@@ -27,7 +27,7 @@ describe('documents — browse state (no query)', () => {
 
   it('selects a single row and reveals the action bar; deep link included when the document fed a review', async () => {
     const user = userEvent.setup()
-    renderAt('/documents')
+    renderAt('/crr/documents')
     await screen.findByText('7 documents · newest first')
     await user.click(q3Row())
     expect(q3Row()).toHaveAttribute('aria-pressed', 'true')
@@ -35,7 +35,7 @@ describe('documents — browse state (no query)', () => {
     expect(screen.getByRole('button', { name: 'Download original' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Used in Veyland review →' })).toHaveAttribute(
       'href',
-      '/review/rev-veyland-2026-08#sec-2',
+      '/crr/review/rev-veyland-2026-08#sec-2',
     )
 
     // single-select: choosing another row moves the selection and the bar
@@ -50,7 +50,7 @@ describe('documents — browse state (no query)', () => {
 
   it('not-yet-extracted documents show the preview action disabled', async () => {
     const user = userEvent.setup()
-    renderAt('/documents')
+    renderAt('/crr/documents')
     await screen.findByText('7 documents · newest first')
     await user.click(
       screen.getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' }),
@@ -63,7 +63,7 @@ describe('documents — browse state (no query)', () => {
 
   it('preview modal: title, meta row, collapsible sections with page ranges, first open; Esc closes', async () => {
     const user = userEvent.setup()
-    renderAt('/documents')
+    renderAt('/crr/documents')
     await screen.findByText('7 documents · newest first')
     await user.click(q3Row())
     await user.click(screen.getByRole('button', { name: 'Preview extracted text' }))
@@ -89,7 +89,7 @@ describe('documents — browse state (no query)', () => {
 describe('documents — search state (query non-empty)', () => {
   it('hit cards with matched passages and marked terms replace the browse rows', async () => {
     const user = userEvent.setup()
-    renderAt('/documents')
+    renderAt('/crr/documents')
     await screen.findByText('7 documents · newest first')
     await user.type(screen.getByLabelText('Search documents'), 'revolver availability')
     await waitFor(() =>
@@ -108,14 +108,14 @@ describe('documents — search state (query non-empty)', () => {
     expect(within(first).getByText(/Liquidity Summary ·/)).toHaveTextContent('p. 14')
     expect(within(first).getByRole('link', { name: 'Used in Veyland review →' })).toHaveAttribute(
       'href',
-      '/review/rev-veyland-2026-08#sec-2',
+      '/crr/review/rev-veyland-2026-08#sec-2',
     )
     expect(within(first).getByRole('button', { name: 'View source' })).toBeInTheDocument()
   })
 
   it('filters hit the seam in browse state too, and live in the URL; advanced help toggles', async () => {
     const user = userEvent.setup()
-    renderAt('/documents?lob=Wealth+Management')
+    renderAt('/crr/documents?lob=Wealth+Management')
     await waitFor(() => expect(screen.getByText('1 document · newest first')).toBeInTheDocument())
     expect(screen.getByText('Verloway_AgriChem_Credit_Memo.pdf')).toBeInTheDocument()
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
@@ -131,7 +131,7 @@ describe('documents — search state (query non-empty)', () => {
   })
 
   it('no matches shows a hand-written empty state', async () => {
-    renderAt('/documents?q=zebra')
+    renderAt('/crr/documents?q=zebra')
     expect(
       await screen.findByText('No passages match. Loosen a filter, or try different words.'),
     ).toBeInTheDocument()

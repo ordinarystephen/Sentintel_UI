@@ -30,7 +30,7 @@ export function RouteErrorScreen() {
       </div>
       <p className="mt-2 text-dense text-faint">{s.intro}</p>
       <Link
-        to="/reviews"
+        to="/crr/reviews"
         className="mt-4 inline-block text-ui text-ink underline underline-offset-2"
       >
         {s.back}

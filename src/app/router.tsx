@@ -1,14 +1,20 @@
 /**
- * Routes (build-spec §4). Every route is refresh-safe: the dev server and any
- * static host serving index.html for unknown paths will land here correctly.
- *   /                landing
- *   /reviews         My reviews      /reviews/all   All reviews (tab in the URL)
- *   /documents       document search
- *   /policy          policy library (stub)
- *   /review/:id      the review page; `#sec-N` anchors deep-link into sections
- *   /styleguide      dev-only type/token reference — not linked from navigation
+ * Routes (build-spec §4 + suite round 2026-09-17). Every route is
+ * refresh-safe: any host serving index.html for unknown paths lands here.
+ *   /                entry decision: 1 entitlement → that app's home;
+ *                    2+ → last-used app, or the suite landing page
+ *   /apps            the suite landing page, always (no redirect)
+ *   /crr             the CRR application home (landing/upload screen)
+ *   /crr/reviews     My reviews      /crr/reviews/all   All reviews
+ *   /crr/documents   document search
+ *   /crr/policy      policy library (stub)
+ *   /crr/review/:id  the review page; `#sec-N` anchors deep-link into sections
+ *   /crr/styleguide  dev-only type/token reference — not linked from navigation
+ * ERM and Vantage have no routes — their landing cards are not links.
  */
-import { createBrowserRouter, createHashRouter, type RouteObject } from 'react-router-dom'
+import { createBrowserRouter, createHashRouter, Navigate, type RouteObject } from 'react-router-dom'
+import { EntryScreen } from '@/screens/suite/EntryScreen'
+import { SuiteLandingScreen } from '@/screens/suite/SuiteLandingScreen'
 import { DocumentsScreen } from '@/screens/documents/DocumentsScreen'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { NotFoundScreen } from '@/screens/NotFoundScreen'
@@ -21,25 +27,37 @@ import { AppShell } from './AppShell'
 
 export const routes: RouteObject[] = [
   {
-    element: <AppShell />,
-    // Last-resort boundary (a crash in the shell itself): no rail, full page.
+    // Suite-level boundary: a crash in the entry/landing layer.
     errorElement: <RouteErrorScreen />,
     children: [
+      { index: true, element: <EntryScreen /> },
+      { path: 'apps', element: <SuiteLandingScreen /> },
       {
-        // Pathless boundary for screen crashes: the card renders in the
-        // canvas and the shell (rail, masthead) stays usable.
+        path: 'crr',
+        element: <AppShell />,
+        // Last-resort boundary (a crash in the shell itself): no rail, full page.
         errorElement: <RouteErrorScreen />,
         children: [
-          { index: true, element: <LandingScreen /> },
-          { path: 'reviews', element: <ReviewsScreen tab="my" /> },
-          { path: 'reviews/all', element: <ReviewsScreen tab="all" /> },
-          { path: 'documents', element: <DocumentsScreen /> },
-          { path: 'policy', element: <PolicyScreen /> },
-          { path: 'review/:id', element: <ReviewScreen /> },
-          { path: 'styleguide', element: <StyleguideScreen /> },
-          { path: '*', element: <NotFoundScreen /> },
+          {
+            // Pathless boundary for screen crashes: the card renders in the
+            // canvas and the shell (rail, masthead) stays usable.
+            errorElement: <RouteErrorScreen />,
+            children: [
+              { index: true, element: <LandingScreen /> },
+              { path: 'reviews', element: <ReviewsScreen tab="my" /> },
+              { path: 'reviews/all', element: <ReviewsScreen tab="all" /> },
+              { path: 'documents', element: <DocumentsScreen /> },
+              { path: 'policy', element: <PolicyScreen /> },
+              { path: 'review/:id', element: <ReviewScreen /> },
+              { path: 'styleguide', element: <StyleguideScreen /> },
+              { path: '*', element: <NotFoundScreen /> },
+            ],
+          },
         ],
       },
+      // Unknown top-level paths (a typed /erm, a stale link) go back through
+      // the entry decision rather than a bare 404.
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ]

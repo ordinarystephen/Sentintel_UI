@@ -5,7 +5,7 @@ import { renderAt } from '@/test/renderAt'
 
 describe('reviews — My', () => {
   it('lists my reviews with open-items badge or sections complete and a relative date', async () => {
-    renderAt('/reviews')
+    renderAt('/crr/reviews')
     const veyland = await screen.findByRole('link', { name: /Veyland US Holdco LLC/ })
     expect(within(veyland).getByText('4 open')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Ambervale Foods Group/ })).toHaveTextContent(
@@ -18,7 +18,7 @@ describe('reviews — My', () => {
 
 describe('reviews — All', () => {
   it('toolbar first, count line, read-only note, rows with owner / read-only / LOB / absolute timestamp / repeat chip', async () => {
-    renderAt('/reviews/all')
+    renderAt('/crr/reviews/all')
     expect(screen.getByLabelText('Search reviews')).toBeInTheDocument()
     expect(screen.getByLabelText('Line of business')).toBeInTheDocument()
     expect(screen.getByLabelText('Owner')).toBeInTheDocument()
@@ -43,7 +43,7 @@ describe('reviews — All', () => {
 
   it('filters execute against the seam and live in the URL', async () => {
     const user = userEvent.setup()
-    renderAt('/reviews/all')
+    renderAt('/crr/reviews/all')
     await screen.findByText(/reviews · showing most recent/)
     await user.selectOptions(screen.getByLabelText('Line of business'), 'Wealth Management')
     await waitFor(() =>
@@ -52,7 +52,7 @@ describe('reviews — All', () => {
     await waitFor(() => expect(screen.queryAllByRole('link', { name: /Veyland/ })).toHaveLength(0))
     const links = screen
       .getAllByRole('link')
-      .filter((l) => l.getAttribute('href')?.startsWith('/review/'))
+      .filter((l) => l.getAttribute('href')?.startsWith('/crr/review/'))
     expect(links.every((l) => l.textContent?.includes('WM'))).toBe(true)
 
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
@@ -70,13 +70,13 @@ describe('reviews — All', () => {
     )
     const rows = screen
       .getAllByRole('link')
-      .filter((l) => l.getAttribute('href')?.startsWith('/review/'))
+      .filter((l) => l.getAttribute('href')?.startsWith('/crr/review/'))
     expect(rows.every((l) => l.textContent?.includes('R. Chen'))).toBe(true)
   })
 
   it('period: last 12 months is the default; all time shows more', async () => {
     const user = userEvent.setup()
-    renderAt('/reviews/all')
+    renderAt('/crr/reviews/all')
     const count = () =>
       Number(
         /^(\d+) reviews/.exec(
@@ -90,7 +90,7 @@ describe('reviews — All', () => {
   })
 
   it('restores filters from the URL', async () => {
-    renderAt('/reviews/all?lob=Wealth+Management&owner=u-alvarez')
+    renderAt('/crr/reviews/all?lob=Wealth+Management&owner=u-alvarez')
     expect(screen.getByLabelText('Line of business')).toHaveValue('Wealth Management')
     await waitFor(() => expect(screen.getByLabelText('Owner')).toHaveValue('u-alvarez'))
     await waitFor(() =>
@@ -100,7 +100,7 @@ describe('reviews — All', () => {
   })
 
   it('no matches shows a hand-written empty state', async () => {
-    renderAt('/reviews/all?q=zebra')
+    renderAt('/crr/reviews/all?q=zebra')
     expect(
       await screen.findByText('No reviews match. Try a borrower name, a CL number, or a sector.'),
     ).toBeInTheDocument()

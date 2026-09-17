@@ -12,7 +12,7 @@ import { test, type Page } from '@playwright/test'
 test.skip(!process.env.DPI_SHOTS, 'run with DPI_SHOTS=1 (npm run screenshots:dpi)')
 
 const OUT = 'e2e/screenshots/dpi'
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },

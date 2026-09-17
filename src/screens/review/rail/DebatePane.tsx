@@ -12,25 +12,27 @@ export function DebatePane({ itemId }: { itemId: string }) {
     return <p className="text-dense leading-[1.55] text-faint">{s.debateEmpty}</p>
   return (
     <div>
-      {q.data.map((p) => (
-        <div
-          key={p.stance}
-          className="mb-[10px] rounded-[10px] border border-rule bg-bg px-3 py-[11px]"
-        >
+      <div className="ctx-debate">
+        {q.data.map((p) => (
           <div
-            className={cx(
-              'mb-1.5 flex items-center gap-[7px] text-micro font-bold tracking-[0.1em] uppercase',
-              p.stance === 'advocate' ? 'text-success' : 'text-error',
-            )}
+            key={p.stance}
+            className="mb-[10px] rounded-[10px] border border-rule bg-bg px-3 py-[11px]"
           >
-            ◆ {p.stance === 'advocate' ? s.advocate : s.dissent}
+            <div
+              className={cx(
+                'mb-1.5 flex items-center gap-[7px] text-micro font-bold tracking-[0.1em] uppercase',
+                p.stance === 'advocate' ? 'text-success' : 'text-error',
+              )}
+            >
+              ◆ {p.stance === 'advocate' ? s.advocate : s.dissent}
+            </div>
+            <p className="text-[0.75rem] leading-[1.55] text-ink-soft">{p.text}</p>
+            <div className="mt-1.5 font-mono text-[0.65625rem] text-faint">
+              {fmt(s.cites, { citations: p.citations.join(' · ') })}
+            </div>
           </div>
-          <p className="text-[0.75rem] leading-[1.55] text-ink-soft">{p.text}</p>
-          <div className="mt-1.5 font-mono text-[0.65625rem] text-faint">
-            {fmt(s.cites, { citations: p.citations.join(' · ') })}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
       <p className="mt-[10px] text-micro leading-[1.55] text-faint">{s.debateNote}</p>
     </div>
   )

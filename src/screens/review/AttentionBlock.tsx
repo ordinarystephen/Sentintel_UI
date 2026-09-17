@@ -91,7 +91,7 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
         </span>
         <div className="min-w-0 flex-1">
           <Link
-            to={`/review/${reviewId}#${sectionAnchor(a.sectionN)}`}
+            to={`/crr/review/${reviewId}#${sectionAnchor(a.sectionN)}`}
             className="block hover:underline"
           >
             <span
@@ -132,7 +132,7 @@ function Row({ a, reviewId }: { a: AttentionItem; reviewId: string }) {
           )}
         </div>
         <Link
-          to={`/review/${reviewId}#${sectionAnchor(a.sectionN)}`}
+          to={`/crr/review/${reviewId}#${sectionAnchor(a.sectionN)}`}
           className="mt-0.5 flex-none text-dense whitespace-nowrap text-indigo"
         >
           {fmt(s.sectionLink, { n: a.sectionN })}

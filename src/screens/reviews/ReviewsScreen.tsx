@@ -18,8 +18,8 @@ import { plural } from '@/lib/fmt'
 export type ReviewsTab = 'my' | 'all'
 
 const TABS: ReadonlyArray<{ id: ReviewsTab; to: string; label: string }> = [
-  { id: 'my', to: '/reviews', label: strings.reviews.tabs.my },
-  { id: 'all', to: '/reviews/all', label: strings.reviews.tabs.all },
+  { id: 'my', to: '/crr/reviews', label: strings.reviews.tabs.my },
+  { id: 'all', to: '/crr/reviews/all', label: strings.reviews.tabs.all },
 ]
 
 export function ReviewsScreen({ tab }: { tab: ReviewsTab }) {

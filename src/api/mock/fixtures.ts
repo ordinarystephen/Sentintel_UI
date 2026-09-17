@@ -34,13 +34,19 @@ import type {
   WorkItem,
 } from '../types'
 
-export const ME: User = { id: 'u-me', name: 'Stark, Tony' }
+export const ME: User = {
+  id: 'u-me',
+  name: 'Stark, Tony',
+  // The CRR team will hold access to every app — the demo shows the
+  // multi-entitlement experience (landing once, then last-used).
+  entitlements: ['crr', 'erm', 'vantage'],
+}
 export const OWNERS: User[] = [
   ME,
-  { id: 'u-chen', name: 'R. Chen' },
-  { id: 'u-alvarez', name: 'T. Alvarez' },
-  { id: 'u-okafor', name: 'M. Okafor' },
-  { id: 'u-lindqvist', name: 'J. Lindqvist' },
+  { id: 'u-chen', name: 'R. Chen', entitlements: ['crr'] },
+  { id: 'u-alvarez', name: 'T. Alvarez', entitlements: ['crr'] },
+  { id: 'u-okafor', name: 'M. Okafor', entitlements: ['crr'] },
+  { id: 'u-lindqvist', name: 'J. Lindqvist', entitlements: ['crr'] },
 ]
 const owner = (id: string): User => OWNERS.find((o) => o.id === id)!
 

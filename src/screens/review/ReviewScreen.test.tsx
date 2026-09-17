@@ -8,7 +8,7 @@ const HALCYON = 'rev-seldwyn-2026-08'
 
 describe('review page — read path', () => {
   it('renders sticky bar, sub line, story, attention and work paper from the seam', async () => {
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' }),
     ).toBeInTheDocument()
@@ -33,15 +33,15 @@ describe('review page — read path', () => {
   })
 
   it('attention rows deep-link to their sections and reviewed rows show the note', async () => {
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const waccLink = screen.getByRole('link', { name: /Expected Case WACC 9.8% was read below/ })
-    expect(waccLink).toHaveAttribute('href', `/review/${VEYLAND}#sec-2`)
+    expect(waccLink).toHaveAttribute('href', `/crr/review/${VEYLAND}#sec-2`)
     const waccRow = waccLink.closest('li')!
     expect(within(waccRow).getByText('review required')).toBeInTheDocument()
     expect(within(waccRow).getByRole('link', { name: 'Section 2 →' })).toHaveAttribute(
       'href',
-      `/review/${VEYLAND}#sec-2`,
+      `/crr/review/${VEYLAND}#sec-2`,
     )
     const headroomRow = screen
       .getByRole('link', { name: /Covenant headroom tightening/ })
@@ -54,7 +54,7 @@ describe('review page — read path', () => {
 
   it('work paper: Financials open by default with the flagged WACC, evidence with page on the quote line, stubbed factor', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const sec2 = screen.getByRole('button', { name: /2.*Financials/ })
     expect(sec2).toHaveAttribute('aria-expanded', 'true')
@@ -87,7 +87,7 @@ describe('review page — read path', () => {
 
   it('source modal opens from View source with provenance and closes on Esc', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     const buttons = screen.getAllByRole('button', { name: 'View source' })
     await user.click(buttons[buttons.length - 1]) // Liquidity evidence
@@ -104,7 +104,7 @@ describe('review page — read path', () => {
 
   it('source modal degrades neutrally when no image is available', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getAllByRole('button', { name: 'View source' })[0]) // WACC evidence, no imageRef
     const dialog = screen.getByRole('dialog')
@@ -114,7 +114,7 @@ describe('review page — read path', () => {
 
   it('Export Review: success toasts the file name; the failing fixture shows the message in-app', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${VEYLAND}`)
+    const first = renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     expect(await screen.findByRole('status')).toHaveTextContent(
@@ -122,7 +122,7 @@ describe('review page — read path', () => {
     )
     first.unmount()
 
-    renderAt(`/review/${HALCYON}`)
+    renderAt(`/crr/review/${HALCYON}`)
     await screen.findByRole('heading', { level: 1, name: 'Seldwyn Marine Finance' })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     const alerts = await screen.findAllByRole('alert')
@@ -136,7 +136,7 @@ describe('review page — read path', () => {
   })
 
   it("another owner's review renders", async () => {
-    renderAt('/review/rev-farrowdale-2026-08')
+    renderAt('/crr/review/rev-farrowdale-2026-08')
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Farrowdale Logistics' }),
     ).toBeInTheDocument()
@@ -144,7 +144,7 @@ describe('review page — read path', () => {
   })
 
   it('unknown review shows the API message', async () => {
-    renderAt('/review/nope')
+    renderAt('/crr/review/nope')
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('No review with id nope.'),
     )

@@ -26,7 +26,7 @@ export function ReviewRow({
   const mine = variant === 'my' || r.ownerId === meId
   return (
     <Link
-      to={`/review/${r.id}`}
+      to={`/crr/review/${r.id}`}
       className="mb-2 flex w-full items-center gap-3 rounded-[10px] border border-rule bg-bg px-3.5 py-[11px] text-left hover:border-rule-strong hover:bg-bg-subtle"
     >
       <span

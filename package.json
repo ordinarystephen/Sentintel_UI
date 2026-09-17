@@ -21,6 +21,7 @@
     "verify": "npm run lint && npm run typecheck && npm run check:tokens && npm run format:check && npm test && npm run build",
     "screenshots:docs": "DOCS_SHOTS=1 playwright test e2e/docs-screenshots.spec.ts --workers=1",
     "screenshots:dpi": "DPI_SHOTS=1 playwright test e2e/dpi-screenshots.spec.ts --workers=1",
+    "e2e:hash": "HASH_MODE=1 VITE_ROUTER=hash playwright test e2e/hash-mode.spec.ts",
     "audit:contrast": "node scripts/contrast-audit.mjs > docs/contrast-audit.md",
     "check:copy": "node scripts/check-copy.mjs"
   },

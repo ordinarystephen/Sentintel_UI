@@ -9,7 +9,7 @@ const heading = () => screen.findByRole('heading', { level: 1, name: 'Veyland US
 
 describe('right context rail', () => {
   it('selects the first flagged item by default and shows §N Item Name with four tabs', async () => {
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await waitFor(() => expect(rail()).toHaveTextContent('§2Expected Case WACC'))
     await waitFor(() =>
@@ -29,7 +29,7 @@ describe('right context rail', () => {
   })
 
   it('Why: resolution chain + applied policies for the selected item', async () => {
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await waitFor(() => expect(rail()).toHaveTextContent('How this got here'))
     expect(rail()).toHaveTextContent('OCR read 9.8% below the confidence floor')
@@ -39,7 +39,7 @@ describe('right context rail', () => {
 
   it('selection drives all tabs: clicking Liquidity switches the header, Why, Debate', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await user.click(screen.getByRole('button', { name: 'Select this item: Liquidity' }))
     expect(rail()).toHaveTextContent('§2Liquidity')
@@ -55,18 +55,18 @@ describe('right context rail', () => {
 
   it('Prior: deltas with worsening values, link to the prior review; hidden when there is no prior', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${VEYLAND}`)
+    const first = renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await user.click(await within(rail()).findByRole('tab', { name: 'Prior' }))
     await waitFor(() => expect(rail()).toHaveTextContent('Since the Feb 2026 review'))
     expect(rail()).toHaveTextContent('5.6x → 5.9x')
     expect(within(rail()).getByRole('link', { name: 'Open the Feb 2026 review' })).toHaveAttribute(
       'href',
-      '/review/rev-veyland-2026-02',
+      '/crr/review/rev-veyland-2026-02',
     )
     first.unmount()
 
-    renderAt('/review/rev-ambervale-2026-08')
+    renderAt('/crr/review/rev-ambervale-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Ambervale Foods Group' })
     await waitFor(() => expect(within(rail()).getAllByRole('tab')).toHaveLength(3))
     expect(within(rail()).queryByRole('tab', { name: 'Prior' })).toBeNull()
@@ -74,7 +74,7 @@ describe('right context rail', () => {
 
   it('Respond: clear with a reason strikes the item in place with the rationale chip; undo round-trips', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await user.click(screen.getByRole('button', { name: 'Select this item: Liquidity' }))
     await user.click(within(rail()).getByRole('tab', { name: 'Respond' }))
@@ -103,7 +103,7 @@ describe('right context rail', () => {
 
   it('Respond: Send & re-run flips the item to re-running, then lands the adjusted value and lifts the flag', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await user.click(within(rail()).getByRole('tab', { name: 'Respond' }))
     await user.type(
@@ -121,7 +121,7 @@ describe('right context rail', () => {
 
   it('Mark verified lifts the review-required treatment and resolves the attention row', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     await user.click(within(rail()).getByRole('tab', { name: 'Respond' }))
     await user.click(within(rail()).getByRole('button', { name: 'Mark verified' }))
@@ -135,7 +135,7 @@ describe('right context rail', () => {
 
   it('is keyboard-reachable: arrow keys move between tabs; Enter selects an item', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     const why = await within(rail()).findByRole('tab', { name: 'Why' })
     why.focus()
@@ -153,7 +153,7 @@ describe('right context rail', () => {
 
   it('read-only review: no dispositions, no clearing, and the rail says so', async () => {
     const user = userEvent.setup()
-    renderAt('/review/rev-farrowdale-2026-08')
+    renderAt('/crr/review/rev-farrowdale-2026-08')
     await screen.findByRole('heading', { level: 1, name: 'Farrowdale Logistics' })
     expect(screen.getByText(/Read-only — this review belongs to R. Chen/)).toBeInTheDocument()
     await user.click(within(rail()).getByRole('tab', { name: 'Respond' }))
@@ -166,7 +166,7 @@ describe('right context rail', () => {
 describe('attention dispositions', () => {
   it('mark reviewed with a note, edit the note, un-review; dismiss is flags-only', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await heading()
     expect(screen.queryByRole('button', { name: /^Dismiss flag: Expected Case WACC/ })).toBeNull()
     expect(

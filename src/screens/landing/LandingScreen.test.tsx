@@ -8,7 +8,7 @@ const pdf = (name: string, size = 500_000) =>
 
 describe('landing', () => {
   it('shows the hero copy, no metadata form, and recents', async () => {
-    renderAt('/')
+    renderAt('/crr')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Start a review')
     expect(screen.getByRole('button', { name: 'Upload documents' })).toBeInTheDocument()
     expect(screen.getByLabelText('Anything Sentinel should know?')).toBeInTheDocument()
@@ -22,7 +22,7 @@ describe('landing', () => {
 
   it('accepts PDFs (and only PDFs), lists chips with size, and removes them', async () => {
     const user = userEvent.setup({ applyAccept: false })
-    renderAt('/')
+    renderAt('/crr')
     const input = screen.getByLabelText('Choose PDF files')
     await user.upload(input, [
       pdf('Veyland_Holdco_Annual_Review_FY25.pdf', 2_516_582),
@@ -41,7 +41,7 @@ describe('landing', () => {
 
   it('Begin with nothing added surfaces the API message; Begin with files lands on the processing state', async () => {
     const user = userEvent.setup()
-    renderAt('/')
+    renderAt('/crr')
     await user.click(screen.getByRole('button', { name: 'Begin review' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Add at least one PDF to begin a review.',
@@ -68,7 +68,7 @@ describe('landing', () => {
 
   it('advanced extraction settings are demoted behind the link and persist', async () => {
     const user = userEvent.setup()
-    renderAt('/')
+    renderAt('/crr')
     expect(screen.queryByLabelText('Parser')).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Advanced extraction settings' }))
     await user.selectOptions(screen.getByLabelText('Parser'), 'docling')

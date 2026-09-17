@@ -221,7 +221,7 @@ export function DocumentsScreen() {
                       {
                         key: 'used',
                         label: fmt(s.usedIn, { borrower: doc.usedInBorrower ?? '' }),
-                        to: `/review/${doc.usedInReviewId}${doc.usedInSectionN ? `#${sectionAnchor(doc.usedInSectionN)}` : ''}`,
+                        to: `/crr/review/${doc.usedInReviewId}${doc.usedInSectionN ? `#${sectionAnchor(doc.usedInSectionN)}` : ''}`,
                       },
                     ]
                   : []),
@@ -355,7 +355,7 @@ export function DocumentsScreen() {
                   </Button>
                   {h.usedInReviewId && (
                     <Link
-                      to={`/review/${h.usedInReviewId}${h.usedInSectionN ? `#${sectionAnchor(h.usedInSectionN)}` : ''}`}
+                      to={`/crr/review/${h.usedInReviewId}${h.usedInSectionN ? `#${sectionAnchor(h.usedInSectionN)}` : ''}`}
                       className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
                     >
                       {fmt(s.usedIn, { borrower: h.usedInBorrower ?? h.counterparty })}

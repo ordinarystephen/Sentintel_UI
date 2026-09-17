@@ -8,7 +8,7 @@ export function NotFoundScreen() {
         {strings.notFound.title}
       </h1>
       <p className="mt-1 text-ui text-muted">{strings.notFound.body}</p>
-      <Link to="/" className="mt-3 inline-block text-ui underline underline-offset-2">
+      <Link to="/crr" className="mt-3 inline-block text-ui underline underline-offset-2">
         {strings.notFound.home}
       </Link>
     </div>

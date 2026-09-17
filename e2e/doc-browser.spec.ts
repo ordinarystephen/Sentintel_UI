@@ -17,7 +17,7 @@ const q3Row = (page: Page) =>
 test('browse → select → action bar → preview modal → download; search switches to hit cards', async ({
   page,
 }) => {
-  await page.goto('/documents')
+  await page.goto('/crr/documents')
   await expect(page.getByText('7 documents · newest first')).toBeVisible()
   await expect(page.locator('mark')).toHaveCount(0)
 
@@ -55,7 +55,7 @@ test('browse → select → action bar → preview modal → download; search sw
 })
 
 test('not-yet-extracted document: preview disabled, download still works', async ({ page }) => {
-  await page.goto('/documents')
+  await page.goto('/crr/documents')
   await page
     .getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' })
     .click()
@@ -66,7 +66,7 @@ test('not-yet-extracted document: preview disabled, download still works', async
 })
 
 test('keyboard: rows are focusable, Enter selects, actions reachable', async ({ page }) => {
-  await page.goto('/documents')
+  await page.goto('/crr/documents')
   await q3Row(page).focus()
   await page.keyboard.press('Enter')
   await expect(q3Row(page)).toHaveAttribute('aria-pressed', 'true')
@@ -77,7 +77,7 @@ test('keyboard: rows are focusable, Enter selects, actions reachable', async ({ 
 test('cobalt-dark screenshots', async ({ page }) => {
   await setTheme(page, 'cobalt', true)
   await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto('/documents')
+  await page.goto('/crr/documents')
   await expect(page.getByText('7 documents · newest first')).toBeVisible()
   await q3Row(page).click()
   await page.getByRole('button', { name: 'Preview extracted text' }).click()

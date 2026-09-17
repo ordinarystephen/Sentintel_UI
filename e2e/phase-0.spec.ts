@@ -21,7 +21,7 @@ for (const theme of THEMES) {
         JSON.stringify({ family: theme.family, dark: theme.dark }),
       ] as const)
       await page.setViewportSize({ width, height: 1400 })
-      await page.goto('/')
+      await page.goto('/crr')
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Start a review')
 
       const bodyClasses = await page.evaluate(() => Array.from(document.body.classList).sort())
@@ -50,7 +50,7 @@ for (const theme of THEMES) {
 }
 
 test('theme controls are keyboard-reachable and the choice survives reload', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/crr')
   const select = page.getByRole('combobox', { name: 'Theme' })
   const moon = page.getByRole('button', { name: 'Toggle dark mode' })
 
@@ -71,12 +71,12 @@ test('theme controls are keyboard-reachable and the choice survives reload', asy
 
 test('reduced motion removes the theme transition', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
+  await page.goto('/crr')
   const duration = await page.evaluate(() => getComputedStyle(document.body).transitionDuration)
   expect(duration.split(',').every((d) => d.trim() === '0s')).toBe(true)
 
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/')
+  await page.goto('/crr')
   const active = await page.evaluate(() => getComputedStyle(document.body).transitionDuration)
   expect(active).toContain('0.2s')
 })

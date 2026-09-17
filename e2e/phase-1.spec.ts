@@ -13,12 +13,12 @@ const THEMES = [
   { name: 'cobalt-dark', family: 'cobalt', dark: true },
 ]
 const ROUTES: ReadonlyArray<[string, string]> = [
-  ['/', 'Start a review'],
-  ['/reviews', 'Reviews'],
-  ['/reviews/all', 'Reviews'],
-  ['/documents', 'Documents'],
-  ['/policy', 'Policy library'],
-  ['/review/rev-veyland-2026-08', 'Veyland US Holdco LLC'],
+  ['/crr', 'Start a review'],
+  ['/crr/reviews', 'Reviews'],
+  ['/crr/reviews/all', 'Reviews'],
+  ['/crr/documents', 'Documents'],
+  ['/crr/policy', 'Policy library'],
+  ['/crr/review/rev-veyland-2026-08', 'Veyland US Holdco LLC'],
 ]
 
 async function setTheme(page: Page, family: string, dark: boolean) {
@@ -29,7 +29,7 @@ async function setTheme(page: Page, family: string, dark: boolean) {
 }
 
 test('reviews tab state lives in the URL and the selected tab is styled', async ({ page }) => {
-  await page.goto('/reviews/all')
+  await page.goto('/crr/reviews/all')
   const all = page.getByRole('tab', { name: 'All' })
   const my = page.getByRole('tab', { name: 'My' })
   await expect(all).toHaveAttribute('aria-selected', 'true')
@@ -64,7 +64,7 @@ test.describe('screenshots', () => {
       test(`review page · ${theme.name} · ${width}px`, async ({ page }) => {
         await setTheme(page, theme.family, theme.dark)
         await page.setViewportSize({ width, height: 900 })
-        await page.goto('/review/rev-veyland-2026-08#sec-2')
+        await page.goto('/crr/review/rev-veyland-2026-08#sec-2')
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
         await page.waitForTimeout(900)
         await page.screenshot({ path: `e2e/screenshots/phase-1/review-${theme.name}-${width}.png` })
@@ -84,7 +84,7 @@ test.describe('screenshots', () => {
     await setTheme(page, 'cobalt', false)
     await page.addInitScript(() => localStorage.setItem('sentinel.rail.collapsed', 'true'))
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/review/rev-veyland-2026-08')
+    await page.goto('/crr/review/rev-veyland-2026-08')
     await page.waitForTimeout(900)
     await page.screenshot({
       path: 'e2e/screenshots/phase-1/review-collapsed-cobalt-light-1440.png',
@@ -94,7 +94,7 @@ test.describe('screenshots', () => {
 
 test('only the canvas scrolls', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
-  await page.goto('/review/rev-veyland-2026-08')
+  await page.goto('/crr/review/rev-veyland-2026-08')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
   const m = await page.evaluate(() => {
     const doc = document.documentElement
@@ -127,7 +127,7 @@ test('only the canvas scrolls', async ({ page }) => {
 
 test('deep links land expanded + scrolled with the neutral flash', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 700 })
-  await page.goto('/review/rev-veyland-2026-08')
+  await page.goto('/crr/review/rev-veyland-2026-08')
   await page.getByRole('link', { name: '5 · Risk Rating Accuracy' }).click()
   await expect(page).toHaveURL(/#sec-5$/)
   await expect
@@ -140,7 +140,7 @@ test('deep links land expanded + scrolled with the neutral flash', async ({ page
     'true',
   )
   // direct load of a hash URL also lands
-  await page.goto('/review/rev-veyland-2026-08#sec-6')
+  await page.goto('/crr/review/rev-veyland-2026-08#sec-6')
   await expect
     .poll(() => page.evaluate(() => document.getElementById('canvas')!.scrollTop))
     .toBeGreaterThan(200)
@@ -149,7 +149,7 @@ test('deep links land expanded + scrolled with the neutral flash', async ({ page
 test('rail and context-rail collapse persist across reload and are keyboard-reachable', async ({
   page,
 }) => {
-  await page.goto('/review/rev-veyland-2026-08')
+  await page.goto('/crr/review/rev-veyland-2026-08')
   const collapse = page.getByRole('button', { name: 'Collapse sidebar' })
   await collapse.focus()
   await page.keyboard.press('Enter')
@@ -178,7 +178,7 @@ test('rail and context-rail collapse persist across reload and are keyboard-reac
 
 test('reduced motion: rail width and deep-link flash have no animation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/review/rev-veyland-2026-08#sec-3')
+  await page.goto('/crr/review/rev-veyland-2026-08#sec-3')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veyland US Holdco LLC')
   const durations = await page.evaluate(() => {
     const nav = document.querySelector('nav[aria-label="App navigation"]')!

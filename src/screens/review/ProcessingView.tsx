@@ -1,5 +1,5 @@
 /**
- * The processing state of `/review/:id` (build-spec §5.2): calm and ambient —
+ * The processing state of `/crr/review/:id` (build-spec §5.2): calm and ambient —
  * mono doc names, serif-italic "Reading the documents", one thin bar, ONE
  * status line cycling coarse phases. No pipeline anatomy, no percentages.
  * Failures interrupt loudly with the backend's message.
@@ -45,14 +45,14 @@ export function ProcessingView({ record }: { record: ProcessingReview }) {
             eyebrow={s.failedEyebrow}
             message={record.error?.message ?? 'Processing failed.'}
           />
-          <Link to="/" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
+          <Link to="/crr" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
             {s.startAnother}
           </Link>
         </div>
       ) : record.status === 'cancelled' ? (
         <div>
           <p className="text-ui text-muted">{s.cancelled}</p>
-          <Link to="/" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
+          <Link to="/crr" className="mt-4 inline-block text-[0.75rem] underline underline-offset-2">
             {s.startAnother}
           </Link>
         </div>

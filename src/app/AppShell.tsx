@@ -4,7 +4,9 @@
  * only). The frame fills the viewport and never scrolls; ONLY the canvas
  * (`<main id="canvas">`) scrolls. Screens render into the canvas via <Outlet>.
  */
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
+import { writeLastApp } from '@/lib/lastApp'
 import { strings } from '@/strings'
 import { LeftRail } from './LeftRail'
 import { Masthead } from './Masthead'
@@ -13,6 +15,8 @@ import { useShell } from './ShellContext'
 
 export function AppShell() {
   const { currentReview, ctxCollapsed } = useShell()
+  // Entering any app records it as the entry decision's last-used app.
+  useEffect(() => writeLastApp('crr'), [])
   return (
     <div className="flex h-full flex-col overflow-hidden bg-bg text-ink">
       <a

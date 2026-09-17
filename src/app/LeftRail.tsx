@@ -130,28 +130,28 @@ export function LeftRail() {
         collapsed ? 'w-[58px] px-[9px]' : 'w-[236px] px-3',
       )}
     >
-      <AppItem to="/" end icon={HomeIcon} label={strings.nav.home} collapsed={collapsed} />
+      <AppItem to="/crr" end icon={HomeIcon} label={strings.nav.home} collapsed={collapsed} />
       <AppItem
-        to="/reviews"
+        to="/crr/reviews"
         end
         icon={FileIcon}
         label={strings.nav.myReviews}
         collapsed={collapsed}
       />
       <AppItem
-        to="/reviews/all"
+        to="/crr/reviews/all"
         icon={PeopleIcon}
         label={strings.nav.allReviews}
         collapsed={collapsed}
       />
       <AppItem
-        to="/documents"
+        to="/crr/documents"
         icon={SearchIcon}
         label={strings.nav.documents}
         collapsed={collapsed}
       />
       <AppItem
-        to="/policy"
+        to="/crr/policy"
         icon={ShieldIcon}
         label={strings.nav.policyLibrary}
         collapsed={collapsed}
@@ -167,7 +167,7 @@ export function LeftRail() {
               </h4>
             )}
             <CtxItem
-              to={`/review/${currentReview.id}`}
+              to={`/crr/review/${currentReview.id}`}
               current={!hash}
               glyph="◎"
               label={strings.nav.overview}
@@ -186,7 +186,7 @@ export function LeftRail() {
               return (
                 <CtxItem
                   key={s.n}
-                  to={`/review/${currentReview.id}#${sectionAnchor(s.n)}`}
+                  to={`/crr/review/${currentReview.id}#${sectionAnchor(s.n)}`}
                   current={hash === `#${sectionAnchor(s.n)}`}
                   glyph={String(s.n)}
                   label={s.short}

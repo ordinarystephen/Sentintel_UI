@@ -32,7 +32,7 @@ export function PriorPane({ prior }: { prior: PriorComparison }) {
         ))}
       </dl>
       <Link
-        to={`/review/${prior.priorReviewId}`}
+        to={`/crr/review/${prior.priorReviewId}`}
         className="mt-[10px] inline-block text-[0.75rem] text-ink underline underline-offset-2"
       >
         {fmt(s.openPrior, { date: label })}

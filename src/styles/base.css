@@ -211,3 +211,36 @@
     }
   }
 }
+
+/* ── Context-rail wide state (≥420px, suite round 2026-09-17) ─────────────
+   The rail becomes a reading pane: body text steps up ONE size on the type
+   scale, and Debate lays advocate/dissent side by side. Unlayered on
+   purpose — these must override the fixed-size utilities inside the rail.
+   Below 420 nothing here applies and the rail renders exactly as before. */
+.ctx-wide .text-micro {
+  font-size: 0.71875rem; /* micro → dense */
+}
+.ctx-wide .text-dense {
+  font-size: 0.78125rem; /* dense → ui-sm */
+}
+.ctx-wide .text-ui-sm {
+  font-size: 0.8125rem; /* ui-sm → ui */
+}
+.ctx-wide .text-ui {
+  font-size: 0.875rem; /* ui → body */
+}
+.ctx-wide .text-\[0\.75rem\] {
+  font-size: 0.8125rem;
+}
+.ctx-wide .text-\[0\.65625rem\] {
+  font-size: 0.71875rem;
+}
+.ctx-wide .ctx-debate {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.ctx-wide .ctx-debate > * {
+  margin-bottom: 0;
+}

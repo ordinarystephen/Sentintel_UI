@@ -4,10 +4,10 @@
  */
 import { expect, test } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 
 test('screen content settles in with a stagger; reduced motion removes it', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/crr')
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   const anim = await page.evaluate(() => {
     const root = document.querySelector('.settle')!
@@ -19,7 +19,7 @@ test('screen content settles in with a stagger; reduced motion removes it', asyn
   expect(anim[1][1]).toBe('0.08s')
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
+  await page.goto('/crr')
   const reduced = await page.evaluate(
     () => getComputedStyle(document.querySelector('.settle > *')!).animationName,
   )
@@ -27,7 +27,7 @@ test('screen content settles in with a stagger; reduced motion removes it', asyn
 })
 
 test('skip link is the first Tab stop and moves focus to the canvas', async ({ page }) => {
-  await page.goto('/reviews')
+  await page.goto('/crr/reviews')
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Skip to content' })
   await expect(skip).toBeFocused()
@@ -53,17 +53,17 @@ test('source modal traps focus and returns it on close', async ({ page }) => {
 })
 
 test('empty states are hand-written', async ({ page }) => {
-  await page.goto('/review/rev-ambervale-2026-08')
+  await page.goto('/crr/review/rev-ambervale-2026-08')
   await expect(
     page.getByText(
       'Nothing needs your attention. Every value was read above the confidence floor and no flags were raised.',
     ),
   ).toBeVisible()
-  await page.goto('/reviews/all?q=zebra')
+  await page.goto('/crr/reviews/all?q=zebra')
   await expect(
     page.getByText('No reviews match. Try a borrower name, a CL number, or a sector.'),
   ).toBeVisible()
-  await page.goto('/documents?q=zebra')
+  await page.goto('/crr/documents?q=zebra')
   await expect(
     page.getByText('No passages match. Loosen a filter, or try different words.'),
   ).toBeVisible()

@@ -8,7 +8,7 @@ import { expect, test, type Page } from '@playwright/test'
 test.skip(!process.env.DOCS_SHOTS, 'run with DOCS_SHOTS=1 (npm run screenshots:docs)')
 
 const OUT = 'docs/screenshots'
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -30,7 +30,12 @@ const settle = (page: Page) => page.waitForTimeout(900)
 test('stone-light: every screen', async ({ page }) => {
   test.setTimeout(90_000)
   await prep(page, 'stone', false)
-  await page.goto('/')
+  await page.goto('/apps')
+  await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/00-suite-landing.png` })
+
+  await page.goto('/crr')
   await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/01-landing.png` })
@@ -95,24 +100,24 @@ test('stone-light: every screen', async ({ page }) => {
   await page.screenshot({ path: `${OUT}/10-source-modal.png` })
   await page.keyboard.press('Escape')
 
-  await page.goto('/reviews')
+  await page.goto('/crr/reviews')
   await expect(page.getByRole('link', { name: /Veyland/ })).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/11-reviews-my.png` })
-  await page.goto('/reviews/all')
+  await page.goto('/crr/reviews/all')
   await expect(page.getByText(/reviews · showing most recent/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/12-reviews-all.png` })
-  await page.goto('/documents?q=revolver+availability')
+  await page.goto('/crr/documents?q=revolver+availability')
   await expect(page.getByText(/sorted by relevance/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/13-documents.png` })
-  await page.goto('/review/rev-seldwyn-2026-08')
+  await page.goto('/crr/review/rev-seldwyn-2026-08')
   await page.getByRole('button', { name: 'Export Review' }).click()
   await expect(page.getByRole('alert').first()).toContainText('Export failed')
   await settle(page)
   await page.screenshot({ path: `${OUT}/14-export-error.png` })
-  await page.goto('/review/rev-farrowdale-2026-08')
+  await page.goto('/crr/review/rev-farrowdale-2026-08')
   await expect(page.getByText(/Read-only/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/15-read-only-review.png` })

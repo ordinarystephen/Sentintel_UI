@@ -67,7 +67,7 @@ export function LandingScreen() {
     setError(null)
     try {
       const { id } = await create.mutateAsync({ files, contextText: context, settings })
-      navigate(`/review/${id}`)
+      navigate(`/crr/review/${id}`)
     } catch (e) {
       setError((e as Error).message)
     }

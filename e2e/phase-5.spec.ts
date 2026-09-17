@@ -17,10 +17,10 @@ async function setTheme(page: Page, family: string, dark: boolean) {
     [JSON.stringify({ family, dark })],
   )
 }
-const reviewLinks = (page: Page) => page.locator('a[href^="/review/"]')
+const reviewLinks = (page: Page) => page.locator('a[href^="/crr/review/"]')
 
 test('All reviews: filters hit the seam, live in the URL, survive reload', async ({ page }) => {
-  await page.goto('/reviews/all')
+  await page.goto('/crr/reviews/all')
   await expect(page.getByText(/^\d+ reviews · showing most recent$/)).toBeVisible()
   await page.getByLabel('Line of business').selectOption('Wealth Management')
   await expect(page).toHaveURL(/lob=Wealth\+Management/)
@@ -44,7 +44,7 @@ test('All reviews: filters hit the seam, live in the URL, survive reload', async
 test('All reviews rows: owner, read-only, repeat chip, LOB, absolute timestamp; opening another owner’s review is read-only', async ({
   page,
 }) => {
-  await page.goto('/reviews/all')
+  await page.goto('/crr/reviews/all')
   const veyland = page.getByRole('link', { name: /Veyland US Holdco LLC/ }).first()
   await expect(veyland).toContainText('you')
   await expect(veyland).toContainText('2nd in 12 mo')
@@ -61,7 +61,7 @@ test('All reviews rows: owner, read-only, repeat chip, LOB, absolute timestamp; 
 test('Documents: search marks terms, filters in the URL, hit deep-links into the review expanded + flashed', async ({
   page,
 }) => {
-  await page.goto('/documents')
+  await page.goto('/crr/documents')
   await page.getByLabel('Search documents').fill('revolver availability')
   await expect(page).toHaveURL(/q=revolver\+availability/)
   await expect(page.getByText(/passages in \d+ documents · sorted by relevance/)).toBeVisible()
@@ -94,7 +94,7 @@ test('Documents: search marks terms, filters in the URL, hit deep-links into the
 })
 
 test('toolbars are keyboard-reachable', async ({ page }) => {
-  await page.goto('/reviews/all')
+  await page.goto('/crr/reviews/all')
   await expect(page.getByText(/reviews · showing most recent/)).toBeVisible()
   await page.getByLabel('Search reviews').focus()
   await page.keyboard.press('Tab')
@@ -107,7 +107,7 @@ test('toolbars are keyboard-reachable', async ({ page }) => {
   const active = await page.evaluate(
     () => document.activeElement?.getAttribute('href') ?? document.activeElement?.tagName ?? 'none',
   )
-  expect(active).toMatch(/^\/review\//)
+  expect(active).toMatch(/^\/crr\/review\//)
 })
 // PHASE5_E2E_PATCHED
 
@@ -116,11 +116,11 @@ test.describe('screenshots', () => {
     test(`lists · ${theme.name}`, async ({ page }) => {
       await setTheme(page, theme.family, theme.dark)
       await page.setViewportSize({ width: 1440, height: 1000 })
-      await page.goto('/reviews/all')
+      await page.goto('/crr/reviews/all')
       await expect(page.getByText(/reviews · showing most recent/)).toBeVisible()
       await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-5/reviews-all-${theme.name}-1440.png` })
-      await page.goto('/documents?q=revolver+availability')
+      await page.goto('/crr/documents?q=revolver+availability')
       await expect(page.getByText(/sorted by relevance/)).toBeVisible()
       await page.waitForTimeout(900)
       await page.screenshot({ path: `e2e/screenshots/phase-5/documents-${theme.name}-1440.png` })
@@ -128,10 +128,10 @@ test.describe('screenshots', () => {
   }
   test('narrow · stone-light · 900px', async ({ page }) => {
     await page.setViewportSize({ width: 900, height: 1000 })
-    await page.goto('/reviews/all')
+    await page.goto('/crr/reviews/all')
     await expect(page.getByText(/reviews · showing most recent/)).toBeVisible()
     await page.screenshot({ path: 'e2e/screenshots/phase-5/reviews-all-stone-light-900.png' })
-    await page.goto('/reviews')
+    await page.goto('/crr/reviews')
     await expect(page.getByRole('link', { name: /Veyland/ })).toBeVisible()
     await page.screenshot({ path: 'e2e/screenshots/phase-5/reviews-my-stone-light-900.png' })
   })

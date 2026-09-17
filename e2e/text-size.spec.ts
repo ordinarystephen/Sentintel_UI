@@ -7,7 +7,7 @@
  */
 import { expect, test, type Page } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 
 const rootPx = (page: Page) =>
   page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
@@ -25,7 +25,7 @@ for (const dsf of [1, 2]) {
 
     test(`setting applies and persists across reload @${dsf}x`, async ({ page }) => {
       await fresh(page)
-      await page.goto('/')
+      await page.goto('/crr')
       const medium = await rootPx(page)
 
       await page.getByRole('button', { name: 'Large text' }).click()

@@ -39,7 +39,7 @@ export function WhyPane({ reviewId, item }: { reviewId: string; item: WorkItem }
           <div className="font-mono text-[0.65625rem] text-indigo">{p.id}</div>
           <p className="mt-0.5 text-dense leading-[1.5] text-ink-soft">{p.text}</p>
           <Link
-            to="/policy"
+            to="/crr/policy"
             className="mt-1 inline-block text-micro text-ink underline underline-offset-2"
           >
             {p.kind === 'standard' ? s.viewStandard : s.viewPolicy}

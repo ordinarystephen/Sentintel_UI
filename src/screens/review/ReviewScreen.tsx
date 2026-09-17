@@ -1,5 +1,5 @@
 /**
- * `/review/:id` (build-spec §5.2–5.3). One URL, three states from one query:
+ * `/crr/review/:id` (build-spec §5.2–5.3). One URL, three states from one query:
  * processing (polls until ready), failed/cancelled (loud, specific), ready.
  * Refresh or leave-and-return always lands correctly because the record is
  * durable from upload.

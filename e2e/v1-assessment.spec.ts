@@ -4,7 +4,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('sentinel.e2e.reset')) {
@@ -66,7 +66,7 @@ test('supporting links deep-link with the neutral flash; reference data expands 
 test('a completed review renders its fully-rated zone (structural, not Veyland-only)', async ({
   page,
 }) => {
-  await page.goto('/review/rev-ambervale-2026-08')
+  await page.goto('/crr/review/rev-ambervale-2026-08')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ambervale Foods Group')
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')
@@ -76,7 +76,7 @@ test('a completed review renders its fully-rated zone (structural, not Veyland-o
 test('a read-only review renders the rated zone — ratings and reasons, no action buttons', async ({
   page,
 }) => {
-  await page.goto('/review/rev-farrowdale-2026-08')
+  await page.goto('/crr/review/rev-farrowdale-2026-08')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Farrowdale Logistics')
   const header = page.getByRole('button', { name: /Areas of assessment/ })
   await expect(header).toContainText('8 areas · 7 satisfactory · 1 n/a')

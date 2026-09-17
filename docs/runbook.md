@@ -43,13 +43,14 @@ make dev
   ```
 
 - **Open** http://localhost:5173/ in Chrome or Edge.
-- **What you should see first**: the **Start a review** page — a serif heading, a dashed drop zone ("Drag documents here"), an optional "Anything Sentinel should know?" box, and a **Recent** list beginning with *Veyland US Holdco LLC* (amber "4 open" badge). A left rail shows Home, My reviews, All reviews, Documents, Policy library.
+- **What you should see first**: the **Sentinel suite landing** — three application cards (CRR with an **Open** button; ERM and Vantage marked "In design"). Click **Open** on CRR. On later visits `/` skips the landing and goes straight back into the app you used last (the masthead brand "Sentinel · CRR ▾" is the switcher, and "All applications" brings the landing back at `/apps`).
+- **What you should see next**: the **Start a review** page — a serif heading, a dashed drop zone ("Drag documents here"), an optional "Anything Sentinel should know?" box, and a **Recent** list beginning with *Veyland US Holdco LLC* (amber "4 open" badge). A left rail shows Home, My reviews, All reviews, Documents, Policy library.
 
 Leave this terminal running; press `Ctrl+C` to stop the server.
 
 ## 4. Guided tour
 
-The data is fictional. Every action below persists in your browser (survives refresh); step 26 resets everything.
+The data is fictional. Every action below persists in your browser (survives refresh); step 30 resets everything.
 
 **Start a review and watch it process**
 
@@ -74,6 +75,7 @@ The data is fictional. Every action below persists in your browser (survives ref
 13. **Respond** tab — type `Use 9.6% from the prior review` and click **Send & re-run**. The item shows a "re-running…" spinner for a moment, then the value becomes **9.6%**, `conf 93%`, the flag lifts, and the attention row resolves itself.
 14. **Debate** tab — advocate (green) and dissent (red) positions with citations, and the footnote: positions are advisory; the analyst's disposition decides.
 15. **Prior** tab — "Since the Feb 2026 review": deltas with worsening values in amber, and a link to the prior review. (Open a review with no prior — e.g. Ambervale Foods — and this tab isn't there at all.)
+16. **Resize the rail** — hover the rail’s left edge (a thin double hairline appears, `col-resize` cursor) and drag left: the rail grows (260–560px, persisted). Past **420px** it becomes a reading pane — the text steps up a size and Debate lays advocate/dissent side by side. **Double-click the edge to reset** to the default 312px. The handle is keyboard-accessible too (focus it, arrows / Home / End).
 
 **Areas of assessment and reference data**
 
@@ -82,32 +84,32 @@ The data is fictional. Every action below persists in your browser (survives ref
 
 **Dispositions**
 
-16. Select **Liquidity**, open **Respond**, click **Incorrect**. A rationale field appears — confirming with it empty is refused. Type `Figure superseded by the Q3 update` and click **Clear — Incorrect**. The item is struck in place with "✓ cleared — incorrect · struck on screen, omitted from the exported review" and your rationale beside it. Click **undo** to restore it.
-17. In NEEDS YOUR ATTENTION, click **dismiss** on *Customer concentration* (dismiss exists only on flag rows). The open count drops.
-18. Click **mark reviewed** on another open row, type a one-line note, **Save**. The row turns green: `Reviewed — "your note"`, with **edit** and **un-review** affordances.
+17. Select **Liquidity**, open **Respond**, click **Incorrect**. A rationale field appears — confirming with it empty is refused. Type `Figure superseded by the Q3 update` and click **Clear — Incorrect**. The item is struck in place with "✓ cleared — incorrect · struck on screen, omitted from the exported review" and your rationale beside it. Click **undo** to restore it.
+18. In NEEDS YOUR ATTENTION, click **dismiss** on *Customer concentration* (dismiss exists only on flag rows). The open count drops.
+19. Click **mark reviewed** on another open row, type a one-line note, **Save**. The row turns green: `Reviewed — "your note"`, with **edit** and **un-review** affordances.
 
 **Export — both outcomes**
 
-19. Click **Export Review** in the sticky bar. A placeholder `.docx` downloads and a toast names the file.
-20. Go to **My reviews** → open **Seldwyn Marine Finance** → click **Export Review**. This fixture fails on purpose: a red toast and an inline banner show the exact render-service message. The screen never breaks.
+20. Click **Export Review** in the sticky bar. A placeholder `.docx` downloads and a toast names the file.
+21. Go to **My reviews** → open **Seldwyn Marine Finance** → click **Export Review**. This fixture fails on purpose: a red toast and an inline banner show the exact render-service message. The screen never breaks.
 
 **Themes and rails**
 
-21. In the masthead, switch the theme select **Stone → Cobalt** (navy rail on a light page), and click the **moon** to see the dark variant of each — four looks, one token layer. Choices persist across refresh.
-22. Still in the masthead, try the **S / M / L** text-size control to the left of the theme select — the whole type scale recomputes from one knob (S ≈ the app's original density on a Retina display). The choice persists across refresh, independently of the theme.
-23. Click **Collapse sidebar** at the rail's foot — a 58px icon strip remains, section numbers become the icons. Click the panel icon in the borrower bar to hide/show the right rail. Both persist.
+22. In the masthead, switch the theme select **Stone → Cobalt** (navy rail on a light page), and click the **moon** to see the dark variant of each — four looks, one token layer. Choices persist across refresh.
+23. Still in the masthead, try the **S / M / L** text-size control to the left of the theme select — the whole type scale recomputes from one knob (S ≈ the app's original density on a Retina display). The choice persists across refresh, independently of the theme.
+24. Click **Collapse sidebar** at the rail's foot — a 58px icon strip remains, section numbers become the icons. Click the panel icon in the borrower bar to hide/show the right rail. Both persist.
 
 **Lists**
 
-24. **All reviews** tab: toolbar first. Search `veyland` — two rows appear (a material-change re-review): the newer one carries the **2nd in 12 mo** chip; the older belongs to T. Alvarez with a **read-only** badge. Clear the search; filter Line of business → *Wealth Management*; try Owner and Period (the counts change — filtering happens in the "backend", not the page). Open a read-only review: no dispositions anywhere, and a line says whose it is.
-25. **Documents** opens in browse mode: one row per document — mono filename, extraction badge, LOB, date. No preview text. Click the *Veyland_Holdco_Q3_Update.pdf* row: it selects (accent stripe) and an action bar appears — **Preview extracted text**, **Download original**, and **Used in Veyland review →**. Click the *Farrowdale_Logistics_Q2_Update.pdf* row: not yet extracted, so its preview action is disabled.
-26. Click **Preview extracted text** on the Veyland Q3 row: a modal titled "Veyland_Holdco_Q3_Update.pdf — extracted text" shows pages, parsed date, status and section count, then the document's own sections as collapsible entries with mono page ranges (first one open). `Esc` closes. **Download original** saves a placeholder PDF.
-27. Now search `revolver availability` — the browse rows give way to match evidence: passages with the matched words highlighted, provenance (`Liquidity Summary · p. 14`), and "Used in Veyland review →" which deep-links straight into Section 2.
-28. Still in Documents, try the advanced syntax ("Advanced search" explains it): `"letters of credit"` (exact phrase — two hits) and `revolver -letters` (excludes passages containing "letters").
+25. **All reviews** tab: toolbar first. Search `veyland` — two rows appear (a material-change re-review): the newer one carries the **2nd in 12 mo** chip; the older belongs to T. Alvarez with a **read-only** badge. Clear the search; filter Line of business → *Wealth Management*; try Owner and Period (the counts change — filtering happens in the "backend", not the page). Open a read-only review: no dispositions anywhere, and a line says whose it is.
+26. **Documents** opens in browse mode: one row per document — mono filename, extraction badge, LOB, date. No preview text. Click the *Veyland_Holdco_Q3_Update.pdf* row: it selects (accent stripe) and an action bar appears — **Preview extracted text**, **Download original**, and **Used in Veyland review →**. Click the *Farrowdale_Logistics_Q2_Update.pdf* row: not yet extracted, so its preview action is disabled.
+27. Click **Preview extracted text** on the Veyland Q3 row: a modal titled "Veyland_Holdco_Q3_Update.pdf — extracted text" shows pages, parsed date, status and section count, then the document's own sections as collapsible entries with mono page ranges (first one open). `Esc` closes. **Download original** saves a placeholder PDF.
+28. Now search `revolver availability` — the browse rows give way to match evidence: passages with the matched words highlighted, provenance (`Liquidity Summary · p. 14`), and "Used in Veyland review →" which deep-links straight into Section 2.
+29. Still in Documents, try the advanced syntax ("Advanced search" explains it): `"letters of credit"` (exact phrase — two hits) and `revolver -letters` (excludes passages containing "letters").
 
 **Reset**
 
-29. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
+30. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
 
 ## 5. Serving the built app (target-environment style)
 
@@ -122,7 +124,7 @@ make run                          # → "Running on http://0.0.0.0:8082"
 
 (`make install` already covered the Flask dependency.)
 
-Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/review/rev-veyland-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as the hosted-app entry point.
+Open http://localhost:8082 — the same app as `npm run dev`, but served from the static build. Refresh any deep URL (e.g. `/crr/review/rev-veyland-2026-08`) and it loads. If you skip `npm run build`, you get a styled placeholder page with the build commands instead of an error. The port chain is `PORT` → `FLASK_RUN_PORT` → `8082`; `./app.sh` is the same thing as the hosted-app entry point.
 
 ## 6. Environment variables
 
@@ -144,6 +146,6 @@ Copy `.env.example` to `.env` to set any of these (all optional):
 | `Error: Port 5173 is in use`                                                   | Another dev server is running. Stop it, or run `npm run dev -- --port 5174` and open that port instead.                                                                     |
 | Blank page                                                                     | Open the browser console (`F12`). If assets 404 under a proxy prefix, the build's `VITE_BASE_PATH` doesn't match the prefix (docs/environment.md). If you built for a prefix and are opening `/`, rebuild without `VITE_BASE_PATH`. |
 | `Blocked request: This host is not allowed`                                    | You're reaching the dev server through a proxy hostname. Set `VITE_ALLOWED_HOSTS=<that hostname>` and start with `npm run dev -- --host`.                                    |
-| Refreshing `/review/…` returns 404 on a static server                          | The server must serve `index.html` for unknown paths (SPA fallback). `npm run preview` does this; plain `python -m http.server` does not — enter at `/` instead.             |
+| Refreshing `/crr/review/…` returns 404 on a static server                          | The server must serve `index.html` for unknown paths (SPA fallback). `npm run preview` does this; plain `python -m http.server` does not — enter at `/` instead.             |
 | Demo looks "used" (cleared items, resolved rows)                               | That's persistence working. Reset with step 26 above.                                                                                                                       |
 | Tests can't find browsers (`npx playwright …`)                                 | One-time `npx playwright install chromium` (only needed for `npm run e2e`, not for the demo).                                                                                |

@@ -9,7 +9,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 // Keep in sync with STATE_VERSION in src/api/mock/mockApi.ts.
 const CURRENT_VERSION = 5
 

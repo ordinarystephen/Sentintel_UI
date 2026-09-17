@@ -44,6 +44,35 @@ export const strings = {
     textSizeLarge: 'Large text',
   },
 
+  /* ════════ Suite landing + application switcher ════════ */
+  suite: {
+    apps: {
+      /* Descriptions are single-line Steve-drafts — wordsmithing later. */
+      crr: {
+        short: 'CRR',
+        full: 'Credit Risk Review',
+        description: 'Deep-dive credit review files, purpose-built for CRR.',
+      },
+      erm: {
+        short: 'ERM',
+        full: 'Enterprise Risk Management',
+        description: 'Portfolio-level insights and analysis.',
+      },
+      vantage: {
+        short: 'Vantage',
+        full: 'P&C',
+        description: 'Generic document extraction and insights.',
+      },
+    },
+    landingAria: 'Applications',
+    open: 'Open',
+    inDesign: 'In design',
+    allApplications: 'All applications',
+    switcherAria: 'Switch application',
+    currentApp: 'Current application',
+    fictionalNote: 'All data in this demonstration build is fictional.',
+  },
+
   /* ════════ Left rail (app navigation) ════════ */
   nav: {
     appNavAria: 'App navigation',
@@ -188,6 +217,8 @@ export const strings = {
   contextRail: {
     header: 'Context',
     toggle: 'Toggle context rail',
+    resizeHandle: 'Resize context rail',
+    resizeHint: 'Drag to resize · double-click to reset',
     noSelection: 'No item selected',
     emptyBody: 'Select a work paper item to see how it got here.',
     tabs: {

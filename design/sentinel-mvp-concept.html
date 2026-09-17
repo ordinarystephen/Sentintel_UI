@@ -158,9 +158,6 @@ body.rail-collapsed .rail-ctx .nav-item{padding:5px 0}
 .searchbar input{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:8px 11px 8px 30px;font-size:13px;background:var(--bg)}
 .searchbar svg{position:absolute;left:10px;top:10px;width:13px;height:13px;color:var(--faint)}
 select.ctl{border:1px solid var(--rule-strong);border-radius:7px;padding:7px 9px;font-size:12px;background:var(--bg);color:var(--ink-soft)}
-.seg{display:inline-flex;gap:2px;background:var(--bg-subtle);border-radius:8px;padding:2px}
-.seg button{border:none;background:none;border-radius:6px;padding:3px 9px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--font-body)}
-.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:var(--shadow-sm)}
 .hit-count{font-size:11.5px;color:var(--faint);margin:10px 0 12px}
 .hit{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:12px 14px;margin-bottom:10px}
 .hit .fname{font-family:var(--font-mono);font-size:12.5px;font-weight:500;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -401,8 +398,13 @@ details.snips ol{margin:8px 0 2px 18px;max-height:180px;overflow:auto;font-famil
 .wp-row.hl > .wp-head-row{animation:hl 1.4s ease both}
 
 /* ============ right context rail ============ */
-.rail-right{width:312px;flex:none;border-left:1px solid var(--rule);background:var(--bg-subtle);display:flex;flex-direction:column;min-height:0}
+.rail-right{width:var(--ctx-w,312px);flex:none;border-left:1px solid var(--rule);background:var(--bg-subtle);display:flex;flex-direction:column;min-height:0;position:relative}
 body.ctx-collapsed .rail-right{display:none}
+/* drag-resize handle on the rail's left edge: min 260, max 560, default 312; dbl-click resets */
+.ctx-resizer{position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize;z-index:5}
+.ctx-resizer:hover,.ctx-resizer.dragging{background:linear-gradient(to right,transparent 2px,var(--rule-strong) 2px,var(--rule-strong) 4px,transparent 4px)}
+/* at >=420px the rail is a reading pane: content steps up */
+.rail-right.wide .ctx-pane{font-size:14px;line-height:1.55}
 .ctx-head{padding:14px 16px 10px;border-bottom:1px solid var(--rule)}
 .ctx-head .micro{color:var(--faint)}
 .ctx-sel{font-size:13px;font-weight:600;margin-top:3px;line-height:1.35}
@@ -500,10 +502,10 @@ body.ctx-collapsed .rail-right{display:none}
 
 <div class="frame">
   <header class="masthead pin-anchor">
-    <span class="brand">Sentinel</span>
+    <span class="brand">Sentinel <span style="color:var(--muted);font-weight:500">· CRR ▾</span></span>
     <span class="badge"><span class="dot"></span> ready</span>
     <span class="spacer"></span>
-    <div class="seg" id="text-size" role="group" aria-label="Text size"><button aria-label="Small text" data-size="0.92" aria-pressed="false">S</button><button aria-label="Medium text (default)" data-size="1" aria-pressed="true">M</button><button aria-label="Large text" data-size="1.1" aria-pressed="false">L</button></div>
+    <div class="tabs" role="radiogroup" aria-label="Text size" id="size-select" style="padding:2px"><button data-size="0.92" title="Small">S</button><button data-size="1" aria-selected="true" title="Medium">M</button><button data-size="1.1" title="Large">L</button></div>
     <select class="ctl" id="theme-select" aria-label="Theme" style="padding:4px 8px;font-size:11.5px"><option value="">Stone</option><option value="theme-cobalt">Cobalt</option></select>
     <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <span class="pin" style="top:14px;right:44px" data-pin>1<span class="pin-pop"><span class="eyebrow">Note 1 · pick your theme</span>Themes are now a choice, not a toggle: pick a palette family (Stone is the default; Cobalt maps Steve's navy palette — deep-navy rail, #19398d primary — onto the same token contract) and the moon flips its dark variant. Four looks, one token layer, zero component changes. That's the whole argument for tokens.</span></span>
@@ -1084,12 +1086,9 @@ body.ctx-collapsed .rail-right{display:none}
     var on=document.body.classList.toggle('dark');
     tt.setAttribute('aria-pressed', on?'true':'false');
   });
-  // Text size S/M/L — the mockup approximates the app's --user-scale knob
-  // with CSS zoom on the frame; the real app recomputes the rem scale.
-  document.querySelectorAll('#text-size button').forEach(function(b){
+  document.querySelectorAll('#size-select [data-size]').forEach(function(b){
     b.addEventListener('click', function(){
-      document.querySelectorAll('#text-size button').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
-      b.setAttribute('aria-pressed','true');
+      document.querySelectorAll('#size-select [data-size]').forEach(function(x){ x.setAttribute('aria-selected', x===b?'true':'false'); });
       document.querySelector('.frame').style.zoom = b.dataset.size;
     });
   });
@@ -1104,6 +1103,18 @@ body.ctx-collapsed .rail-right{display:none}
     var off=document.body.classList.toggle('ctx-collapsed');
     this.setAttribute('aria-pressed', off?'false':'true');
   });
+  /* drag-resize: pointer drag on the rail's left edge; dbl-click resets to 312 */
+  (function(){
+    var MIN=260, MAX=560, DEF=312, WIDE=420;
+    var h=document.createElement('div'); h.className='ctx-resizer'; h.title='Drag to resize · double-click to reset';
+    ctxRail.appendChild(h);
+    function setW(w){ w=Math.max(MIN,Math.min(MAX,w)); document.documentElement.style.setProperty('--ctx-w',w+'px'); ctxRail.classList.toggle('wide',w>=WIDE); }
+    var sx=0, sw=0, drag=false;
+    h.addEventListener('pointerdown', function(e){ sx=e.clientX; sw=ctxRail.getBoundingClientRect().width; drag=true; h.setPointerCapture(e.pointerId); h.classList.add('dragging'); document.body.style.userSelect='none'; });
+    h.addEventListener('pointermove', function(e){ if(drag) setW(sw+(sx-e.clientX)); });
+    h.addEventListener('pointerup', function(){ drag=false; h.classList.remove('dragging'); document.body.style.userSelect=''; });
+    h.addEventListener('dblclick', function(){ setW(DEF); });
+  })();
   document.querySelectorAll('.ctx-tabs [data-pane]').forEach(function(tb){
     tb.addEventListener('click', function(){
       document.querySelectorAll('.ctx-tabs [data-pane]').forEach(function(x){ x.setAttribute('aria-selected', x===tb?'true':'false'); });

@@ -5,7 +5,7 @@
  */
 import { expect, test, type Page } from '@playwright/test'
 
-const VEYLAND = '/review/rev-veyland-2026-08'
+const VEYLAND = '/crr/review/rev-veyland-2026-08'
 const THEMES = [
   { name: 'stone-light', family: 'stone', dark: false },
   { name: 'stone-dark', family: 'stone', dark: true },
@@ -147,7 +147,7 @@ test.describe('screenshots', () => {
   }
   test('read-only review · stone-light', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/review/rev-farrowdale-2026-08')
+    await page.goto('/crr/review/rev-farrowdale-2026-08')
     await page
       .getByRole('complementary', { name: 'Context' })
       .getByRole('tab', { name: 'Respond' })

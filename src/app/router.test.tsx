@@ -8,13 +8,56 @@ const VEYLAND = 'rev-veyland-2026-08'
 const nav = () => screen.getByRole('navigation', { name: 'App navigation' })
 const h1 = () => screen.getByRole('heading', { level: 1 })
 
+describe('suite entry (entitlement routing)', () => {
+  it('/ with multiple entitlements and no last-used app renders the suite landing', async () => {
+    renderAt('/')
+    expect(await screen.findByRole('navigation', { name: 'Applications' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /CRR.*Credit Risk Review.*Open/s })).toHaveAttribute(
+      'href',
+      '/crr',
+    )
+    expect(screen.getAllByText('In design')).toHaveLength(2)
+    // design-status cards are not links
+    expect(screen.getAllByRole('link')).toHaveLength(1)
+  })
+
+  it('/ redirects to the last-used entitled app', async () => {
+    localStorage.setItem('sentinel.lastApp', 'crr')
+    try {
+      renderAt('/')
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Start a review' }),
+      ).toBeInTheDocument()
+    } finally {
+      localStorage.removeItem('sentinel.lastApp')
+    }
+  })
+
+  it('/apps always renders the landing, even with a last-used app recorded', async () => {
+    localStorage.setItem('sentinel.lastApp', 'crr')
+    try {
+      renderAt('/apps')
+      expect(await screen.findByRole('navigation', { name: 'Applications' })).toBeInTheDocument()
+    } finally {
+      localStorage.removeItem('sentinel.lastApp')
+    }
+  })
+
+  it('entering the CRR shell records it as the last-used app', async () => {
+    renderAt('/crr/reviews')
+    await screen.findByRole('heading', { level: 1 })
+    expect(localStorage.getItem('sentinel.lastApp')).toBe('crr')
+    localStorage.removeItem('sentinel.lastApp')
+  })
+})
+
 describe('routes', () => {
   it.each([
-    ['/', 'Start a review', 'Home'],
-    ['/reviews', 'Reviews', 'My reviews'],
-    ['/reviews/all', 'Reviews', 'All reviews'],
-    ['/documents', 'Documents', 'Documents'],
-    ['/policy', 'Policy library', 'Policy library'],
+    ['/crr', 'Start a review', 'Home'],
+    ['/crr/reviews', 'Reviews', 'My reviews'],
+    ['/crr/reviews/all', 'Reviews', 'All reviews'],
+    ['/crr/documents', 'Documents', 'Documents'],
+    ['/crr/policy', 'Policy library', 'Policy library'],
   ])('%s renders its screen and marks the rail item active', (path, title, navLabel) => {
     renderAt(path)
     expect(h1()).toHaveTextContent(title)
@@ -30,35 +73,35 @@ describe('routes', () => {
   })
 
   it('reviews tabs reflect the URL', () => {
-    renderAt('/reviews/all')
+    renderAt('/crr/reviews/all')
     expect(screen.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: 'My' })).toHaveAttribute('aria-selected', 'false')
   })
 
   it('unknown paths render Not found inside the shell', () => {
-    renderAt('/nope/nothing')
+    renderAt('/crr/nope/nothing')
     expect(h1()).toHaveTextContent('Nothing here')
     expect(nav()).toBeInTheDocument()
   })
 
   it('outside a review there is no contextual zone and no context rail', () => {
-    renderAt('/')
+    renderAt('/crr')
     expect(within(nav()).queryByRole('link', { name: 'Overview' })).toBeNull()
     expect(screen.queryByRole('complementary', { name: 'Context' })).toBeNull()
   })
 
   it('/review/:id shows the contextual zone, section deep links and the context rail', async () => {
-    renderAt(`/review/${VEYLAND}#sec-2`)
+    renderAt(`/crr/review/${VEYLAND}#sec-2`)
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' }),
     ).toBeInTheDocument()
     const zone = within(nav()).getByRole('region', { name: 'Veyland US Holdco LLC' })
     expect(within(zone).getByRole('link', { name: 'Overview' })).toHaveAttribute(
       'href',
-      `/review/${VEYLAND}`,
+      `/crr/review/${VEYLAND}`,
     )
     const sec2 = within(zone).getByRole('link', { name: '2 · Financials' })
-    expect(sec2).toHaveAttribute('href', `/review/${VEYLAND}#sec-2`)
+    expect(sec2).toHaveAttribute('href', `/crr/review/${VEYLAND}#sec-2`)
     expect(sec2).toHaveAttribute('aria-current', 'true')
     expect(
       within(zone).getByRole('link', { name: '6 · Trading Activity & Exposure Analysis' }),
@@ -76,7 +119,7 @@ describe('routes', () => {
 
   it('leaving the review clears the contextual zone', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     expect(await within(nav()).findByRole('link', { name: 'Overview' })).toBeInTheDocument()
     await user.click(within(nav()).getByRole('link', { name: 'Documents' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Documents' })).toBeInTheDocument()
@@ -88,7 +131,7 @@ describe('routes', () => {
 describe('rail collapse', () => {
   it('collapses to an icon strip, persists, and restores on remount', async () => {
     const user = userEvent.setup()
-    const first = renderAt('/reviews')
+    const first = renderAt('/crr/reviews')
     expect(screen.getByText('My reviews')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     expect(screen.queryByText('My reviews')).toBeNull()
@@ -103,14 +146,14 @@ describe('rail collapse', () => {
     expect(localStorage.getItem('sentinel.rail.collapsed')).toBe('true')
 
     first.unmount()
-    renderAt('/reviews')
+    renderAt('/crr/reviews')
     expect(nav()).toHaveAttribute('data-collapsed', 'true')
     expect(screen.queryByText('My reviews')).toBeNull()
   })
 
   it('collapsed rail still shows section numbers inside a review', async () => {
     const user = userEvent.setup()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await within(nav()).findByRole('region', { name: 'Veyland US Holdco LLC' })
     await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     const zone = within(nav()).getByRole('region', { name: 'Veyland US Holdco LLC' })
@@ -122,7 +165,7 @@ describe('rail collapse', () => {
 describe('context rail collapse', () => {
   it('toggles from the sticky bar and persists', async () => {
     const user = userEvent.setup()
-    const first = renderAt(`/review/${VEYLAND}`)
+    const first = renderAt(`/crr/review/${VEYLAND}`)
     const toggle = () => screen.getByRole('button', { name: 'Toggle context rail' })
     expect(await screen.findByRole('button', { name: 'Toggle context rail' })).toHaveAttribute(
       'aria-pressed',
@@ -134,7 +177,7 @@ describe('context rail collapse', () => {
     expect(localStorage.getItem('sentinel.ctx.collapsed')).toBe('true')
 
     first.unmount()
-    renderAt(`/review/${VEYLAND}`)
+    renderAt(`/crr/review/${VEYLAND}`)
     await screen.findByRole('button', { name: 'Toggle context rail' })
     expect(screen.queryByRole('complementary', { name: 'Context' })).toBeNull()
   })
