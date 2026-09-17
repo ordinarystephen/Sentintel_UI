@@ -4,7 +4,7 @@
  * review query so re-fetches reflect the recorded disposition.
  */
 import { useReviewMutations } from '@/api/hooks'
-import type { ClearReason } from '@/api/types'
+import type { AmendSource, ClearReason } from '@/api/types'
 import { useToast } from '@/components/toastContext'
 
 export function useReviewActions(reviewId: string) {
@@ -30,7 +30,8 @@ export function useReviewActions(reviewId: string) {
       m.markReviewed.isPending ||
       m.unreview.isPending ||
       m.setAreaRating.isPending ||
-      m.editNote.isPending,
+      m.editNote.isPending ||
+      m.amendEvidence.isPending,
     respond: (itemId: string, text: string) => guard(m.respond.mutateAsync({ itemId, text })),
     verify: (itemId: string) => guard(m.verify.mutateAsync(itemId)),
     clear: (itemId: string, reason: ClearReason, note: string) =>
@@ -44,6 +45,8 @@ export function useReviewActions(reviewId: string) {
       guard(m.editNote.mutateAsync({ attentionId, note })),
     setAreaRating: (areaId: string, rating: 'satisfactory' | 'unsatisfactory') =>
       guard(m.setAreaRating.mutateAsync({ areaId, rating })),
+    amendEvidence: (source: AmendSource, why: string) =>
+      guard(m.amendEvidence.mutateAsync({ source, why })),
   }
 }
 

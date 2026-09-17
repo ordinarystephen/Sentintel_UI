@@ -8,7 +8,7 @@ _All company, person, and transaction data in this application is fictional; any
 
 ## Start here
 
-**The development team inherits the `v1.3.1` tag** — clone `main` at that tag (rail-drag selection hotfix over `v1.3.0`, the suite round: landing + entitlement routing with the CRR app under `/crr`, masthead app switcher, drag-resizable context rail).
+**The development team inherits the `v1.4.0` tag** — clone `main` at that tag (amend-evidence round over `v1.3.1`: Add document mid-review with the required rationale, the evidence manifest, RXM identity + search keys).
 
 **Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
 

@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Review } from '../types'
-import { createMockApi, EXPORT_FAILS_ID, ME, VEYLAND_ID, PROCESSING } from './mockApi'
+import {
+  AMEND_SETTLE_MS,
+  createMockApi,
+  EXPORT_FAILS_ID,
+  ME,
+  VEYLAND_ID,
+  PROCESSING,
+} from './mockApi'
+import { amendReRunning } from '@/screens/review/amendState'
 
 const T0 = Date.UTC(2026, 7, 29, 12, 0, 0)
 const make = (storage: Storage | null = null) => createMockApi({ latencyMs: 0, storage })
@@ -43,9 +51,14 @@ describe('identity and lists', () => {
     const chen = await api.listAllReviews({ ownerId: 'u-chen', period: 'all' })
     expect(chen.reviews.every((r) => r.ownerName === 'R. Chen')).toBe(true)
 
-    const byCl = await api.listAllReviews({ query: 'cl6430', period: 'all' })
-    expect(byCl.reviews.map((r) => r.id).sort()).toEqual(['rev-veyland-2026-02', VEYLAND_ID].sort())
-    expect(byCl.reviews[0].repeatIndex).toBe(2)
+    // RXM matches with or without the prefix (ratified search keys)
+    const byRxm = await api.listAllReviews({ query: 'rxm-6430', period: 'all' })
+    expect(byRxm.reviews.map((r) => r.id).sort()).toEqual(
+      ['rev-veyland-2026-02', VEYLAND_ID].sort(),
+    )
+    expect(byRxm.reviews[0].repeatIndex).toBe(2)
+    const bare = await api.listAllReviews({ query: '6430', period: 'all' })
+    expect(bare.reviews.map((r) => r.id).sort()).toEqual(byRxm.reviews.map((r) => r.id).sort())
 
     const bySector = await api.listAllReviews({ query: 'marine', period: 'all' })
     expect(bySector.reviews.length).toBeGreaterThanOrEqual(2)
@@ -106,7 +119,7 @@ describe('createReview / processing', () => {
     vi.setSystemTime(T0 + PROCESSING.detectBorrowerAt + 100)
     mine = await api.listMyReviews()
     expect(mine[0].borrowerName).toBe('Veyland US Holdco LLC')
-    expect(mine[0].clId).toBe('CL6430')
+    expect(mine[0].rxm).toBe('RXM-6430')
 
     vi.setSystemTime(T0 + PROCESSING.indexing + 100)
     expect(await api.getReviewStatus(id)).toMatchObject({
@@ -449,7 +462,7 @@ describe('document text and download', () => {
 describe('export', () => {
   it('downloads a placeholder .docx for a ready review', async () => {
     const res = await make().exportReview(VEYLAND_ID)
-    expect(res.fileName).toBe('CL6430_Veyland_US_Holdco_LLC_Review.docx')
+    expect(res.fileName).toBe('RXM-6430_Veyland_US_Holdco_LLC_Review.docx')
     expect(res.blob.type).toContain('wordprocessingml')
     expect(res.blob.size).toBeGreaterThan(0)
   })
@@ -458,11 +471,70 @@ describe('export', () => {
     const api = make()
     await expect(api.exportReview(EXPORT_FAILS_ID)).rejects.toMatchObject({
       message:
-        'Export failed: the render service returned no document for CL7712 (render-service: 502 Bad Gateway).',
+        'Export failed: the render service returned no document for RXM-7712 (render-service: 502 Bad Gateway).',
     })
     const { id } = await api.createReview([file('Doc.pdf')], '')
     await expect(api.exportReview(id)).rejects.toMatchObject({
       message: expect.stringContaining('still processing'),
     })
+  })
+})
+
+describe('amend evidence (v1.4)', () => {
+  it('searchRepository scopes to the borrower, honors the ratified keys, excludes in-review docs', async () => {
+    const api = make()
+    const all = await api.searchRepository(VEYLAND_ID, '')
+    expect(all.map((r) => r.repoId)).toEqual(['repo-veyland-cov', 'repo-veyland-ra2'])
+    // name or RXM, with or without the prefix — case-insensitive
+    expect((await api.searchRepository(VEYLAND_ID, 'veyland')).length).toBe(2)
+    expect((await api.searchRepository(VEYLAND_ID, '6430')).length).toBe(2)
+    expect((await api.searchRepository(VEYLAND_ID, 'RXM-6430')).length).toBe(2)
+    expect((await api.searchRepository(VEYLAND_ID, 'northgale')).length).toBe(0)
+  })
+
+  it('amendEvidence requires a rationale, records origin/addedAt/why, re-runs then settles', async () => {
+    const api = make()
+    await expect(
+      api.amendEvidence(VEYLAND_ID, { kind: 'repo', repoId: 'repo-veyland-cov' }, '   '),
+    ).rejects.toThrow(/rationale/i)
+
+    const r = await api.amendEvidence(
+      VEYLAND_ID,
+      { kind: 'repo', repoId: 'repo-veyland-cov' },
+      'Credit officer provided the June compliance certificate after the review opened',
+    )
+    expect(r.documents).toHaveLength(3)
+    const added = r.documents.find((d) => d.origin === 'amended')!
+    expect(added.fileName).toBe('Veyland_Holdco_Covenant_Cert_2026-06.pdf')
+    expect(added.docId).toBe('doc-veyland-cov')
+    expect(added.why).toMatch(/June compliance certificate/)
+    expect(r.evidenceAmendedAt).toBeTruthy()
+    // impacted checks re-run, then settle at the known instant
+    expect(amendReRunning(r, T0)).toBe(true)
+    expect(amendReRunning(r, T0 + AMEND_SETTLE_MS + 1)).toBe(false)
+    // the repository no longer offers what the review already holds
+    expect((await api.searchRepository(VEYLAND_ID, '')).map((x) => x.repoId)).toEqual([
+      'repo-veyland-ra2',
+    ])
+    // an upload path lands too, without a docId (not yet parsed)
+    const r2 = await api.amendEvidence(
+      VEYLAND_ID,
+      { kind: 'upload', fileName: 'Veyland_Site_Visit_Notes.pdf', sizeBytes: 500_000 },
+      'Site visit notes from the September meeting',
+    )
+    const up = r2.documents.find((d) => d.fileName === 'Veyland_Site_Visit_Notes.pdf')!
+    expect(up.origin).toBe('amended')
+    expect(up.docId).toBeUndefined()
+  })
+
+  it('searchDocuments: borrower name and RXM are first-class keys; full text stays secondary', async () => {
+    const api = make()
+    const byRxm = await api.searchDocuments('6430', {})
+    expect(byRxm.hits.length).toBeGreaterThan(0)
+    expect(byRxm.hits.every((h) => h.counterparty === 'Veyland US Holdco')).toBe(true)
+    const byName = await api.searchDocuments('ambervale', {})
+    expect(byName.hits.some((h) => h.counterparty === 'Ambervale Foods Group')).toBe(true)
+    const fullText = await api.searchDocuments('revolver availability', {})
+    expect(fullText.hits.length).toBeGreaterThan(0)
   })
 })

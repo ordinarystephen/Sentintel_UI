@@ -72,7 +72,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
 
   const download = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Export Review' }).click()
-  expect((await download).suggestedFilename()).toBe('CL6430_Veyland_US_Holdco_LLC_Review.docx')
+  expect((await download).suggestedFilename()).toBe('RXM-6430_Veyland_US_Holdco_LLC_Review.docx')
   await expect(page.getByRole('status').filter({ hasText: 'Exported' })).toBeVisible()
 })
 
@@ -80,7 +80,7 @@ test('export failure is loud and in-app', async ({ page }) => {
   await page.goto('/crr/review/rev-seldwyn-2026-08')
   await page.getByRole('button', { name: 'Export Review' }).click()
   await expect(page.getByRole('alert').first()).toContainText(
-    'Export failed: the render service returned no document for CL7712',
+    'Export failed: the render service returned no document for RXM-7712',
   )
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Seldwyn Marine Finance')
   await page.screenshot({ path: 'e2e/screenshots/phase-3/export-error-stone-light-1440.png' })

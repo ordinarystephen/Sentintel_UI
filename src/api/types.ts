@@ -31,8 +31,8 @@ export interface ReviewSummary {
   id: string
   /** null until the borrower is detected during processing ("New review — reading…"). */
   borrowerName: string | null
-  /** null until detected. */
-  clId: string | null
+  /** Borrower/counterparty identifier (RXM scheme, e.g. "RXM-6430"); null until detected. */
+  rxm: string | null
   lob: Lob
   ownerId: string
   ownerName: string
@@ -74,7 +74,31 @@ export interface ReviewDocument {
   date: string
   pages?: number
   sizeBytes?: number
+  /** Set when the document's extracted text is on system (enables Preview). */
+  docId?: string
+  /** Evidence provenance: absent/'opening' = opening set; 'amended' = added mid-review. */
+  origin?: 'opening' | 'amended'
+  /** amend-evidence audit fields (origin 'amended' only) */
+  addedAt?: string
+  why?: string
 }
+
+/** A document on system (parsed into the index store) for some borrower. */
+export interface RepositoryDoc {
+  repoId: string
+  /** Borrower/counterparty this document belongs to, RXM scheme. */
+  rxm: string
+  fileName: string
+  docType: string
+  uploadedAt: string
+  pages: number
+  parsed: boolean
+  /** Extracted-text id (Preview) — present when parsed. */
+  docId?: string
+}
+
+export type AmendSource =
+  { kind: 'repo'; repoId: string } | { kind: 'upload'; fileName: string; sizeBytes: number }
 
 export interface StoryChange {
   date: string
@@ -241,12 +265,16 @@ export interface Disposition {
 export interface Review extends ReviewSummary {
   status: 'ready'
   borrowerName: string
-  clId: string
+  rxm: string
   sector: string
   ownership: string
   ratings: Rating[]
   dealTypeChips: string[]
   runCompletedAt: string
+  /** Set when evidence was amended mid-review (the manifest's status line). */
+  evidenceAmendedAt?: string
+  /** While now < this, impacted checks are re-running; settled afterwards. */
+  amendSettlesAt?: string
   documents: ReviewDocument[]
   story: Story
   /** Always six, in order. */
@@ -333,6 +361,8 @@ export interface DocumentHit {
   fileName: string
   lob: Lob
   counterparty: string
+  /** RXM of the counterparty, when it maps to a known borrower. */
+  rxm?: string
   docType: string
   date: string
   extracted: boolean

@@ -26,7 +26,7 @@ export function StyleguideScreen() {
           <span className="font-display text-borrower font-semibold tracking-display">
             Veyland US Holdco LLC
           </span>
-          <span className="micro text-faint">CL6430</span>
+          <span className="micro text-faint">RXM-6430</span>
         </div>
         <h2 className="font-display text-section-title font-semibold">2 · Financial analysis</h2>
         <blockquote className="border-l-2 border-rule-strong pl-3 font-display text-ui italic text-ink-soft">
@@ -90,7 +90,7 @@ export function StyleguideScreen() {
           </span>
         </div>
         <div className="rounded-md border border-error/30 bg-error-bg px-3 py-2 text-ui-sm text-error shadow-md">
-          Export failed: the render service returned no document for CL6430.
+          Export failed: the render service returned no document for RXM-6430.
         </div>
       </section>
 

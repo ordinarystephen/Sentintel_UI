@@ -8,6 +8,8 @@
  */
 import { createMockApi } from './mock/mockApi'
 import type {
+  AmendSource,
+  RepositoryDoc,
   ApiErrorShape,
   ClearReason,
   DebatePosition,
@@ -19,6 +21,7 @@ import type {
   Policy,
   PriorComparison,
   ProcessingReview,
+  Review,
   ReviewFilters,
   ReviewList,
   ReviewRecord,
@@ -153,6 +156,26 @@ export interface SentinelApi {
    * passage fed a review, `usedInReviewId`.
    */
   searchDocuments(query: string, filters: DocumentFilters): Promise<DocumentSearchResult>
+
+  /**
+   * Amend-evidence support (v1.4): documents on system for THIS review's
+   * borrower (matched by RXM) that are not yet part of the review's
+   * evidence set. `query` matches borrower/counterparty name or RXM
+   * (case-insensitive substring; RXM with or without the prefix); empty
+   * query returns the full scoped list.
+   */
+  searchRepository(reviewId: string, query: string): Promise<RepositoryDoc[]>
+
+  /**
+   * Add a document to a review's evidence set mid-review ("Add document").
+   * `source` is either a repository document (by repoId) or a fresh upload;
+   * `why` is REQUIRED — it is recorded in the review's evidence log and
+   * shown on the manifest row. The mock marks the review amended
+   * (`evidenceAmendedAt`) with impacted checks re-running until
+   * `amendSettlesAt`; the real backend re-runs impacted checks and streams
+   * the same states. Returns the updated review.
+   */
+  amendEvidence(reviewId: string, source: AmendSource, why: string): Promise<Review>
 
   /**
    * The extracted text of one document, organized by the DOCUMENT's own

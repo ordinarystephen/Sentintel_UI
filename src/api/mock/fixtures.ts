@@ -19,6 +19,7 @@
  */
 import type {
   AssessmentArea,
+  RepositoryDoc,
   AttentionItem,
   DocumentText,
   DebatePosition,
@@ -430,7 +431,7 @@ const VEYLAND_DISPOSITIONS: Disposition[] = [
 export const VEYLAND: Review = {
   id: VEYLAND_ID,
   borrowerName: 'Veyland US Holdco LLC',
-  clId: 'CL6430',
+  rxm: 'RXM-6430',
   lob: 'IB Lending',
   ownerId: ME.id,
   ownerName: ME.name,
@@ -455,6 +456,7 @@ export const VEYLAND: Review = {
       date: '2026-03-31',
       pages: 21,
       sizeBytes: 2_516_582,
+      docId: 'doc-veyland-annual',
     },
     {
       fileName: VEYLAND_DOC_Q3,
@@ -462,6 +464,7 @@ export const VEYLAND: Review = {
       date: '2026-07-15',
       pages: 12,
       sizeBytes: 1_153_433,
+      docId: 'doc-veyland-q3',
     },
   ],
   story: {
@@ -601,7 +604,7 @@ export const RERUN_OUTCOMES: Record<string, { content: WorkItem['content']; conf
 interface SummarySeed {
   id: string
   borrowerName: string
-  clId: string
+  rxm: string
   lob: Lob
   ownerId: string
   createdAt: string
@@ -720,7 +723,7 @@ function completeReview(seed: SummarySeed): Review {
   return {
     id: seed.id,
     borrowerName: seed.borrowerName,
-    clId: seed.clId,
+    rxm: seed.rxm,
     lob: seed.lob,
     ownerId: o.id,
     ownerName: o.name,
@@ -756,7 +759,7 @@ const NAMED: SummarySeed[] = [
   {
     id: 'rev-farrowdale-2026-08',
     borrowerName: 'Farrowdale Logistics',
-    clId: 'CL8093',
+    rxm: 'RXM-8093',
     lob: 'IB Lending',
     ownerId: 'u-chen',
     createdAt: '2026-08-26T14:10:00Z',
@@ -767,7 +770,7 @@ const NAMED: SummarySeed[] = [
   {
     id: 'rev-verloway-2026-08',
     borrowerName: 'Verloway AgriChem',
-    clId: 'CL2210',
+    rxm: 'RXM-2210',
     lob: 'Wealth Management',
     ownerId: 'u-alvarez',
     createdAt: '2026-08-24T11:00:00Z',
@@ -776,7 +779,7 @@ const NAMED: SummarySeed[] = [
   {
     id: 'rev-ambervale-2026-08',
     borrowerName: 'Ambervale Foods Group',
-    clId: 'CL5120',
+    rxm: 'RXM-5120',
     lob: 'IB Lending',
     ownerId: ME.id,
     createdAt: '2026-08-21T15:20:00Z',
@@ -785,7 +788,7 @@ const NAMED: SummarySeed[] = [
   {
     id: EXPORT_FAILS_ID,
     borrowerName: 'Seldwyn Marine Finance',
-    clId: 'CL7712',
+    rxm: 'RXM-7712',
     lob: 'IB Lending',
     ownerId: ME.id,
     createdAt: '2026-08-12T10:45:00Z',
@@ -796,7 +799,7 @@ const NAMED: SummarySeed[] = [
   {
     id: 'rev-northgale-2026-07',
     borrowerName: 'Northgale Health Partners',
-    clId: 'CL4488',
+    rxm: 'RXM-4488',
     lob: 'IB Lending',
     ownerId: ME.id,
     createdAt: '2026-07-30T09:05:00Z',
@@ -805,7 +808,7 @@ const NAMED: SummarySeed[] = [
   {
     id: VEYLAND_PRIOR_ID,
     borrowerName: 'Veyland US Holdco LLC',
-    clId: 'CL6430',
+    rxm: 'RXM-6430',
     lob: 'IB Lending',
     ownerId: 'u-alvarez',
     createdAt: '2026-02-14T13:30:00Z',
@@ -861,7 +864,7 @@ function generated(): SummarySeed[] {
     return {
       id: `rev-gen-${i}`,
       borrowerName: name,
-      clId: `CL${((3100 + i * 137) % 9000) + 1000}`,
+      rxm: `RXM-${((3100 + i * 137) % 9000) + 1000}`,
       lob,
       ownerId,
       createdAt: at,
@@ -882,7 +885,7 @@ export function summaryOf(r: Review): ReviewSummary {
   const {
     id,
     borrowerName,
-    clId,
+    rxm,
     lob,
     ownerId,
     ownerName,
@@ -897,7 +900,7 @@ export function summaryOf(r: Review): ReviewSummary {
   return {
     id,
     borrowerName,
-    clId,
+    rxm,
     lob,
     ownerId,
     ownerName,
@@ -912,6 +915,36 @@ export function summaryOf(r: Review): ReviewSummary {
 }
 
 // ---------------------------------------------------------------------------
+// Repository (amend-evidence round): documents on system for a borrower that
+// are NOT part of any review's opening set — what "From the repository"
+// searches. Both Veyland entries also have extracted text in DOCUMENTS below
+// (so Preview works after they join a review).
+// ---------------------------------------------------------------------------
+
+export const REPOSITORY: RepositoryDoc[] = [
+  {
+    repoId: 'repo-veyland-cov',
+    rxm: 'RXM-6430',
+    fileName: 'Veyland_Holdco_Covenant_Cert_2026-06.pdf',
+    docType: 'compliance certificate',
+    uploadedAt: '2026-06-30',
+    pages: 4,
+    parsed: true,
+    docId: 'doc-veyland-cov',
+  },
+  {
+    repoId: 'repo-veyland-ra2',
+    rxm: 'RXM-6430',
+    fileName: 'Veyland_Holdco_Revolver_Amend_No2.pdf',
+    docType: 'credit agreement',
+    uploadedAt: '2026-05-12',
+    pages: 38,
+    parsed: true,
+    docId: 'doc-veyland-ra2',
+  },
+]
+
+// ---------------------------------------------------------------------------
 // Documents
 // ---------------------------------------------------------------------------
 
@@ -923,6 +956,8 @@ export function summaryOf(r: Review): ReviewSummary {
 export interface DocumentRecord extends DocumentText {
   lob: Lob
   counterparty: string
+  /** RXM of the counterparty, when it maps to a known borrower. */
+  rxm?: string
   docType: string
   date: string
 }
@@ -933,6 +968,7 @@ export const DOCUMENTS: DocumentRecord[] = [
     fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
     counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
     docType: 'annual review',
     date: '2026-03-31',
     pages: 21,
@@ -994,6 +1030,7 @@ export const DOCUMENTS: DocumentRecord[] = [
     fileName: VEYLAND_DOC_Q3,
     lob: 'IB Lending',
     counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
     docType: 'quarterly update',
     date: '2026-07-15',
     pages: 15,
@@ -1037,6 +1074,7 @@ export const DOCUMENTS: DocumentRecord[] = [
     fileName: 'Seldwyn_Marine_Facility_Agreement.pdf',
     lob: 'IB Lending',
     counterparty: 'Seldwyn Marine Finance',
+    rxm: 'RXM-7712',
     docType: 'facility agreement',
     date: '2026-05-02',
     pages: 68,
@@ -1074,6 +1112,7 @@ export const DOCUMENTS: DocumentRecord[] = [
     fileName: 'Ambervale_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
     counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
     docType: 'annual review',
     date: '2026-08-20',
     pages: 18,
@@ -1105,6 +1144,7 @@ export const DOCUMENTS: DocumentRecord[] = [
     fileName: 'Verloway_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
     counterparty: 'Verloway AgriChem',
+    rxm: 'RXM-2210',
     docType: 'credit submission',
     date: '2026-08-22',
     pages: 11,
@@ -1151,10 +1191,51 @@ export const DOCUMENTS: DocumentRecord[] = [
     ],
   },
   {
+    docId: 'doc-veyland-cov',
+    fileName: 'Veyland_Holdco_Covenant_Cert_2026-06.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
+    docType: 'compliance certificate',
+    date: '2026-06-30',
+    pages: 4,
+    parsedAt: '2026-06-30T16:20:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Covenant Compliance Certificate',
+        pageStart: 1,
+        pageEnd: 4,
+        text: 'For the fiscal quarter ended 2026-06-30 the borrower certifies compliance with each covenant under the credit agreement. Springing first-lien net leverage covenant: not tested (revolver utilization below the 35% threshold). Gross leverage reported at 5.9x.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-veyland-ra2',
+    fileName: 'Veyland_Holdco_Revolver_Amend_No2.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
+    docType: 'credit agreement',
+    date: '2026-05-12',
+    pages: 38,
+    parsedAt: '2026-05-12T11:05:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Amendment No. 2 to the Revolving Facility',
+        pageStart: 1,
+        pageEnd: 38,
+        text: 'Extends the revolving facility maturity and resets the letter-of-credit sublimit. All other terms of the credit agreement remain in full force and effect.',
+      },
+    ],
+  },
+  {
     docId: 'doc-farrowdale-q2',
     fileName: 'Farrowdale_Logistics_Q2_Update.pdf',
     lob: 'IB Lending',
     counterparty: 'Farrowdale Logistics',
+    rxm: 'RXM-8093',
     docType: 'quarterly update',
     date: '2026-08-01',
     pages: 9,
@@ -1174,6 +1255,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: VEYLAND_DOC_Q3,
     lob: 'IB Lending',
     counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
     docType: 'quarterly update',
     date: '2026-07-15',
     extracted: true,
@@ -1192,6 +1274,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
     counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
     docType: 'annual review',
     date: '2026-03-31',
     extracted: true,
@@ -1206,6 +1289,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: 'Seldwyn_Marine_Facility_Agreement.pdf',
     lob: 'IB Lending',
     counterparty: 'Seldwyn Marine Finance',
+    rxm: 'RXM-7712',
     docType: 'facility agreement',
     date: '2026-05-02',
     extracted: true,
@@ -1220,6 +1304,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: VEYLAND_DOC_ANNUAL,
     lob: 'IB Lending',
     counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
     docType: 'annual review',
     date: '2026-03-31',
     extracted: true,
@@ -1237,6 +1322,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: 'Ambervale_Foods_Annual_Review_FY25.pdf',
     lob: 'IB Lending',
     counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
     docType: 'annual review',
     date: '2026-08-20',
     extracted: true,
@@ -1254,6 +1340,7 @@ export const PASSAGES: DocumentPassage[] = [
     fileName: 'Verloway_AgriChem_Credit_Memo.pdf',
     lob: 'Wealth Management',
     counterparty: 'Verloway AgriChem',
+    rxm: 'RXM-2210',
     docType: 'credit submission',
     date: '2026-08-22',
     extracted: true,
@@ -1276,11 +1363,42 @@ export const PASSAGES: DocumentPassage[] = [
     page: 22,
   },
   {
+    id: 'doc-veyland-cov-passage',
+    docId: 'doc-veyland-cov',
+    fileName: 'Veyland_Holdco_Covenant_Cert_2026-06.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
+    docType: 'compliance certificate',
+    date: '2026-06-30',
+    extracted: true,
+    snippet:
+      'For the fiscal quarter ended 2026-06-30 the borrower certifies compliance with each covenant under the credit agreement.',
+    sectionName: 'Covenant Compliance Certificate',
+    page: 1,
+  },
+  {
+    id: 'doc-veyland-ra2-passage',
+    docId: 'doc-veyland-ra2',
+    fileName: 'Veyland_Holdco_Revolver_Amend_No2.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Veyland US Holdco',
+    rxm: 'RXM-6430',
+    docType: 'credit agreement',
+    date: '2026-05-12',
+    extracted: true,
+    snippet:
+      'Extends the revolving facility maturity and resets the letter-of-credit sublimit; all other terms remain in full force and effect.',
+    sectionName: 'Amendment No. 2 to the Revolving Facility',
+    page: 1,
+  },
+  {
     id: 'doc-farrowdale-q2-passage',
     docId: 'doc-farrowdale-q2',
     fileName: 'Farrowdale_Logistics_Q2_Update.pdf',
     lob: 'IB Lending',
     counterparty: 'Farrowdale Logistics',
+    rxm: 'RXM-8093',
     docType: 'quarterly update',
     date: '2026-08-01',
     extracted: false,

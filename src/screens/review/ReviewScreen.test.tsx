@@ -12,12 +12,14 @@ describe('review page — read path', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('CL6430')).toBeInTheDocument()
+    expect(screen.getByText('RXM-6430')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Export Review' })).toBeInTheDocument()
     expect(screen.getByText(/Software \(application hosting\) · sponsor-owned/)).toBeInTheDocument()
     expect(screen.getByText("Moody's B1")).toBeInTheDocument()
     expect(screen.getByText('term loan B')).toBeInTheDocument()
-    expect(screen.getByText(/Run completed \d\d:\d\d · 2 documents/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Documents in this review/ })).toHaveTextContent(
+      /2 · run completed \d\d:\d\d/,
+    )
     expect(
       screen.getByText(/Veyland is a sponsor-owned application-hosting platform/),
     ).toBeInTheDocument()
@@ -118,7 +120,7 @@ describe('review page — read path', () => {
     await screen.findByRole('heading', { level: 1 })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Exported CL6430_Veyland_US_Holdco_LLC_Review.docx',
+      'Exported RXM-6430_Veyland_US_Holdco_LLC_Review.docx',
     )
     first.unmount()
 
@@ -129,7 +131,7 @@ describe('review page — read path', () => {
     expect(
       alerts.some((a) =>
         a.textContent?.includes(
-          'Export failed: the render service returned no document for CL7712',
+          'Export failed: the render service returned no document for RXM-7712',
         ),
       ),
     ).toBe(true)

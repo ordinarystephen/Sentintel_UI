@@ -49,6 +49,7 @@ import type {
 import {
   buildReviews,
   DOCUMENTS,
+  REPOSITORY,
   CONFIDENCE_FLOOR,
   DEBATES,
   EXPORT_FAILS_ID,
@@ -76,6 +77,9 @@ export const MESSAGES = {
   noItem: 'No work item with id {id}.',
   noAttention: 'No attention item with id {id}.',
   readOnly: 'This review belongs to {owner} — you can read it, but editing stays with its owner.',
+  whyRequired: "A rationale is required — it is recorded in the review's evidence log.",
+  noRepoDoc: 'No repository document {id} for this borrower.',
+  alreadyInReview: '{file} is already part of this review.',
   respondEmpty: 'Say what to re-check, correct, or add before sending.',
   rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
   notCleared: 'This item is not cleared.',
@@ -83,7 +87,7 @@ export const MESSAGES = {
   notProcessing: 'Review {id} is not processing.',
   stillProcessing: 'This review is still processing — export once it is ready.',
   exportFailed:
-    'Export failed: the render service returned no document for {clId} (render-service: 502 Bad Gateway).',
+    'Export failed: the render service returned no document for {rxm} (render-service: 502 Bad Gateway).',
   parseFailed: 'Could not parse {file}: the file is encrypted or damaged (parser: pdfplumber).',
   statusReading: 'Reading {file}…',
   statusReadingFallback: 'Reading the documents…',
@@ -107,9 +111,14 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * structural to every review (all fixtures seeded with rated zones); 4 =
  * canonical workpaper section titles (fixture data changed under stored
  * reviews — same scenario-A shadowing logic); 5 = fictional-name hygiene
- * (v1.1.2 — every borrower name, review/doc id, and filename changed).
+ * (v1.1.2 — every borrower name, review/doc id, and filename changed);
+ * 6 = amend evidence (v1.4 — documents carry origin/addedAt/why/docId,
+ * reviews carry evidenceAmendedAt/amendSettlesAt, CL ids became RXM).
  */
-export const STATE_VERSION = 5
+export const STATE_VERSION = 6
+
+/** How long "impacted checks re-running" lasts after an evidence amend. */
+export const AMEND_SETTLE_MS = 6_000
 
 /** Processing timeline (ms since upload). */
 export const PROCESSING = {
@@ -279,7 +288,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     const base: Omit<ProcessingReview, 'status' | 'phase' | 'statusLine'> = {
       id: seed.id,
       borrowerName: detected ? VEYLAND.borrowerName : null,
-      clId: detected ? VEYLAND.clId : null,
+      rxm: detected ? VEYLAND.rxm : null,
       lob: 'IB Lending',
       ownerId: ME.id,
       ownerName: ME.name,
@@ -497,7 +506,9 @@ export function createMockApi(options: MockOptions = {}): MockApi {
           return false
         if ((filters.period ?? '12m') === '12m' && Date.parse(s.createdAt) < since) return false
         if (q) {
-          const hay = [s.borrowerName, s.clId, s.sector].filter(Boolean).join(' ').toLowerCase()
+          // Search keys (ratified 2026-09-17): borrower/counterparty name or
+          // RXM — case-insensitive substring; a bare "6430" matches RXM-6430.
+          const hay = [s.borrowerName, s.rxm].filter(Boolean).join(' ').toLowerCase()
           if (!hay.includes(q)) return false
         }
         return true
@@ -693,6 +704,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
           exclude.push(m[2]!.slice(1).toLowerCase())
         else include.push(m[2]!.toLowerCase())
       }
+      const qKey = query.trim().toLowerCase()
       const stemOf = (t: string) => t.slice(0, Math.max(5, t.length - 2))
       const stems = include.map(stemOf)
       const exStems = exclude.map(stemOf)
@@ -740,7 +752,13 @@ export function createMockApi(options: MockOptions = {}): MockApi {
             (w) => stems.some((st) => w.startsWith(st)),
             () => score++,
           )
-        if (hasQuery && score === 0) continue
+        // First-class keys (ratified): borrower/counterparty name or RXM
+        // match the passage regardless of its text; full-text stays as the
+        // secondary capability.
+        const keyHay = `${p.counterparty} ${p.rxm ?? ''}`.toLowerCase()
+        const keyMatch = qKey.length > 0 && keyHay.includes(qKey)
+        if (hasQuery && score === 0 && !keyMatch) continue
+        if (keyMatch) score += 100
         hits.push({ ...p, snippetHtml: html, score })
       }
       // Relevance: matched terms, then passages that fed a review, then recency.
@@ -788,20 +806,74 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       return delay(result)
     },
 
+    // ---- amend evidence (v1.4) ------------------------------------------
+
+    searchRepository: (reviewId, query) => {
+      const review = stored(reviewId)
+      if (!review) return fail(fmt(MESSAGES.noReview, { id: reviewId }))
+      const q = query.trim().toLowerCase()
+      const inReview = new Set(review.documents.map((d) => d.fileName))
+      const scoped = REPOSITORY.filter((r) => r.rxm === review.rxm && !inReview.has(r.fileName))
+      // The modal searches by the ratified keys: borrower/counterparty name
+      // or RXM (with or without the prefix). Empty query = the scoped list.
+      const keyHay = `${review.borrowerName} ${review.rxm}`.toLowerCase()
+      const out = q.length === 0 || keyHay.includes(q) ? scoped : []
+      return delay(clone(out))
+    },
+
+    amendEvidence: (reviewId, source, why) => {
+      const review = mutable(reviewId)
+      assertOwner(review)
+      if (!why.trim()) return fail(MESSAGES.whyRequired)
+      const addedAt = new Date(now()).toISOString()
+      let doc: ReviewDocument
+      if (source.kind === 'repo') {
+        const repo = REPOSITORY.find((r) => r.repoId === source.repoId && r.rxm === review.rxm)
+        if (!repo) return fail(fmt(MESSAGES.noRepoDoc, { id: source.repoId }))
+        if (review.documents.some((d) => d.fileName === repo.fileName))
+          return fail(fmt(MESSAGES.alreadyInReview, { file: repo.fileName }))
+        doc = {
+          fileName: repo.fileName,
+          kind: repo.docType,
+          date: repo.uploadedAt,
+          pages: repo.pages,
+          docId: repo.docId,
+          origin: 'amended',
+          addedAt,
+          why: why.trim(),
+        }
+      } else {
+        doc = {
+          fileName: source.fileName,
+          kind: 'uploaded document',
+          date: addedAt.slice(0, 10),
+          sizeBytes: source.sizeBytes,
+          origin: 'amended',
+          addedAt,
+          why: why.trim(),
+        }
+      }
+      review.documents.push(doc)
+      review.evidenceAmendedAt = addedAt
+      review.amendSettlesAt = new Date(now() + AMEND_SETTLE_MS).toISOString()
+      save()
+      return delay(clone(review))
+    },
+
     exportReview: (id) => {
       const rec = record(id)
       if (!rec) return fail(fmt(MESSAGES.noReview, { id }))
       if (rec.status !== 'ready') return fail(MESSAGES.stillProcessing)
       if (id === EXPORT_FAILS_ID) {
-        return fail(fmt(MESSAGES.exportFailed, { clId: rec.clId }))
+        return fail(fmt(MESSAGES.exportFailed, { rxm: rec.rxm }))
       }
       // Placeholder bytes, not a real OOXML package: enough to exercise the download path.
-      const body = `Sentinel placeholder export — ${rec.borrowerName} · ${rec.clId}\n`
+      const body = `Sentinel placeholder export — ${rec.borrowerName} · ${rec.rxm}\n`
       const blob = new Blob([body], {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       })
       const result: ExportResult = {
-        fileName: `${rec.clId}_${rec.borrowerName.replace(/[^A-Za-z0-9]+/g, '_')}_Review.docx`,
+        fileName: `${rec.rxm}_${rec.borrowerName.replace(/[^A-Za-z0-9]+/g, '_')}_Review.docx`,
         blob,
       }
       return delay(result)

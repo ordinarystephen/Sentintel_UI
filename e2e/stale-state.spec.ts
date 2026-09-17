@@ -11,13 +11,13 @@ import { expect, test } from '@playwright/test'
 
 const VEYLAND = '/crr/review/rev-veyland-2026-08'
 // Keep in sync with STATE_VERSION in src/api/mock/mockApi.ts.
-const CURRENT_VERSION = 5
+const CURRENT_VERSION = 6
 
 /** A minimal pre-v1.0-shaped Veyland override: no `areas`, no `referenceData`. */
 const LEGACY_REVIEW = {
   id: 'rev-veyland-2026-08',
   borrowerName: 'Veyland US Holdco LLC (stale copy)',
-  clId: 'CL6430',
+  rxm: 'RXM-6430',
   lob: 'IB Lending',
   ownerId: 'u-me',
   ownerName: 'Stark, Tony',

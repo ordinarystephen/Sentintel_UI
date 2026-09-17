@@ -11,10 +11,13 @@ import { useRegisterCurrentReview, useShell, type CurrentReview } from '@/app/Sh
 import { ReviewScreenContext } from './reviewContext'
 import { useReviewActions } from './useReviewActions'
 import { Badge } from '@/components/Badge'
-import { formatTime, shortOutlook } from '@/lib/format'
+import { shortOutlook } from '@/lib/format'
 import { useHashTarget } from '@/lib/useHashTarget'
 import { strings } from '@/strings'
+import { AddDocumentModal } from './AddDocumentModal'
 import { AssessmentAreas } from './AssessmentAreas'
+import { Button } from '@/components/Button'
+import { EvidenceManifest } from './EvidenceManifest'
 import { AttentionBlock } from './AttentionBlock'
 import { ExportButton } from './ExportButton'
 import { ReferenceDataBlock } from './ReferenceDataBlock'
@@ -23,7 +26,7 @@ import { StoryCard } from './StoryCard'
 import { isFlagged } from './itemState'
 import { useExport } from './useExport'
 import { Workpaper } from './Workpaper'
-import { fmt, plural } from '@/lib/fmt'
+import { fmt } from '@/lib/fmt'
 
 function hashSection(hash: string): number | null {
   const m = /^#sec-(\d)$/.exec(hash)
@@ -35,6 +38,7 @@ export function ReviewView({ review }: { review: Review }) {
   const { hash } = useLocation()
   const { ctxCollapsed, setCtxCollapsed, selectedItemId, setSelectedItemId } = useShell()
   const [source, setSource] = useState<Evidence | null>(null)
+  const [addDoc, setAddDoc] = useState(false)
   const exp = useExport(review.id)
   const actions = useReviewActions(review.id)
   const screenCtx = useMemo(
@@ -98,8 +102,13 @@ export function ReviewView({ review }: { review: Review }) {
           <h1 className="font-display text-borrower font-semibold tracking-display">
             {review.borrowerName}
           </h1>
-          <span className="font-mono text-micro text-faint">{review.clId}</span>
+          <span className="font-mono text-micro text-faint">{review.rxm}</span>
           <div className="ml-auto flex items-center gap-2">
+            {!review.readOnly && (
+              <Button variant="outline" small onClick={() => setAddDoc(true)}>
+                {s.addDocument}
+              </Button>
+            )}
             <ExportButton onClick={exp.run} pending={exp.pending} />
             <button
               type="button"
@@ -146,13 +155,9 @@ export function ReviewView({ review }: { review: Review }) {
               {c}
             </Badge>
           ))}
-          <span className="text-faint">
-            {fmt(s.runCompleted, {
-              time: formatTime(review.runCompletedAt),
-              documents: plural(review.documents.length, s.documentsOne, s.documentsOther),
-            })}
-          </span>
         </div>
+
+        <EvidenceManifest review={review} />
 
         <ReferenceDataBlock review={review} />
         <StoryCard review={review} />
@@ -163,6 +168,9 @@ export function ReviewView({ review }: { review: Review }) {
         <p className="mt-[30px] border-t border-rule pt-3 text-micro text-faint">{s.disclaimer}</p>
 
         {source && <SourceModal evidence={source} onClose={() => setSource(null)} />}
+        {addDoc && (
+          <AddDocumentModal review={review} actions={actions} onClose={() => setAddDoc(false)} />
+        )}
       </div>
     </ReviewScreenContext.Provider>
   )

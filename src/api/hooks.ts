@@ -5,7 +5,13 @@
  */
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './index'
-import type { ClearReason, DocumentFilters, ExtractionSettings, ReviewFilters } from './types'
+import type {
+  AmendSource,
+  ClearReason,
+  DocumentFilters,
+  ExtractionSettings,
+  ReviewFilters,
+} from './types'
 
 export const queryKeys = {
   me: ['me'] as const,
@@ -129,6 +135,11 @@ export function useReviewMutations(reviewId: string) {
     }),
     editNote: useMutation({
       mutationFn: (v: { attentionId: string; note: string }) => api.editNote(v.attentionId, v.note),
+      ...opts,
+    }),
+    amendEvidence: useMutation({
+      mutationFn: (v: { source: AmendSource; why: string }) =>
+        api.amendEvidence(reviewId, v.source, v.why),
       ...opts,
     }),
     cancel: useMutation({ mutationFn: () => api.cancelReview(reviewId), ...opts }),

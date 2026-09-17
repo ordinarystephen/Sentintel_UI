@@ -61,7 +61,7 @@ test('empty states are hand-written', async ({ page }) => {
   ).toBeVisible()
   await page.goto('/crr/reviews/all?q=zebra')
   await expect(
-    page.getByText('No reviews match. Try a borrower name, a CL number, or a sector.'),
+    page.getByText('No reviews match. Try a borrower / counterparty name or RXM.'),
   ).toBeVisible()
   await page.goto('/crr/documents?q=zebra')
   await expect(

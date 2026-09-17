@@ -56,7 +56,7 @@ describe('reviews — All', () => {
     expect(links.every((l) => l.textContent?.includes('WM'))).toBe(true)
 
     await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
-    await user.type(screen.getByLabelText('Search reviews'), 'cl6430')
+    await user.type(screen.getByLabelText('Search reviews'), '6430')
     await waitFor(() =>
       expect(screen.getByText('2 reviews · showing most recent')).toBeInTheDocument(),
     )
@@ -102,7 +102,7 @@ describe('reviews — All', () => {
   it('no matches shows a hand-written empty state', async () => {
     renderAt('/crr/reviews/all?q=zebra')
     expect(
-      await screen.findByText('No reviews match. Try a borrower name, a CL number, or a sector.'),
+      await screen.findByText('No reviews match. Try a borrower / counterparty name or RXM.'),
     ).toBeInTheDocument()
   })
 })
