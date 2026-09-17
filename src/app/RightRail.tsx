@@ -45,6 +45,13 @@ function ResizeHandle({ width, onResize }: { width: number; onResize: (w: number
   const [dragging, setDragging] = useState(false)
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    // The selection guard must land synchronously, before the browser's
+    // native selection gesture starts — a state/effect-driven style is a
+    // frame too late. preventDefault suppresses the compatibility
+    // mousedown that begins native selection; the direct DOM style (not
+    // React state) is deliberate.
+    e.preventDefault()
+    window.getSelection()?.removeAllRanges()
     drag.current = { startX: e.clientX, startW: width }
     e.currentTarget.setPointerCapture(e.pointerId)
     setDragging(true)

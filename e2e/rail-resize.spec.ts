@@ -31,9 +31,13 @@ test('drag widens the rail, persists across reload; double-click resets', async 
   const y = box.y + 200
   await page.mouse.move(box.x + 3, y)
   await page.mouse.down()
-  await page.mouse.move(box.x + 3 - 120, y, { steps: 8 })
+  // sweep well across the canvas text — the synchronous guard in
+  // pointerdown must keep the native selection gesture from starting
+  await page.mouse.move(box.x + 3 - 600, y, { steps: 20 })
+  await page.mouse.move(box.x + 3 - 120, y, { steps: 20 })
   await page.mouse.up()
   expect(await railWidth(page)).toBe(432)
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('')
   await expect(handle(page)).toHaveAttribute('aria-valuenow', '432')
 
   await page.reload()

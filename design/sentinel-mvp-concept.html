@@ -1110,9 +1110,11 @@ body.ctx-collapsed .rail-right{display:none}
     ctxRail.appendChild(h);
     function setW(w){ w=Math.max(MIN,Math.min(MAX,w)); document.documentElement.style.setProperty('--ctx-w',w+'px'); ctxRail.classList.toggle('wide',w>=WIDE); }
     var sx=0, sw=0, drag=false;
-    h.addEventListener('pointerdown', function(e){ sx=e.clientX; sw=ctxRail.getBoundingClientRect().width; drag=true; h.setPointerCapture(e.pointerId); h.classList.add('dragging'); document.body.style.userSelect='none'; });
+    h.addEventListener('pointerdown', function(e){ e.preventDefault(); var sel=window.getSelection(); if(sel) sel.removeAllRanges(); sx=e.clientX; sw=ctxRail.getBoundingClientRect().width; drag=true; h.setPointerCapture(e.pointerId); h.classList.add('dragging'); document.body.style.userSelect='none'; });
     h.addEventListener('pointermove', function(e){ if(drag) setW(sw+(sx-e.clientX)); });
-    h.addEventListener('pointerup', function(){ drag=false; h.classList.remove('dragging'); document.body.style.userSelect=''; });
+    function endDrag(){ drag=false; h.classList.remove('dragging'); document.body.style.userSelect=''; }
+    h.addEventListener('pointerup', endDrag);
+    h.addEventListener('pointercancel', endDrag);
     h.addEventListener('dblclick', function(){ setW(DEF); });
   })();
   document.querySelectorAll('.ctx-tabs [data-pane]').forEach(function(tb){
