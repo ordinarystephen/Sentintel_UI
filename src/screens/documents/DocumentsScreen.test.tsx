@@ -3,55 +3,53 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { renderAt } from '@/test/renderAt'
 
+const HINT =
+  '20 documents · 10 borrowers — click a borrower to expand · keyword queries still search every parsed passage'
+const veylandGroup = () => screen.getByRole('button', { name: /Veyland US Holdco RXM-6430/ })
 const q3Row = () =>
   screen.getByRole('button', { name: 'Select document: Veyland_Holdco_Q3_Update.pdf' })
 
-describe('documents — browse state (no query)', () => {
-  it('shows document rows only: filename, extraction badge, LOB, date — no preview text', async () => {
+describe('documents — browse state (no query): borrower groups', () => {
+  it('groups by borrower, largest first open; rows carry filename, badge, date — no preview text', async () => {
+    const user = userEvent.setup()
     renderAt('/crr/documents')
-    expect(await screen.findByText('9 documents · newest first')).toBeInTheDocument()
+    expect(await screen.findByText(HINT)).toBeInTheDocument()
+    // largest group (Ambervale, 5 docs) is open by default; others closed
+    expect(screen.getByText('Ambervale_Foods_Q2_Performance_Update.pdf')).toBeInTheDocument()
+    expect(screen.queryByText('Veyland_Holdco_Q3_Update.pdf')).toBeNull()
+    await user.click(veylandGroup())
     const row = q3Row()
-    expect(within(row).getByText('Veyland_Holdco_Q3_Update.pdf')).toBeInTheDocument()
     expect(within(row).getByText('extracted')).toBeInTheDocument()
-    expect(within(row).getByText('IB')).toBeInTheDocument()
     expect(within(row).getByText('2026-07-15')).toBeInTheDocument()
     // no snippets, no marks, no per-passage provenance in browse
     expect(screen.queryByText(/revolving credit facility remains undrawn/)).toBeNull()
     expect(document.querySelector('mark')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'View source' })).toBeNull()
-    const farrowdale = screen.getByRole('button', {
-      name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf',
-    })
-    expect(within(farrowdale).getByText('not yet extracted')).toBeInTheDocument()
+    // collapsing hides the group's rows again
+    await user.click(veylandGroup())
+    expect(screen.queryByText('Veyland_Holdco_Q3_Update.pdf')).toBeNull()
   })
 
-  it('selects a single row and reveals the action bar; deep link included when the document fed a review', async () => {
+  it('selects a single row and reveals the action bar; deep link + raw viewer included', async () => {
     const user = userEvent.setup()
     renderAt('/crr/documents')
-    await screen.findByText('9 documents · newest first')
+    await screen.findByText(HINT)
+    await user.click(veylandGroup())
     await user.click(q3Row())
     expect(q3Row()).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Preview extracted text' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Download original' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Raw document' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Used in Veyland review →' })).toHaveAttribute(
       'href',
       '/crr/review/rev-veyland-2026-08#sec-2',
     )
-
-    // single-select: choosing another row moves the selection and the bar
-    const seldwyn = screen.getByRole('button', {
-      name: 'Select document: Seldwyn_Marine_Facility_Agreement.pdf',
-    })
-    await user.click(seldwyn)
-    expect(seldwyn).toHaveAttribute('aria-pressed', 'true')
-    expect(q3Row()).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.queryByRole('link', { name: 'Used in Veyland review →' })).toBeNull()
   })
 
   it('not-yet-extracted documents show the preview action disabled', async () => {
     const user = userEvent.setup()
     renderAt('/crr/documents')
-    await screen.findByText('9 documents · newest first')
+    await screen.findByText(HINT)
+    await user.click(screen.getByRole('button', { name: /Farrowdale Logistics RXM-8093/ }))
     await user.click(
       screen.getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' }),
     )
@@ -64,7 +62,8 @@ describe('documents — browse state (no query)', () => {
   it('preview modal: title, meta row, collapsible sections with page ranges, first open; Esc closes', async () => {
     const user = userEvent.setup()
     renderAt('/crr/documents')
-    await screen.findByText('9 documents · newest first')
+    await screen.findByText(HINT)
+    await user.click(veylandGroup())
     await user.click(q3Row())
     await user.click(screen.getByRole('button', { name: 'Preview extracted text' }))
     const dialog = screen.getByRole('dialog')
@@ -87,10 +86,10 @@ describe('documents — browse state (no query)', () => {
 })
 
 describe('documents — search state (query non-empty)', () => {
-  it('hit cards with matched passages and marked terms replace the browse rows', async () => {
+  it('hit cards with matched passages and marked terms replace the grouped browse', async () => {
     const user = userEvent.setup()
     renderAt('/crr/documents')
-    await screen.findByText('9 documents · newest first')
+    await screen.findByText(HINT)
     await user.type(screen.getByLabelText('Search documents'), 'revolver availability')
     await waitFor(() =>
       expect(
@@ -111,19 +110,22 @@ describe('documents — search state (query non-empty)', () => {
       '/crr/review/rev-veyland-2026-08#sec-2',
     )
     expect(within(first).getByRole('button', { name: 'View source' })).toBeInTheDocument()
+    // clearing the query returns to the grouped view
+    await user.clear(screen.getByLabelText('Search documents'))
+    expect(await screen.findByText(HINT)).toBeInTheDocument()
   })
 
-  it('filters hit the seam in browse state too, and live in the URL; advanced help toggles', async () => {
+  it('the counterparty filter narrows browse groups; advanced help toggles', async () => {
     const user = userEvent.setup()
-    renderAt('/crr/documents?lob=Wealth+Management')
-    await waitFor(() => expect(screen.getByText('1 document · newest first')).toBeInTheDocument())
-    expect(screen.getByText('Verloway_AgriChem_Credit_Memo.pdf')).toBeInTheDocument()
-    await user.selectOptions(screen.getByLabelText('Line of business'), 'all')
-    await user.selectOptions(screen.getByLabelText('Document type'), 'facility agreement')
+    renderAt('/crr/documents')
+    await screen.findByText(HINT)
+    await user.selectOptions(screen.getByLabelText('Counterparty'), 'Verloway AgriChem')
     await waitFor(() =>
-      expect(screen.getByText('Seldwyn_Marine_Facility_Agreement.pdf')).toBeInTheDocument(),
+      expect(
+        screen.getByRole('button', { name: /Verloway AgriChem RXM-2210/ }),
+      ).toBeInTheDocument(),
     )
-    expect(screen.getAllByRole('button', { name: /^Select document:/ })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: /Veyland US Holdco/ })).toBeNull()
 
     expect(screen.queryByText('must appear verbatim')).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Advanced search' }))

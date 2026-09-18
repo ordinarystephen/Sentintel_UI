@@ -17,17 +17,17 @@ async function fresh(page: Page, path = '/erm') {
   await page.reload()
 }
 
-test('landing card and masthead switcher both enter ERM', async ({ page }) => {
+test('landing card and masthead switcher both enter CPEA', async ({ page }) => {
   await fresh(page, '/apps')
   await page
     .getByRole('navigation', { name: 'Applications' })
-    .getByRole('link', { name: /ERM.*Open/s })
+    .getByRole('link', { name: /Credit Portfolio Event Assessment.*Open/s })
     .click()
   await expect(page.getByRole('heading', { name: 'Start a portfolio analysis' })).toBeVisible()
   await expect(page).toHaveURL(/\/erm$/)
   expect(await page.evaluate(() => localStorage.getItem('sentinel.lastApp'))).toBe('erm')
   await expect(page.getByRole('button', { name: 'Switch application' })).toContainText(
-    'Sentinel · ERM',
+    'Sentinel · CPEA',
   )
 })
 
@@ -182,13 +182,13 @@ test('runs: newest first, frozen revisit of a historical run', async ({ page }) 
 test('documents: lens grouping, collapse, search, extraction and raw viewers', async ({ page }) => {
   await fresh(page, '/erm/documents')
   await expect(
-    page.getByText('17 documents · 7 borrowers on system for ERM', { exact: false }),
+    page.getByText('17 documents · 7 borrowers on system for this application', { exact: false }),
   ).toBeVisible()
   // first group open with 3 visible then scroll; chips are data-driven
   await expect(page.getByText('Ambervale_Foods_Annual_Review_FY25.pdf')).toBeVisible()
   await expect(page.getByText('in monitor scope').first()).toBeVisible()
   // 3 documents visible then scroll: the group body is a scroll container
-  const body = page.locator('.max-h-\\[176px\\]').first()
+  const body = page.getByTestId('group-docs').first()
   expect(await body.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
   // collapse the group
   await page.getByRole('button', { name: /Ambervale Foods Group/ }).click()

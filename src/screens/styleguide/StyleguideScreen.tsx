@@ -57,7 +57,7 @@ export function StyleguideScreen() {
             Cancel this review
           </button>
           <button type="button" className="text-micro text-muted underline underline-offset-2">
-            Advanced extraction settings
+            Workpaper configuration
           </button>
         </div>
       </section>

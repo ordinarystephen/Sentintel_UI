@@ -1,59 +1,58 @@
 /**
- * Landing (`/`, build-spec §5.1): drop zone + optional context, "Begin
- * review", the demoted extraction settings, and Recent reviews. No metadata
- * form — borrower and ID are detected during processing. A review starts
- * with exactly two interactions: drop, Begin.
+ * CRR start (`/crr`, build-spec §5.1 + refinement round 2026-09-18): drop
+ * zone (shared upload rows: progress + named-rule rejection) OR the shared
+ * repository picker — uploads and picks mix, and a repository-only review
+ * works end to end. Optional context, "Begin review · N documents", the
+ * Workpaper-configuration disclosure (in place of the REMOVED extraction
+ * settings — parsing is the platform's job), and Recent reviews. Borrower
+ * and ID are detected during processing; no metadata form.
  */
-import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
+import { useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateReview, useMyReviews } from '@/api/hooks'
-import { DEFAULT_EXTRACTION, type ExtractionSettings } from '@/api/types'
-import { FileIcon } from '@/app/icons'
+import type { RepositoryDoc } from '@/api/types'
+import { ChevronIcon } from '@/app/icons'
+import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
+import { Collapsible } from '@/components/Collapsible'
+import { UploadFileRows } from '@/components/upload/UploadFileRows'
+import { useUploadList } from '@/components/upload/uploadList'
+import { RepositoryPicker } from '@/components/viewers/RepositoryPicker'
 import { cx } from '@/lib/cx'
-import { formatBytes } from '@/lib/format'
-import { usePersistedState } from '@/lib/usePersistedState'
+import { fmt, plural } from '@/lib/fmt'
+import { SECTIONS } from '@/lib/sections'
 import { ReviewRow } from '@/screens/reviews/ReviewRow'
 import { strings } from '@/strings'
-import { plural } from '@/lib/fmt'
+import { WORKPAPER_TEMPLATES } from './config'
 
-const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
-const isSettings = (v: unknown): v is ExtractionSettings =>
-  typeof v === 'object' && v !== null && 'parser' in v && 'preset' in v && 'concurrency' in v
+const isPdf = (name: string) => /\.pdf$/i.test(name)
 
 export function LandingScreen() {
   const s = strings.landing
   const navigate = useNavigate()
-  const [files, setFiles] = useState<File[]>([])
-  const [rejected, setRejected] = useState<string[]>([])
+  const upload = useUploadList(isPdf)
+  const [picked, setPicked] = useState<RepositoryDoc[]>([])
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [context, setContext] = useState('')
   const [dragging, setDragging] = useState(false)
-  const [advanced, setAdvanced] = useState(false)
-  const [settings, setSettings] = usePersistedState(
-    'extraction.settings',
-    DEFAULT_EXTRACTION,
-    isSettings,
-  )
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const create = useCreateReview()
   const recents = useMyReviews()
 
-  function addFiles(list: FileList | File[]) {
-    const incoming = Array.from(list)
-    const bad = incoming.filter((f) => !isPdf(f)).map((f) => f.name)
-    setRejected(bad)
-    setFiles((prev) => {
-      const seen = new Set(prev.map((f) => `${f.name}:${f.size}`))
-      return [...prev, ...incoming.filter((f) => isPdf(f) && !seen.has(`${f.name}:${f.size}`))]
-    })
-    setError(null)
-  }
+  // Workpaper configuration (placeholder vocabulary — see ./config)
+  const [wpcOpen, setWpcOpen] = useState(false)
+  const [template, setTemplate] = useState<string>(WORKPAPER_TEMPLATES[0])
+  const [sections, setSections] = useState<number[]>(SECTIONS.map((x) => x.n))
+  const [topics, setTopics] = useState('')
+
+  const totalDocs = upload.files.length + picked.length
+  const pickedIds = useMemo(() => picked.map((d) => d.repoId), [picked])
 
   function onDrop(e: DragEvent) {
     e.preventDefault()
     setDragging(false)
-    addFiles(e.dataTransfer.files)
+    upload.addFiles(e.dataTransfer.files)
   }
 
   function onZoneKey(e: KeyboardEvent) {
@@ -66,7 +65,12 @@ export function LandingScreen() {
   async function begin() {
     setError(null)
     try {
-      const { id } = await create.mutateAsync({ files, contextText: context, settings })
+      const { id } = await create.mutateAsync({
+        files: upload.files,
+        contextText: context,
+        repositoryDocIds: pickedIds,
+        config: { template, sections, customTopics: topics.trim() || undefined },
+      })
       navigate(`/crr/review/${id}`)
     } catch (e) {
       setError((e as Error).message)
@@ -115,7 +119,17 @@ export function LandingScreen() {
           </svg>
           <div className="text-[0.9375rem] font-semibold">{s.dropBig}</div>
           <div className="mt-[3px] text-ui-sm text-muted">
-            {s.dropOr} <span className="text-ink underline underline-offset-2">{s.browse}</span>
+            {s.dropOr} <span className="text-ink underline underline-offset-2">{s.browse}</span>{' '}
+            <button
+              type="button"
+              className="text-ink underline underline-offset-2"
+              onClick={(e) => {
+                e.stopPropagation()
+                setPickerOpen(true)
+              }}
+            >
+              {s.fromRepo}
+            </button>
           </div>
           <div className="mt-3 text-micro tracking-[0.04em] text-faint">{s.dropHint}</div>
           <input
@@ -126,35 +140,39 @@ export function LandingScreen() {
             aria-label={s.chooseFilesAria}
             className="sr-only"
             onChange={(e) => {
-              if (e.target.files) addFiles(e.target.files)
+              if (e.target.files) upload.addFiles(e.target.files)
               e.target.value = ''
             }}
           />
         </div>
 
-        {rejected.length > 0 && (
-          <p role="alert" className="mt-2 text-dense text-warn">
-            {s.onlyPdf} <span className="font-mono">{rejected.join(', ')}</span>
-          </p>
-        )}
+        <UploadFileRows
+          files={upload.files}
+          rejected={upload.rejected}
+          progressOf={upload.progressOf}
+          onRemove={upload.removeFile}
+          onRemoveRejected={upload.removeRejected}
+          listAria={s.fileListAria}
+        />
 
-        {files.length > 0 && (
-          <ul className="mt-3 flex flex-col gap-1.5" aria-label={s.fileListAria}>
-            {files.map((f) => (
+        {picked.length > 0 && (
+          <ul className="mt-2 flex flex-col gap-1.5" aria-label={s.pickedListAria}>
+            {picked.map((d) => (
               <li
-                key={`${f.name}:${f.size}`}
-                className="flex items-center gap-[9px] rounded-lg border border-rule bg-bg px-[11px] py-[7px] text-ui-sm"
+                key={d.repoId}
+                className="flex items-center gap-2.5 rounded-lg border border-rule bg-bg px-3 py-2 text-[0.78125rem]"
               >
-                <FileIcon className="h-[13px] w-[13px] flex-none text-faint" />
-                <span className="truncate font-mono text-[0.75rem]">{f.name}</span>
-                <span className="flex-none text-micro text-faint">{formatBytes(f.size)}</span>
+                <span className="truncate font-mono text-[0.75rem]">{d.fileName}</span>
+                <Badge>{d.docType}</Badge>
+                <span className="flex-none text-micro normal-case tracking-normal text-faint">
+                  {d.counterparty}
+                </span>
                 <button
                   type="button"
-                  aria-label={`${s.removeFile} ${f.name}`}
-                  onClick={() => setFiles((prev) => prev.filter((x) => x !== f))}
-                  className="ml-auto flex-none text-faint hover:text-ink"
+                  onClick={() => setPicked((prev) => prev.filter((x) => x.repoId !== d.repoId))}
+                  className="ml-auto flex-none text-[0.75rem] text-faint underline underline-offset-2 hover:text-ink"
                 >
-                  ✕
+                  {strings.upload.remove}
                 </button>
               </li>
             ))}
@@ -177,19 +195,9 @@ export function LandingScreen() {
 
         <div className="mt-4 flex items-center gap-3.5">
           <Button variant="primary" onClick={begin} disabled={create.isPending}>
-            {s.begin}
-          </Button>
-          <span className="text-[0.75rem] text-faint">
-            {plural(files.length, s.documentCountOne, s.documentCountOther)}
-          </span>
-          <Button
-            variant="quiet"
-            className="ml-auto"
-            onClick={() => setAdvanced((a) => !a)}
-            aria-expanded={advanced}
-            aria-controls="advanced-settings"
-          >
-            {s.advanced}
+            {fmt(s.beginCount, {
+              documents: plural(totalDocs, s.documentCountOne, s.documentCountOther),
+            })}
           </Button>
         </div>
         {error && (
@@ -198,40 +206,79 @@ export function LandingScreen() {
           </p>
         )}
 
-        {advanced && (
-          <div
-            id="advanced-settings"
-            className="mt-3 flex flex-wrap gap-3 rounded-lg border border-rule bg-bg-subtle px-3.5 py-3"
+        <div className="mt-4">
+          <button
+            type="button"
+            aria-expanded={wpcOpen}
+            aria-controls="wpc-body"
+            onClick={() => setWpcOpen((o) => !o)}
+            className="inline-flex items-center gap-[7px] text-dense text-muted"
           >
-            <Setting
-              label={s.parser}
-              value={settings.parser}
-              options={['pdfplumber', 'pymupdf', 'docling']}
-              onChange={(v) =>
-                setSettings({ ...settings, parser: v as ExtractionSettings['parser'] })
-              }
+            <ChevronIcon
+              className={cx(
+                'h-[9px] w-[9px] flex-none text-faint transition-transform duration-200',
+                wpcOpen && 'rotate-90',
+              )}
             />
-            <Setting
-              label={s.preset}
-              value={settings.preset}
-              options={['ib_lending', 'generic']}
-              onChange={(v) =>
-                setSettings({ ...settings, preset: v as ExtractionSettings['preset'] })
-              }
-            />
-            <Setting
-              label={s.concurrency}
-              value={String(settings.concurrency)}
-              options={['2', '4', '8']}
-              onChange={(v) =>
-                setSettings({
-                  ...settings,
-                  concurrency: Number(v) as ExtractionSettings['concurrency'],
-                })
-              }
-            />
-          </div>
-        )}
+            {s.wpcSummary}
+            <span className="font-mono text-micro text-faint">{s.wpcHint}</span>
+          </button>
+          <Collapsible open={wpcOpen} id="wpc-body">
+            {/* Option vocabulary is a deliberate placeholder — ./config. */}
+            <div className="mt-[9px] grid grid-cols-[220px_1fr] items-center gap-x-4 gap-y-2.5 rounded-[10px] border border-rule bg-bg-subtle px-[15px] py-[13px] text-[0.78125rem] max-[700px]:grid-cols-1">
+              <label htmlFor="wpc-template" className="micro">
+                {s.wpcTemplate}
+              </label>
+              <select
+                id="wpc-template"
+                value={template}
+                onChange={(e) => setTemplate(e.target.value)}
+                className="max-w-[320px] rounded-[7px] border border-rule-strong bg-bg px-2 py-[7px] text-[0.78125rem] text-ink-soft"
+              >
+                {WORKPAPER_TEMPLATES.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+              <span className="micro">{s.wpcSections}</span>
+              <span className="flex flex-wrap gap-1">
+                {SECTIONS.map((sec) => {
+                  const on = sections.includes(sec.n)
+                  return (
+                    <button
+                      key={sec.n}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() =>
+                        setSections((prev) =>
+                          on ? prev.filter((n) => n !== sec.n) : [...prev, sec.n].sort(),
+                        )
+                      }
+                      className={cx(
+                        'rounded border px-[7px] text-[0.65625rem]',
+                        on
+                          ? 'border-indigo-line bg-indigo-bg text-indigo'
+                          : 'border-rule-strong bg-bg text-faint',
+                      )}
+                    >
+                      {sec.n} {sec.short}
+                    </button>
+                  )
+                })}
+              </span>
+              <label htmlFor="wpc-topics" className="micro">
+                {s.wpcTopics}
+              </label>
+              <input
+                id="wpc-topics"
+                type="text"
+                value={topics}
+                onChange={(e) => setTopics(e.target.value)}
+                placeholder={s.wpcTopicsPlaceholder}
+                className="rounded-[7px] border border-rule-strong bg-bg px-2.5 py-[7px] text-[0.78125rem]"
+              />
+            </div>
+          </Collapsible>
+        </div>
       </div>
 
       <div className="mx-auto mt-10 max-w-[600px]">
@@ -243,37 +290,19 @@ export function LandingScreen() {
           <ReviewRow key={r.id} review={r} variant="my" />
         ))}
       </div>
-    </div>
-  )
-}
 
-function Setting({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: string[]
-  onChange: (v: string) => void
-}) {
-  const id = `setting-${label.replace(/\s+/g, '-').toLowerCase()}`
-  return (
-    <label htmlFor={id} className="flex items-center gap-2 text-[0.75rem] text-muted">
-      {label}
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-[7px] border border-rule-strong bg-bg px-2 py-1 font-mono text-[0.75rem] text-ink-soft"
-      >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
+      {pickerOpen && (
+        <RepositoryPicker
+          onClose={() => setPickerOpen(false)}
+          onDone={(docs) => {
+            setPicked((p) => {
+              const have = new Set(p.map((x) => x.repoId))
+              return [...p, ...docs.filter((d) => !have.has(d.repoId))]
+            })
+            setPickerOpen(false)
+          }}
+        />
+      )}
+    </div>
   )
 }

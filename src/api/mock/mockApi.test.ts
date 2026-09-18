@@ -96,10 +96,10 @@ describe('getReview', () => {
 describe('createReview / processing', () => {
   it('creates a durable record that names itself, then serves a Veyland copy', async () => {
     const api = make()
-    const { id } = await api.createReview(
-      [file('Acme_Annual.pdf'), file('Acme_Q3.pdf')],
-      'What is revolver availability at close?\n\n',
-    )
+    const { id } = await api.createReview({
+      files: [file('Acme_Annual.pdf'), file('Acme_Q3.pdf')],
+      contextText: 'What is revolver availability at close?\n\n',
+    })
     let mine = await api.listMyReviews()
     expect(mine[0]).toMatchObject({ id, status: 'processing', borrowerName: null })
 
@@ -147,7 +147,7 @@ describe('createReview / processing', () => {
   it('resumes from persisted state in a fresh instance (tab killed mid-processing)', async () => {
     const storage = localStorage
     const first = make(storage)
-    const { id } = await first.createReview([file('Doc.pdf')], '')
+    const { id } = await first.createReview({ files: [file('Doc.pdf')], contextText: '' })
     vi.setSystemTime(T0 + 6_000)
     const second = make(storage)
     expect(await second.getReviewStatus(id)).toMatchObject({
@@ -162,7 +162,7 @@ describe('createReview / processing', () => {
 
   it('cancel keeps the record with status cancelled', async () => {
     const api = make()
-    const { id } = await api.createReview([file('Doc.pdf')], '')
+    const { id } = await api.createReview({ files: [file('Doc.pdf')], contextText: '' })
     await api.cancelReview(id)
     expect(await api.getReview(id)).toMatchObject({ id, status: 'cancelled' })
     await expect(api.cancelReview(VEYLAND_ID)).rejects.toMatchObject({
@@ -172,20 +172,22 @@ describe('createReview / processing', () => {
 
   it('a damaged file fails loudly with the specific message', async () => {
     const api = make()
-    const { id } = await api.createReview([file('Veyland_corrupt_scan.pdf')], '')
+    const { id } = await api.createReview({
+      files: [file('Veyland_corrupt_scan.pdf')],
+      contextText: '',
+    })
     vi.setSystemTime(T0 + PROCESSING.failAt)
     const st = await api.getReviewStatus(id)
     expect(st).toMatchObject({
       status: 'failed',
       error: {
-        message:
-          'Could not parse Veyland_corrupt_scan.pdf: the file is encrypted or damaged (parser: pdfplumber).',
+        message: 'Could not parse Veyland_corrupt_scan.pdf: the file is encrypted or damaged.',
       },
     })
   })
 
   it('rejects an empty upload', async () => {
-    await expect(make().createReview([], '')).rejects.toMatchObject({
+    await expect(make().createReview({ files: [], contextText: '' })).rejects.toMatchObject({
       message: 'Add at least one PDF to begin a review.',
     })
   })
@@ -473,7 +475,7 @@ describe('export', () => {
       message:
         'Export failed: the render service returned no document for RXM-7712 (render-service: 502 Bad Gateway).',
     })
-    const { id } = await api.createReview([file('Doc.pdf')], '')
+    const { id } = await api.createReview({ files: [file('Doc.pdf')], contextText: '' })
     await expect(api.exportReview(id)).rejects.toMatchObject({
       message: expect.stringContaining('still processing'),
     })
@@ -543,5 +545,35 @@ describe('amend evidence (v1.4)', () => {
     expect(byName.hits.some((h) => h.counterparty === 'Ambervale Foods Group')).toBe(true)
     const fullText = await api.searchDocuments('revolver availability', {})
     expect(fullText.hits.length).toBeGreaterThan(0)
+  })
+})
+
+describe('question-set store (v1.6)', () => {
+  it('7 fixture sets ship; Add-new appends a persisted set with an honest placeholder list', async () => {
+    const storage = new Map<string, string>()
+    const fakeStorage = {
+      getItem: (k: string) => storage.get(k) ?? null,
+      setItem: (k: string, v: string) => void storage.set(k, v),
+      removeItem: (k: string) => void storage.delete(k),
+    } as Storage
+    const api = make(fakeStorage)
+    const before = await api.getQuestionSets()
+    expect(before).toHaveLength(7)
+    expect(before.map((q) => q.name)).toContain('Watchlist deep-dive')
+    // counts match the ratified card grid
+    expect(before.find((q) => q.name === 'Quarterly credit pulse')?.fields).toHaveLength(17)
+    expect(before.find((q) => q.name === 'Liquidity stress pulse')?.fields).toHaveLength(7)
+
+    await expect(api.addQuestionSet({ name: '  ', description: 'x' })).rejects.toThrow(/title/i)
+    const saved = await api.addQuestionSet({
+      name: 'My covenant follow-ups',
+      description: 'Ad hoc follow-ups from the September committee.',
+    })
+    expect(saved.fields.length).toBeGreaterThan(0)
+    const after = await api.getQuestionSets()
+    expect(after).toHaveLength(8)
+    // persists: a fresh api over the same storage still has it
+    const again = await createMockApi({ latencyMs: 0, storage: fakeStorage }).getQuestionSets()
+    expect(again.map((q) => q.name)).toContain('My covenant follow-ups')
   })
 })

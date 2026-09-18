@@ -405,6 +405,48 @@ body.ctx-collapsed .rail-right{display:none}
 .ctx-resizer:hover,.ctx-resizer.dragging{background:linear-gradient(to right,transparent 2px,var(--rule-strong) 2px,var(--rule-strong) 4px,transparent 4px)}
 /* at >=420px the rail is a reading pane: content steps up */
 .rail-right.wide .ctx-pane{font-size:14px;line-height:1.55}
+/* command palette (21st.dev behavior, Sentinel skin) */
+.cp-trigger{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule-strong);border-radius:7px;padding:4px 10px;font-size:12px;color:var(--muted);background:var(--bg)}
+.cp-trigger:hover{background:var(--bg-hover);color:var(--ink)}
+.cp-trigger kbd{font-family:var(--font-mono);font-size:10px;border:1px solid var(--rule-strong);border-radius:4px;padding:0 4px;color:var(--faint);background:var(--bg-subtle)}
+.cp-overlay{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:80;display:none;justify-content:center;align-items:flex-start;padding:12vh 20px 20px}
+.cp-overlay.open{display:flex}
+.cp{width:100%;max-width:580px;background:var(--bg);border:1px solid var(--rule);border-radius:12px;box-shadow:var(--shadow-md);overflow:hidden;animation:settle .18s ease both}
+.cp input{width:100%;border:none;outline:none;background:transparent;padding:14px 18px;font-size:15px;border-bottom:1px solid var(--rule)}
+.cp-list{max-height:46vh;overflow-y:auto;padding:8px}
+.cp-group{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:8px 10px 4px}
+.cp-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:8px;padding:8px 10px;font-size:13px}
+.cp-item[aria-selected="true"],.cp-item:hover{background:var(--bg-hover)}
+.cp-item .nm{font-family:var(--font-display);font-weight:600;font-size:14px}
+.cp-item .mono{color:var(--muted)}
+.cp-item .st{margin-left:auto;font-size:11px;color:var(--faint)}
+.cp-item svg{width:14px;height:14px;color:var(--faint);flex:none}
+.cp-foot{display:flex;gap:14px;border-top:1px solid var(--rule);padding:8px 14px;font-size:11px;color:var(--faint)}
+.cp-foot kbd{font-family:var(--font-mono);font-size:10px;border:1px solid var(--rule-strong);border-radius:4px;padding:0 4px;background:var(--bg-subtle)}
+/* upload states (21st.dev behavior, Sentinel skin) */
+.up-file{display:flex;align-items:center;gap:10px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);padding:8px 12px;margin-top:8px;font-size:12.5px}
+.up-file .mono{flex:none}
+.up-file .bar{flex:1;height:4px;border-radius:999px;background:var(--rule);overflow:hidden;min-width:60px}
+.up-file .bar i{display:block;height:100%;background:var(--success);border-radius:999px}
+.up-file.err{border-color:var(--warn-line);background:var(--warn-bg)}
+.up-file.err .why{color:var(--warn);font-size:12px}
+.up-file .act{margin-left:auto;flex:none}
+/* documents: borrower groups (mirrors the P&I lens) */
+.b-group{margin:12px 0 6px;display:flex;gap:10px;align-items:baseline;cursor:pointer;user-select:none;border-radius:8px;padding:4px 6px}
+.b-group:hover{background:var(--bg-hover)}
+.b-group::before{content:"▸";font-size:11px;color:var(--faint);align-self:center}
+.b-group.open::before{content:"▾"}
+.b-group h3{font-family:var(--font-display);font-size:15px;font-weight:600}
+.b-docs{max-height:196px;overflow-y:auto;padding:0 6px}
+/* workpaper configuration (placeholders) */
+.wpc{margin-top:14px}
+.wpc-grid{display:grid;grid-template-columns:220px 1fr;gap:10px 16px;padding:12px 2px 2px;font-size:12.5px;align-items:center}
+.wpc-grid label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sec-chip{font-size:10.5px;border:1px solid var(--indigo-line);color:var(--indigo);background:var(--indigo-bg);border-radius:4px;padding:1px 7px;margin-right:4px}
+/* policy library */
+.pol-row{display:flex;gap:12px;align-items:baseline;border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:11px 14px;margin-bottom:8px;flex-wrap:wrap}
+.pol-row .pid{font-family:var(--font-mono);font-size:12px;color:var(--indigo);flex:none}
+.pol-row .ptitle{font-weight:600;flex:1;min-width:200px}
 /* evidence manifest rows */
 .doc-mrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--rule);font-size:12.5px}
 .doc-mrow:first-child{border-top:none}
@@ -510,6 +552,7 @@ body.ctx-collapsed .rail-right{display:none}
     <span class="brand">Sentinel <span style="color:var(--muted);font-weight:500">· CRR ▾</span></span>
     <span class="badge"><span class="dot"></span> ready</span>
     <span class="spacer"></span>
+    <button class="cp-trigger pin-anchor" id="cp-open" aria-label="Search everything" title="Search — ⌘K"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search<kbd>⌘K</kbd><span class="pin" style="top:26px;left:-8px" data-pin>36<span class="pin-pop"><span class="eyebrow">Note 36 · jump to anything</span>The 21st.dev pass, applied the Sentinel way: the behavior (a cmdk-style palette) is harvested and fully re-skinned to tokens — vendored as first-party code, no marketplace dependency shipping. ⌘K from anywhere: borrower name or RXM lands on the review or document; verbs ("Add document", "Export review") ride below. The ratified search keys, turned into the fastest interaction in the app.</span></span></button>
     <div class="tabs" role="radiogroup" aria-label="Text size" id="size-select" style="padding:2px"><button data-size="0.92" title="Small">S</button><button data-size="1" aria-selected="true" title="Medium">M</button><button data-size="1.1" title="Large">L</button></div>
     <select class="ctl" id="theme-select" aria-label="Theme" style="padding:4px 8px;font-size:11.5px"><option value="">Stone</option><option value="theme-cobalt">Cobalt</option></select>
     <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
@@ -534,7 +577,7 @@ body.ctx-collapsed .rail-right{display:none}
       <button class="nav-item" data-goto="screen-documents" data-nav="docs" title="Documents">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><span class="nav-label">Documents</span>
       </button>
-      <button class="nav-item pin-anchor" data-nav="policy" title="Policy library">
+      <button class="nav-item pin-anchor" data-goto="screen-policy" data-nav="policy" title="Policy library">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg><span class="nav-label">Policy library</span>
         <span class="pin" style="top:-4px;right:-6px" data-pin>18<span class="pin-pop"><span class="eyebrow">Note 18 · the open slots</span>Policy library sketches one candidate for Steve's "1–2 more": the corpus the checks run against, browsable so an analyst can see <em>why</em> a check fired. Other candidates for the remaining slot: a QC queue (the RIC's worklist, stage 2) or Templates (the ib_lending seam, surfaced honestly).</span></span>
       </button>
@@ -573,7 +616,7 @@ body.ctx-collapsed .rail-right{display:none}
           <div class="dropzone pin-anchor" role="button" tabindex="0" aria-label="Upload documents">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <div class="big">Drag documents here</div>
-            <div class="or">or <span class="link">browse files</span></div>
+            <div class="or">or <span class="link">browse files</span> · or <span class="link" id="startrev-open">pull from the repository</span></div>
             <div class="hint">PDF · one borrower per review</div>
             <span class="pin" style="top:-9px;right:-9px" data-pin>4<span class="pin-pop"><span class="eyebrow">Note 4 · files only</span>Starting a review asks for nothing but the documents — no form, no template picker, no extraction config. Borrower, review type and CL number are detected while reading, so the review names itself. The POC's three-step wizard is gone from the analyst path entirely.</span></span>
           </div>
@@ -589,11 +632,21 @@ body.ctx-collapsed .rail-right{display:none}
           </div>
           <textarea id="ctx" class="qbox" placeholder="Context or questions, one per line — e.g. Focus on covenant headroom. What is revolver availability at close?"></textarea>
 
+          <details class="refdata wpc pin-anchor">
+            <summary>Workpaper configuration<span class="mono" style="color:var(--faint)">defaults applied — open to adjust</span>
+              <span class="pin" style="top:-8px;right:-26px" data-pin>39<span class="pin-pop"><span class="eyebrow">Note 39 · configuration, not extraction settings</span>Steve's call: the advanced extraction settings leave the home page — parsing is the platform's job, not the analyst's. In their place, workpaper configuration per the ratified initiation design: template, section toggles, custom analysis topics. All placeholders for now; the fast path stays the default and the choices ride the evidence snapshot.</span></span>
+            </summary>
+            <div class="wpc-grid">
+              <label>Template</label><select class="ctl" style="max-width:320px"><option>IB Lending — standard workpaper</option><option>Placeholder — template B</option></select>
+              <label>Sections</label><span><span class="sec-chip">1 Borrower</span><span class="sec-chip">2 Financials</span><span class="sec-chip">3 Underwriting</span><span class="sec-chip">4 Portfolio Mgmt</span><span class="sec-chip">5 Risk Rating</span><span class="sec-chip">6 Trading</span></span>
+              <label>Custom analysis topics</label><input type="text" style="border:1px solid var(--rule-strong);border-radius:7px;padding:7px 10px;font-size:12.5px;background:var(--bg)" placeholder="Add a topic — appends to the template, never replaces">
+            </div>
+          </details>
+
           <div class="begin-row pin-anchor">
             <button class="btn primary" id="begin-btn">Begin review</button>
             <span style="font-size:12px;color:var(--faint)">2 documents</span>
-            <button class="link quiet adv">Advanced extraction settings</button>
-            <span class="pin" style="top:-9px;right:-4px" data-pin>6<span class="pin-pop"><span class="eyebrow">Note 6 · defaults, demoted</span>Parser, section preset and concurrency become defaults behind this quiet link — present for the power user, invisible to everyone else. The other five modes leave the analyst path altogether; Sentinel's front door is the review.</span></span>
+            <span class="pin" style="top:-9px;right:-4px" data-pin>6<span class="pin-pop"><span class="eyebrow">Note 6 · no settings at all</span>Steve's ruling, refinement round: advanced extraction settings are gone entirely — not demoted, removed. Parsing is the platform's job; the analyst never sees parser, preset or concurrency choices. What the analyst does shape lives above, in workpaper configuration. The other POC modes left the analyst path already; the front door is the review.</span></span>
           </div>
         </div>
 
@@ -837,8 +890,12 @@ body.ctx-collapsed .rail-right{display:none}
             <button class="link quiet">Advanced search</button>
             <span class="pin" style="top:-9px;right:-6px" data-pin>21<span class="pin-pop"><span class="eyebrow">Note 21 · the index store, surfaced</span>Steve's document repository, two states: browse (clean rows, no preview text) and search — type a query to see matched passages with terms marked, because in search results the passage is evidence, not decoration. Hits carry provenance and jump to the source page or the review that used them.</span></span>
           </div>
-          <div class="hit-count" id="doc-count">6 documents · newest first</div>
+          <div class="hit-count" id="doc-count">6 documents · 4 borrowers — click a borrower to expand · keyword queries still search every parsed passage</div>
           <div id="doc-browse" class="pin-anchor">
+            <div class="b-group open"><h3>Veyland US Holdco LLC</h3><span class="mono" style="color:var(--muted)">RXM-6430</span><span class="badge slate">2 documents</span>
+              <span class="pin" style="top:-8px;right:-10px" data-pin>40<span class="pin-pop"><span class="eyebrow">Note 40 · one repository, mirrored lenses</span>Steve's call: CRR's Documents page mirrors Credit Portfolio Event Assessment's — borrower groups, collapsible, three visible then scroll, the same extraction and raw-document viewers. One platform repository; each application is a lens on it. CRR keeps its ratified extra: keyword queries surface matched passages as evidence.</span></span>
+            </div>
+            <div class="b-docs">
             <div class="doc-item sel">
               <button class="rowbtn"><span class="fname">Veyland_Holdco_Q3_Update.pdf</span><span class="dmeta"><span class="badge green">extracted</span><span>IB</span><span class="mono">2026-07-15</span></span></button>
               <div class="doc-actions">
@@ -857,6 +914,9 @@ body.ctx-collapsed .rail-right{display:none}
                 <button class="link quiet" data-target="wp-sec1">Used in Veyland review →</button>
               </div>
             </div>
+            </div>
+            <div class="b-group"><h3>Seldwyn Marine Finance</h3><span class="mono" style="color:var(--muted)">RXM-7712</span><span class="badge slate">1 document</span></div>
+            <div class="b-docs" hidden>
             <div class="doc-item">
               <button class="rowbtn"><span class="fname">Seldwyn_Marine_Facility_Agreement.pdf</span><span class="dmeta"><span class="badge green">extracted</span><span>IB</span><span class="mono">2026-05-02</span></span></button>
               <div class="doc-actions" hidden>
@@ -864,6 +924,9 @@ body.ctx-collapsed .rail-right{display:none}
                 <button class="btn outline small">Download original</button>
               </div>
             </div>
+            </div>
+            <div class="b-group"><h3>Ambervale Foods Group</h3><span class="mono" style="color:var(--muted)">RXM-5120</span><span class="badge slate">1 document</span></div>
+            <div class="b-docs" hidden>
             <div class="doc-item">
               <button class="rowbtn"><span class="fname">Ambervale_Foods_Annual_Review_FY25.pdf</span><span class="dmeta"><span class="badge green">extracted</span><span>IB</span><span class="mono">2026-02-09</span></span></button>
               <div class="doc-actions" hidden>
@@ -871,12 +934,16 @@ body.ctx-collapsed .rail-right{display:none}
                 <button class="btn outline small">Download original</button>
               </div>
             </div>
+            </div>
+            <div class="b-group"><h3>Verloway AgriChem</h3><span class="mono" style="color:var(--muted)">RXM-2210</span><span class="badge slate">1 document</span></div>
+            <div class="b-docs" hidden>
             <div class="doc-item">
               <button class="rowbtn"><span class="fname">Verloway_AgriChem_Credit_Memo.pdf</span><span class="dmeta"><span class="badge slate">not yet extracted</span><span>WM</span><span class="mono">2026-08-20</span></span></button>
               <div class="doc-actions" hidden>
                 <button class="btn outline small" disabled style="opacity:.5">Preview extracted text</button>
                 <button class="btn outline small">Download original</button>
               </div>
+            </div>
             </div>
             <span class="pin" style="top:-9px;right:26px" data-pin>30<span class="pin-pop"><span class="eyebrow">Note 30 · browse is clean, search shows evidence</span>Steve's test-pass call: no preview text on document rows. Browsing shows filename, status, LOB, date — nothing else. Selecting a row reveals its actions: preview, download, and the review that used it. The matched-passage snippets now appear ONLY when a search query is active, because there they are evidence of the match, not decoration. Post-select options are an open list — download and preview are the settled two.</span></span>
           </div>
@@ -903,6 +970,33 @@ body.ctx-collapsed .rail-right{display:none}
           </div>
         </div>
       </section>
+
+      <!-- ============ SCREEN 7 · POLICY LIBRARY ============ -->
+      <section class="screen" id="screen-policy" aria-label="Policy library">
+        <div class="landing-hero" style="max-width:680px;margin-top:6px">
+          <div class="micro">Policy library</div>
+          <h1 style="font-size:20px">Policy search</h1>
+          <p class="sub" style="margin-bottom:14px">Ask a question of the policies pulled into the application — or search and browse them directly.</p>
+          <div class="doc-toolbar pin-anchor">
+            <span class="searchbar" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><input placeholder="Ask anything — 'When must valuation inputs be re-verified?' — or search by number, title, keyword" aria-label="Ask or search policies"></span>
+            <button class="btn primary small">Ask</button>
+            <span class="pin" style="top:-9px;right:-6px" data-pin>41<span class="pin-pop"><span class="eyebrow">Note 41 · ask the policies</span>Steve's call: the Policy library is a search function — one box that takes a plain question OR a search term. A question comes back as an answer with the governing clauses cited, through the same evidence anatomy as everywhere else; a term filters the browse list. The answering engine is a future enhancement deliberately folded into the UI now — the seam is visible, the machinery arrives later.</span></span>
+          </div>
+          <div class="card" style="padding:14px 16px;margin-bottom:16px">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="micro">Answer</span><span class="badge slate">capability preview</span></div>
+            <p style="font-size:13.5px;margin-bottom:10px">Valuation inputs must be re-verified whenever a source document is amended or superseded; reliance without re-verification requires a recorded rationale in the review's evidence log.</p>
+            <blockquote style="font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink);border-left:2px solid var(--rule-strong);padding-left:12px;margin-bottom:8px">"Valuation inputs must be verified against source documents before reliance."</blockquote>
+            <div style="display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--muted)"><span class="mono" style="color:var(--indigo)">ProcMan-DEMO · §4.2</span><span>rev. 2026-06-01</span><button class="link">View policy</button></div>
+          </div>
+          <div class="zone-h"><h3>Browse policies</h3><span class="aside">newest revision first</span></div>
+          <div class="pol-row"><span class="pid">ProcMan-DEMO · §4.2</span><span class="ptitle">Reliance on extracted valuation inputs</span><span class="mono" style="color:var(--faint)">rev. 2026-06-01</span><button class="link">View</button></div>
+          <div class="pol-row"><span class="pid">ProcMan-DEMO · §5.1</span><span class="ptitle">Evidence and citation standards for review workpapers</span><span class="mono" style="color:var(--faint)">rev. 2026-04-15</span><button class="link">View</button></div>
+          <div class="pol-row"><span class="pid">POLICY · ib-lending/ev-support</span><span class="ptitle">Enterprise-value coverage as a downgrade trigger</span><span class="mono" style="color:var(--faint)">rev. 2026-03-02</span><button class="link">View</button></div>
+          <div class="pol-row"><span class="pid">POLICY · ib-lending/covenants</span><span class="ptitle">Springing covenant testing and headroom disclosure</span><span class="mono" style="color:var(--faint)">rev. 2025-11-20</span><button class="link">View</button></div>
+          <p class="disclaimer">All policy content in this demonstration build is fictional.</p>
+        </div>
+      </section>
+
 
       </div>
     </main>
@@ -1036,6 +1130,20 @@ body.ctx-collapsed .rail-right{display:none}
           <div class="or">or browse files</div>
           <div class="hint">PDF · DOCX · XLSX — added to this review's evidence</div>
         </div>
+        <div class="up-file">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.2"><path d="m4 12.5 5 5L20 6.5"/></svg>
+          <span class="mono">Ambervale_Foods_Compliance_Cert_2026-06.pdf</span>
+          <span style="color:var(--faint)">2.1 MB</span>
+          <span class="bar"><i style="width:100%"></i></span>
+          <span class="act link quiet">Remove</span>
+        </div>
+        <div class="up-file err pin-anchor">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.2"><path d="M12 8v5m0 3.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+          <span class="mono">Redfenn_Q2_full_scan.pdf</span>
+          <span class="why">61 MB — over the 50 MB limit</span>
+          <span class="act"><span class="link quiet">Remove</span></span>
+          <span class="pin" style="top:-12px;right:-10px" data-pin>37<span class="pin-pop"><span class="eyebrow">Note 37 · uploads that explain themselves</span>The second 21st.dev harvest: per-file rows with progress, validation that names the rule it hit, and retry on transfer failure — the three ways uploads actually go wrong, each with an honest state. Skinned to tokens; amber for needs-you, never red drama.</span></span>
+        </div>
       </div>
       <div id="adddoc-pane-repo" hidden>
         <div class="searchbar" style="margin-bottom:10px">
@@ -1064,6 +1172,51 @@ body.ctx-collapsed .rail-right{display:none}
   </div>
 </div>
 
+<!-- ============ START REVIEW FROM REPOSITORY ============ -->
+<div class="overlay" id="startrev-overlay" role="dialog" aria-modal="true" aria-label="Start a review from the repository">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-h"><h3>Start a review from documents on system</h3><button class="icon-btn" id="startrev-close" aria-label="Close">✕</button></div>
+    <div class="modal-b pin-anchor">
+      <div class="searchbar" style="margin-bottom:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" placeholder="Search by borrower / counterparty name or RXM" value="veyland">
+      </div>
+      <div class="hit-count">4 documents on system for <span class="mono">RXM-6430</span> · Veyland US Holdco LLC</div>
+      <label class="hit" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;cursor:pointer"><input type="checkbox" checked>
+        <span class="fname" style="flex:1">Veyland_Holdco_Annual_Review_FY25.pdf</span><span class="badge slate">annual review</span><span style="font-size:11px;color:var(--faint)">2026-03-31</span></label>
+      <label class="hit" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;cursor:pointer"><input type="checkbox" checked>
+        <span class="fname" style="flex:1">Veyland_Holdco_Q3_Update.pdf</span><span class="badge slate">quarterly update</span><span style="font-size:11px;color:var(--faint)">2026-07-15</span></label>
+      <label class="hit" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;cursor:pointer"><input type="checkbox">
+        <span class="fname" style="flex:1">Veyland_Holdco_Covenant_Cert_2026-06.pdf</span><span class="badge slate">compliance certificate</span><span style="font-size:11px;color:var(--faint)">2026-06-30</span></label>
+      <label class="hit" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox">
+        <span class="fname" style="flex:1">Veyland_Holdco_Revolver_Amend_No2.pdf</span><span class="badge slate">credit agreement</span><span style="font-size:11px;color:var(--faint)">2026-05-12</span></label>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn outline small" id="startrev-cancel">Cancel</button>
+        <button class="btn primary small">Start review · 2 documents</button>
+      </div>
+      <span class="pin" style="top:8px;right:6px" data-pin>38<span class="pin-pop"><span class="eyebrow">Note 38 · the repository is a starting line</span>Steve's gap: uploads were the only way in — but the documents often already live in central storage. Same search keys (name or RXM), multi-select, and the button says what it will do. Uploads and repository picks can mix in one review; the amend modal reuses this exact pattern mid-review.</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMMAND PALETTE ============ -->
+<div class="cp-overlay" id="cp-overlay" role="dialog" aria-modal="true" aria-label="Search everything">
+  <div class="cp">
+    <input id="cp-input" type="text" placeholder="Search borrowers, RXM, documents — or type a command…" autocomplete="off">
+    <div class="cp-list">
+      <div class="cp-group">Reviews</div>
+      <button class="cp-item" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg><span class="nm">Veyland US Holdco LLC</span><span class="mono">RXM-6430</span><span class="st">review in progress</span></button>
+      <button class="cp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg><span class="nm">Torvane Aggregates</span><span class="mono">RXM-2214</span><span class="st">completed 2026-08-30</span></button>
+      <div class="cp-group">Documents</div>
+      <button class="cp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span class="mono" style="color:var(--ink)">Veyland_Holdco_Q3_Update.pdf</span><span class="st">quarterly update · parsed</span></button>
+      <div class="cp-group">Actions</div>
+      <button class="cp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add document to this review</button>
+      <button class="cp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>Export Review</button>
+    </div>
+    <div class="cp-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
+  </div>
+</div>
+
 <!-- ============ CRIT NAV ============ -->
 <nav class="crit-nav" aria-label="Mockup navigation">
   <button data-screen="screen-landing" aria-selected="true">1 · Landing</button>
@@ -1071,8 +1224,9 @@ body.ctx-collapsed .rail-right{display:none}
   <button data-screen="screen-overview" aria-selected="false">3 · Review</button>
   <button data-screen="screen-reviews" aria-selected="false">4 · Reviews</button>
   <button data-screen="screen-documents" aria-selected="false">5 · Documents</button>
+  <button data-screen="screen-policy" aria-selected="false">6 · Policy search</button>
   <span class="sep"></span>
-  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 35</button>
+  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 41</button>
 </nav>
 <script>
 (function(){
@@ -1345,6 +1499,45 @@ body.ctx-collapsed .rail-right{display:none}
       });
     });
   });
+  // documents: collapsible borrower groups
+  document.querySelectorAll('.b-group').forEach(function(g){
+    g.addEventListener('click', function(e){
+      if(e.target.closest('.pin')) return;
+      var docs=g.nextElementSibling;
+      if(!docs || !docs.classList.contains('b-docs')) return;
+      docs.hidden=!docs.hidden;
+      g.classList.toggle('open', !docs.hidden);
+    });
+  });
+
+  // start-review-from-repository picker
+  var srov=document.getElementById('startrev-overlay');
+  function srClose(){ srov.classList.remove('open'); }
+  document.getElementById('startrev-open').addEventListener('click', function(e){ e.stopPropagation(); srov.classList.add('open'); });
+  document.getElementById('startrev-close').addEventListener('click', srClose);
+  document.getElementById('startrev-cancel').addEventListener('click', srClose);
+  srov.addEventListener('click', function(e){ if(e.target===srov) srClose(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') srClose(); });
+
+  // command palette: ⌘K/Ctrl-K, arrow-key nav, Escape closes
+  var cpo=document.getElementById('cp-overlay'), cpi=document.getElementById('cp-input');
+  function cpOpen(){ cpo.classList.add('open'); cpi.focus(); }
+  function cpClose(){ cpo.classList.remove('open'); }
+  document.getElementById('cp-open').addEventListener('click', function(e){ e.stopPropagation(); cpOpen(); });
+  cpo.addEventListener('click', function(e){ if(e.target===cpo) cpClose(); });
+  document.addEventListener('keydown', function(e){
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); cpo.classList.contains('open')?cpClose():cpOpen(); return; }
+    if(!cpo.classList.contains('open')) return;
+    var items=Array.prototype.slice.call(cpo.querySelectorAll('.cp-item'));
+    var idx=items.findIndex(function(i){ return i.getAttribute('aria-selected')==='true'; });
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      var next=e.key==='ArrowDown'?(idx+1)%items.length:(idx-1+items.length)%items.length;
+      items.forEach(function(i,n){ i.setAttribute('aria-selected', n===next?'true':'false'); });
+      items[next].scrollIntoView({block:'nearest'});
+    } else if(e.key==='Escape'){ cpClose(); }
+  });
+
   document.getElementById('adddoc-confirm').addEventListener('click', function(){
     adClose();
     document.getElementById('run-line').textContent='3 · evidence amended 11:32 · impacted checks re-running';

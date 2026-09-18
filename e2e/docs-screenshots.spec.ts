@@ -47,9 +47,30 @@ test('stone-light: every screen', async ({ page }) => {
   await page.screenshot({ path: `${OUT}/19-erm-start.png` })
 
   await page.goto('/erm/documents')
-  await expect(page.getByText(/on system for ERM/)).toBeVisible()
+  await expect(page.getByText(/on system for this application/)).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/20-erm-documents.png` })
+
+  await page.goto('/crr/policy')
+  await page.getByLabel('Ask or search policies').fill('When must valuation inputs be re-verified?')
+  await page.getByRole('button', { name: 'Ask' }).click()
+  await expect(page.getByText('capability preview')).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/21-policy-search.png` })
+
+  await page.goto('/erm')
+  await page
+    .getByRole('radiogroup', { name: 'Question mode' })
+    .getByRole('radio', { name: 'Question set' })
+    .click()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/22-cpea-question-sets.png` })
+
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.getByRole('dialog', { name: 'Search everything' })).toBeVisible()
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: `${OUT}/23-command-palette.png` })
+  await page.keyboard.press('Escape')
 
   await page.goto('/crr')
   await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
@@ -73,7 +94,7 @@ test('stone-light: every screen', async ({ page }) => {
     .fill('What is revolver availability at close?')
   await settle(page)
   await page.screenshot({ path: `${OUT}/02-landing-with-files.png` })
-  await page.getByRole('button', { name: 'Begin review' }).click()
+  await page.getByRole('button', { name: /^Begin review/ }).click()
   await expect(page.getByRole('heading', { level: 2 })).toHaveText('Reading the documents')
   await settle(page)
   await page.screenshot({ path: `${OUT}/03-processing.png` })

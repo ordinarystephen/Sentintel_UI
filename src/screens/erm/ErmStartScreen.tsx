@@ -12,8 +12,10 @@ import { useQuestionSets, useResolvePopulation, useErmMutations } from '@/api/ho
 import type { PopulationCriteria, RepositoryDoc } from '@/api/types'
 import { Button } from '@/components/Button'
 import { RepositoryPicker } from '@/components/viewers/RepositoryPicker'
+import { cx } from '@/lib/cx'
 import { fmt, plural } from '@/lib/fmt'
 import { strings } from '@/strings'
+import { AddQuestionSetModal } from './AddQuestionSetModal'
 import { POP_VOCAB } from './config'
 
 const s = strings.erm.start
@@ -59,8 +61,10 @@ export function ErmStartScreen() {
   const navigate = useNavigate()
   const sets = useQuestionSets()
   const m = useErmMutations()
+  const [mode, setMode] = useState<'prompt' | 'qset'>('prompt')
   const [prompt, setPrompt] = useState('')
   const [setId, setSetId] = useState<string>('qs-quarterly-pulse')
+  const [addOpen, setAddOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [picked, setPicked] = useState<RepositoryDoc[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -81,8 +85,8 @@ export function ErmStartScreen() {
 
   async function go() {
     const { runId } = await m.startRun.mutateAsync({
-      questionSetId: setId,
-      prompt: prompt.trim() || undefined,
+      questionSetId: mode === 'qset' ? setId : 'qs-quarterly-pulse',
+      prompt: mode === 'prompt' ? prompt.trim() || undefined : undefined,
       criteria,
       documents: attachedNames,
     })
@@ -99,28 +103,68 @@ export function ErmStartScreen() {
 
       <div>
         <ZoneHeading title={s.questionZone} aside={s.questionAside} />
-        <textarea
-          aria-label={s.promptAria}
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder={s.promptPlaceholder}
-          className="min-h-[76px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.8125rem]"
-        />
-        <div className="mt-2 max-w-[340px]">
-          <select
-            aria-label={s.questionSetAria}
-            value={setId}
-            onChange={(e) => setSetId(e.target.value)}
-            className="w-full rounded-[7px] border border-rule-strong bg-bg px-2 py-[7px] text-[0.78125rem] text-ink-soft"
-          >
-            {(sets.data ?? []).map((q) => (
-              <option key={q.id} value={q.id}>
-                {fmt(s.questionSetOption, { name: q.name, n: q.fields.length })}
-              </option>
-            ))}
-            <option value="">{s.adHocOption}</option>
-          </select>
+        <div
+          role="radiogroup"
+          aria-label={s.modeAria}
+          className="inline-flex gap-[3px] rounded-[9px] border border-rule bg-bg-subtle p-[3px]"
+        >
+          {(
+            [
+              ['prompt', s.modePrompt],
+              ['qset', s.modeQset],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={mode === id}
+              onClick={() => setMode(id)}
+              className={cx(
+                'rounded-[7px] px-[18px] py-[7px] text-[0.8125rem] font-medium text-muted',
+                mode === id && 'bg-bg font-semibold text-ink shadow-sm',
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+        {mode === 'prompt' ? (
+          <textarea
+            aria-label={s.promptAria}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder={s.promptPlaceholder}
+            className="mt-3 min-h-[76px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.8125rem]"
+          />
+        ) : (
+          <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-[10px] border border-dashed border-rule bg-bg-subtle px-3.5 py-[9px] text-muted hover:text-ink"
+            >
+              <span className="text-[1.25rem] leading-none">＋</span>
+              <span className="text-[0.8125rem] font-semibold">{s.addNew}</span>
+              <span className="text-dense text-faint">{s.addNewHint}</span>
+            </button>
+            {(sets.data ?? []).map((q) => (
+              <button
+                key={q.id}
+                type="button"
+                aria-pressed={setId === q.id}
+                onClick={() => setSetId(q.id)}
+                className={cx(
+                  'rounded-[10px] border border-rule bg-bg px-3.5 py-[9px] text-left transition-[box-shadow,border-color] duration-150 hover:border-rule-strong hover:shadow-md',
+                  setId === q.id && 'border-primary shadow-[0_0_0_1px_var(--primary)]',
+                )}
+              >
+                <h4 className="font-display text-[0.875rem] font-semibold">{q.name}</h4>
+                <p className="line-clamp-2 text-dense text-muted">{q.description}</p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
@@ -232,6 +276,7 @@ export function ErmStartScreen() {
         {strings.suite.fictionalNote}
       </p>
 
+      {addOpen && <AddQuestionSetModal onClose={() => setAddOpen(false)} />}
       {pickerOpen && (
         <RepositoryPicker
           onClose={() => setPickerOpen(false)}

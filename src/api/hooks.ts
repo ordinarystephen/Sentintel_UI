@@ -8,9 +8,9 @@ import { api } from './index'
 import type {
   AmendSource,
   ClearReason,
+  CreateReviewInput,
   DocumentFilters,
   ErmRun,
-  ExtractionSettings,
   PopulationCriteria,
   ReviewFilters,
 } from './types'
@@ -59,6 +59,9 @@ export const useRun = (runId: string) =>
 
 export const useRuns = () => useQuery({ queryKey: queryKeys.runs, queryFn: () => api.listRuns() })
 
+export const usePolicyDocs = () =>
+  useQuery({ queryKey: ['policyDocs'], queryFn: () => api.listPolicyDocs() })
+
 export function useErmMutations() {
   const qc = useQueryClient()
   const invalidateRuns = () => qc.invalidateQueries({ queryKey: ['erm'] })
@@ -70,6 +73,11 @@ export function useErmMutations() {
     cancelRun: useMutation({
       mutationFn: (runId: string) => api.cancelRun(runId),
       onSuccess: invalidateRuns,
+    }),
+    addQuestionSet: useMutation({
+      mutationFn: (input: { name: string; description: string; fileName?: string }) =>
+        api.addQuestionSet(input),
+      onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.questionSets }),
     }),
   }
 }
@@ -196,8 +204,7 @@ export function useReviewMutations(reviewId: string) {
 export function useCreateReview() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: { files: File[]; contextText: string; settings?: ExtractionSettings }) =>
-      api.createReview(v.files, v.contextText, v.settings),
+    mutationFn: (v: CreateReviewInput) => api.createReview(v),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['reviews'] }),
   })
 }

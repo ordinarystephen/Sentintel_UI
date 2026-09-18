@@ -16,9 +16,9 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/crr',
     )
-    // ERM is live (v1.5): two active cards, Vantage still in design
+    // CPEA (formerly ERM) is live: two active cards, Vantage still in design
     expect(
-      screen.getByRole('link', { name: /ERM.*Enterprise Risk Management.*Open/s }),
+      screen.getByRole('link', { name: /Credit Portfolio Event Assessment.*CPEA.*Open/s }),
     ).toHaveAttribute('href', '/erm')
     expect(screen.getAllByText('In design')).toHaveLength(1)
     expect(screen.getAllByRole('link')).toHaveLength(2)
@@ -60,7 +60,7 @@ describe('routes', () => {
     ['/crr/reviews', 'Reviews', 'My reviews'],
     ['/crr/reviews/all', 'Reviews', 'All reviews'],
     ['/crr/documents', 'Documents', 'Documents'],
-    ['/crr/policy', 'Policy library', 'Policy library'],
+    ['/crr/policy', 'Policy search', 'Policy library'],
   ])('%s renders its screen and marks the rail item active', (path, title, navLabel) => {
     renderAt(path)
     expect(h1()).toHaveTextContent(title)

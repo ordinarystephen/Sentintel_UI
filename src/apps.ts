@@ -17,6 +17,11 @@ export interface SentinelApp {
   status: 'active' | 'design'
   /** Route home for active apps; design-status apps have nowhere to go. */
   home: string
+  /**
+   * Landing-card lead: 'short' (CRR's serif monogram) or 'full' (CPEA's
+   * long serif name at reduced size, with the short label as the aside).
+   */
+  landingTitle?: 'short' | 'full'
 }
 
 export const APPS: readonly SentinelApp[] = [
@@ -35,6 +40,7 @@ export const APPS: readonly SentinelApp[] = [
     description: strings.suite.apps.erm.description,
     status: 'active',
     home: '/erm',
+    landingTitle: 'full',
   },
   {
     id: 'vantage',

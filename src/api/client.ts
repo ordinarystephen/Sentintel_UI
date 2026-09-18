@@ -21,8 +21,10 @@ import type {
   DocumentSearchResult,
   DocumentText,
   ExportResult,
-  ExtractionSettings,
+  CreateReviewInput,
   Policy,
+  PolicyAnswer,
+  PolicyDoc,
   PriorComparison,
   ProcessingReview,
   Review,
@@ -75,15 +77,12 @@ export interface SentinelApi {
    * durable from this call: it appears in listMyReviews immediately with
    * `borrowerName: null` and renames itself when the borrower is detected.
    * `contextText` lines ride into the run and surface as `question` attention
-   * items. `settings` are the demoted extraction controls (parser, section
-   * preset, concurrency); omitted = platform defaults. Resolves as soon as the
-   * record exists — never waits for the run.
+   * items. Uploads and repository picks (by docId) may mix; a repository-only
+   * review (zero uploads) is valid. `config` is the initiation-time workpaper
+   * configuration and rides the review's evidence snapshot. Resolves as soon
+   * as the record exists — never waits for the run.
    */
-  createReview(
-    files: File[],
-    contextText: string,
-    settings?: ExtractionSettings,
-  ): Promise<{ id: string }>
+  createReview(input: CreateReviewInput): Promise<{ id: string }>
 
   /** Cheap poll while processing: phase + status line, or the failure message. */
   getReviewStatus(id: string): Promise<ProcessingReview | { status: 'ready' }>
@@ -152,6 +151,17 @@ export interface SentinelApi {
   /** Policies and standards applied in this review, each listing the items it touched. */
   getPolicies(reviewId: string): Promise<Policy[]>
 
+  /** Policy search: the browsable rows, newest revision first. */
+  listPolicyDocs(): Promise<PolicyDoc[]>
+
+  /**
+   * Ask the policies (CAPABILITY PREVIEW): returns the fixture preview
+   * answer for any question — the answering engine is future work; the seam
+   * is visible now so the UI contract is stable. A non-question search term
+   * belongs in listPolicyDocs filtering, not here.
+   */
+  askPolicies(question: string): Promise<PolicyAnswer>
+
   // ---- documents ----
 
   /**
@@ -215,6 +225,17 @@ export interface SentinelApi {
 
   /** One run, any state — queued/running (with progress), completed, cancelled, failed. */
   getRun(runId: string): Promise<ErmRun>
+
+  /**
+   * Save a question set (CPEA "Add new"): the mock parses no file — a saved
+   * set gets a placeholder question list (count from fixture logic, labeled
+   * honestly). Appends to getQuestionSets and persists.
+   */
+  addQuestionSet(input: {
+    name: string
+    description: string
+    fileName?: string
+  }): Promise<QuestionSet>
 
   /** Newest first. Every run ever started is kept and revisitable. */
   listRuns(): Promise<ErmRun[]>

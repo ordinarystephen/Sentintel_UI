@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sentinel · ERM — POC concept</title>
+<title>Sentinel · Credit Portfolio Event Assessment — POC concept</title>
 <style>
 /* ============================================================
-   SENTINEL · ERM — POC concept r1
+   SENTINEL · CREDIT PORTFOLIO EVENT ASSESSMENT — POC concept r3 (formerly ERM)
    Portfolio-level insights and analysis. Sibling of
    sentinel-mvp-concept.html — same token contract, same voice.
    Pink pins = design rationale. Fictional data.
@@ -184,6 +184,19 @@ table.mon{width:100%;border-collapse:collapse;font-size:13px}
 .rag.green{background:var(--success)}
 .rag.amber{background:var(--warn)}
 .rag.red{background:var(--error)}
+/* question mode: segmented control + question-set cards */
+.seg{display:inline-flex;background:var(--bg-subtle);border-radius:9px;padding:3px;gap:3px;border:1px solid var(--rule)}
+.seg button{padding:7px 18px;border-radius:7px;font-size:13px;color:var(--muted);font-weight:500}
+.seg button[aria-checked="true"]{background:var(--bg);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:600}
+.qs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:12px}
+.qs-card{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:9px 14px;text-align:left;cursor:pointer;transition:box-shadow .15s ease,border-color .15s ease}
+.qs-card:hover{box-shadow:var(--shadow-md);border-color:var(--rule-strong)}
+.qs-card.sel{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.qs-card h4{font-family:var(--font-display);font-size:14px;font-weight:600;margin-bottom:2px}
+.qs-card p{font-size:11.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qs-card.add{border-style:dashed;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;color:var(--muted);background:var(--bg-subtle)}
+.qs-card.add:hover{color:var(--ink)}
+.qs-card.add .plus{font-size:20px;line-height:1}
 /* start screen */
 select.ctl{border:1px solid var(--rule-strong);border-radius:7px;padding:7px 9px;font-size:12.5px;background:var(--bg);color:var(--ink-soft);width:100%}
 .pop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
@@ -296,16 +309,16 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
 </head>
 <body class="notes-on">
 
-<div class="crit-banner">SENTINEL · ERM CONCEPT<span class="sub">Portfolio-level insights and analysis, on the Sentinel design system. Pink pins = rationale. Fictional data.</span></div>
+<div class="crit-banner">SENTINEL · CREDIT PORTFOLIO EVENT ASSESSMENT — CONCEPT<span class="sub">Portfolio-level insights and analysis, on the Sentinel design system. Pink pins = rationale. Fictional data.</span></div>
 
 <div class="frame">
   <div class="masthead">
-    <span class="brand">Sentinel <span class="app">· ERM ▾</span></span>
+    <span class="brand">Sentinel <span class="app">· CPEA ▾</span></span>
     <span class="spacer"></span>
     <button class="theme-cycle" id="themer" type="button">Theme: Stone</button>
   </div>
   <div class="shell-row">
-    <nav class="rail-nav" aria-label="ERM navigation">
+    <nav class="rail-nav" aria-label="Credit Portfolio Event Assessment navigation">
       <button class="nav-item active" data-nav="screen-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg>Home</button>
       <button class="nav-item" data-nav="screen-runs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>Runs</button>
       <button class="nav-item" data-nav="screen-documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>Documents</button>
@@ -320,22 +333,35 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
           <p class="sub">Ask a question of any population — documents you bring, documents on system, or a whole portfolio slice.</p>
           <span class="pin pin-left" style="top:-4px;left:290px" data-pin>E6<span class="pin-pop"><span class="eyebrow">Note E6 · the same arc as CRR</span>Steve's reframing: the monitor is a RESULT, not a home. ERM now speaks the suite's three-beat rhythm — start, processing, results — with the POC workspace intact at the end. The start screen takes the prompt, the documents (uploaded or picked), and the population scope in one place; "go" means go.</span></span>
         </div>
-        <div class="zone-h" style="margin-top:4px"><h3>The question</h3><span class="aside">a prompt, a saved question set, or both</span></div>
-        <textarea class="qbox" aria-label="Prompt" placeholder="What do you want to know? e.g. Which borrowers have covenant headroom below 1.0x at the latest test?"></textarea>
-        <div style="max-width:340px;margin-top:8px">
-          <select class="ctl" aria-label="Question set">
-            <option>Question set: Quarterly credit pulse · 17 questions</option>
-            <option>Question set: Covenant sweep · 5 questions</option>
-            <option>Ad hoc — prompt only</option>
-          </select>
+        <div class="zone-h pin-anchor" style="margin-top:4px"><h3>What to ask</h3><span class="aside">one prompt, or a saved question set</span>
+          <span class="pin" style="top:-8px;right:-10px" data-pin>E14<span class="pin-pop"><span class="eyebrow">Note E14 · two ways to ask</span>Steve's spec: a segmented control — Prompt only, or Question set. Choosing Question set opens the card menu of saved sets (title + description), with Add new always first: upload a question file, name it, describe it, save — and it becomes a card for every future run. The 21st.dev segmented-control behavior, on Sentinel tokens.</span></span>
         </div>
-        <div class="zone-h"><h3>The documents</h3><span class="aside">optional — leave empty to run on the population below</span></div>
+        <div class="seg" role="radiogroup" aria-label="Question mode" id="qmode">
+          <button role="radio" aria-checked="true" data-mode="prompt">Prompt only</button>
+          <button role="radio" aria-checked="false" data-mode="qset">Question set</button>
+        </div>
+        <div id="qmode-prompt" style="margin-top:12px">
+          <textarea class="qbox" aria-label="Prompt" placeholder="What do you want to know? e.g. Which borrowers have covenant headroom below 1.0x at the latest test?"></textarea>
+        </div>
+        <div id="qmode-qset" hidden>
+          <div class="qs-grid" id="qs-grid">
+            <button class="qs-card add" id="qs-add"><span class="plus">＋</span><span style="font-weight:600;font-size:13px">Add new</span><span style="font-size:11.5px;color:var(--faint)">· upload a question set</span></button>
+            <button class="qs-card sel"><h4>Quarterly credit pulse</h4><p>17 questions across leverage, liquidity, covenants, ratings, exposure and the coverage team.</p></button>
+            <button class="qs-card"><h4>Covenant sweep</h4><p>5 questions on covenant tests, headroom and certificate currency.</p></button>
+            <button class="qs-card"><h4>Watchlist deep-dive</h4><p>8 questions for names already on the watchlist — triggers, mitigants, exit options.</p></button>
+            <button class="qs-card"><h4>Sponsor &amp; ownership refresh</h4><p>6 questions on sponsor support, ownership changes and guarantee scope.</p></button>
+            <button class="qs-card"><h4>Liquidity stress pulse</h4><p>7 questions on availability, maturities and revolver utilization under stress.</p></button>
+            <button class="qs-card"><h4>Regulatory classification sweep</h4><p>4 questions confirming regulatory ratings and classification currency.</p></button>
+            <button class="qs-card"><h4>Documentation currency check</h4><p>5 questions on amendments, waivers and whether the file reflects the latest agreement.</p></button>
+          </div>
+        </div>
+        <div class="zone-h"><h3>Documents</h3><span class="aside">optional — leave empty to run on the population below</span></div>
         <div class="dropzone compact" role="button" tabindex="0" aria-label="Upload documents">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 17v2a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2"/></svg>
           <div class="big">Drop documents here</div>
           <div class="or">or browse files · or <span class="link">select from the repository</span></div>
         </div>
-        <div class="zone-h pin-anchor"><h3>The population</h3><span class="aside">full-population search — scope resolved on system</span>
+        <div class="zone-h pin-anchor"><h3>Population</h3><span class="aside">full-population search — scope resolved on system</span>
           <span class="pin" style="top:-8px;right:-10px" data-pin>E7<span class="pin-pop"><span class="eyebrow">Note E7 · deliberate placeholders</span>Steve's instruction verbatim: the population vocabulary isn't settled, so these are dropdowns with placeholder values — portfolios, sub-portfolios, regions, as-of. The shape (a labeled dropdown row that composes with explicit documents) is the design; the words in the lists are not. Population scope and hand-picked documents union into one run.</span></span>
         </div>
         <div class="pop-grid">
@@ -383,17 +409,17 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
           <div class="sum-line"><b>Summary</b><span class="badge indigo">Quarterly credit pulse · 17 questions</span><span class="mono" style="color:var(--faint)">run 09:12 · IB Lending · latest on system</span></div>
           <div class="sum-stats">
             <span><b>6</b> borrowers analyzed · 11 documents · 17 questions · 102 answers</span>
-            <span class="badge slate">89 stated</span><span class="badge slate">5 derived</span><span class="badge amber">8 unsupported</span>
+            <span class="badge slate">87 stated</span><span class="badge slate">7 derived</span><span class="badge amber">8 unsupported</span>
             <span style="color:var(--muted)">Most attention needed: <b>Redfenn Timber Holdings</b> — 8 of 17 answers unsupported; documents predate Amendment No. 1</span>
           </div>
           <details class="refdata2">
             <summary>Population — why these borrowers<span class="mono">6 included · 3 excluded · 1 indeterminate</span></summary>
             <div style="margin-top:8px;font-size:12.5px;color:var(--muted)">Criteria: IB Lending · all sub-portfolios · all regions · latest documents on system. Exclusions are named, never silent:</div>
             <div style="margin-top:6px">
-              <div class="excl-row"><span class="who">Seldwyn Marine Finance</span><span class="mono">RXM-7742</span><span class="reason">excluded — no documents on system as of the run</span></div>
-              <div class="excl-row"><span class="who">Verloway AgriChem</span><span class="mono">RXM-8105</span><span class="reason">excluded — outside selected portfolio (Wealth Management)</span></div>
-              <div class="excl-row"><span class="who">Aurelock Dental Group</span><span class="mono">RXM-9033</span><span class="reason">excluded — no exposure at the as-of date</span></div>
-              <div class="excl-row"><span class="who">Farrowdale Logistics</span><span class="mono">RXM-6617</span><span class="reason" style="color:var(--warn)">indeterminate — insufficient look-through information; included in the count, flagged for review</span></div>
+              <div class="excl-row"><span class="who">Seldwyn Marine Finance</span><span class="mono">RXM-7712</span><span class="reason">excluded — no documents on system as of the run</span></div>
+              <div class="excl-row"><span class="who">Verloway AgriChem</span><span class="mono">RXM-2210</span><span class="reason">excluded — outside selected portfolio (Wealth Management)</span></div>
+              <div class="excl-row"><span class="who">Aurelock Dental Group</span><span class="mono">RXM-6429</span><span class="reason">excluded — no exposure at the as-of date</span></div>
+              <div class="excl-row"><span class="who">Farrowdale Logistics</span><span class="mono">RXM-8093</span><span class="reason" style="color:var(--warn)">indeterminate — insufficient look-through information; included in the count, flagged for review</span></div>
             </div>
           </details>
           <span class="pin" style="top:-9px;right:-6px" data-pin>E8<span class="pin-pop"><span class="eyebrow">Note E8 · the population accounts for itself</span>Steve's new requirement, made structural: every run opens with a summary — question set, status counts, the headline finding — and a disclosure that answers "why was this population chosen and why were some borrowers excluded." Exclusions carry named reasons; the indeterminate class (insufficient look-through) is reported, never silently defaulted. The run is an auditable object, not just a table.</span></span>
@@ -446,7 +472,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
         <div class="run-row" style="border-color:var(--rule-strong)">
           <span class="when">Today 09:12</span>
           <span class="what"><span class="qs">Quarterly credit pulse</span> · 17 questions<br><span class="scope">IB Lending · all sub-portfolios · all regions — 6 borrowers · 11 documents</span></span>
-          <span class="badge slate">89 stated</span><span class="badge slate">5 derived</span><span class="badge amber">8 unsupported</span>
+          <span class="badge slate">87 stated</span><span class="badge slate">7 derived</span><span class="badge amber">8 unsupported</span>
           <button class="btn outline small" data-goto="screen-results">View results</button>
         </div>
         <div class="run-row">
@@ -458,7 +484,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
         <div class="run-row">
           <span class="when">2026-08-28 09:00</span>
           <span class="what"><span class="qs">Quarterly credit pulse</span> · 17 questions<br><span class="scope">IB Lending · all sub-portfolios — 6 borrowers · 10 documents</span></span>
-          <span class="badge slate">96 stated</span><span class="badge amber">4 unsupported</span>
+          <span class="badge slate">94 stated</span><span class="badge amber">4 unsupported</span>
           <button class="btn outline small" data-goto="screen-results">View results</button>
         </div>
         <p class="disclaimer">All data in this demonstration build is fictional.</p>
@@ -468,7 +494,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
       <section class="screen" id="screen-documents" aria-label="Documents">
         <div class="pin-anchor">
           <h1 class="page">Documents</h1>
-          <p class="sub">Everything on system that ERM can see — search it, and choose what feeds the monitor.</p>
+          <p class="sub">Everything on system this application can see — search it, and choose what feeds the monitor.</p>
           <span class="pin pin-left" style="top:-4px;left:180px" data-pin>E5<span class="pin-pop"><span class="eyebrow">Note E5 · one repository, an ERM lens</span>Steve's gap: the monitor said "11 documents" with nowhere to see or search them. This screen is the shared platform repository viewed through ERM's lens — same search keys (name or RXM), plus one ERM-only control: whether a document is in the monitor's scope. Nothing here is a second document store.</span></span>
         </div>
         <div class="searchbar">
@@ -477,7 +503,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
         </div>
         <div class="hit-count">17 documents · 7 borrowers on system for ERM — click a borrower to expand</div>
 
-        <div class="b-group open"><h3>Ambervale Foods Group</h3><span class="mono" style="color:var(--muted)">RXM-3821</span><span class="badge slate">5 documents</span></div>
+        <div class="b-group open"><h3>Ambervale Foods Group</h3><span class="mono" style="color:var(--muted)">RXM-5120</span><span class="badge slate">5 documents</span></div>
         <div class="b-docs">
         <div class="doc-row"><span class="fname">Ambervale_Foods_Q2_Performance_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
         <div class="doc-row"><span class="fname">Ambervale_Foods_Covenant_Cert_2026-06.pdf</span><span class="badge slate">compliance certificate</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
@@ -486,7 +512,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
         <div class="doc-row"><span class="fname">Ambervale_Foods_Q1_Performance_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag off">not in scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
         </div>
 
-        <div class="b-group"><h3>Torvane Aggregates</h3><span class="mono" style="color:var(--muted)">RXM-2214</span><span class="badge slate">1 document</span></div>
+        <div class="b-group"><h3>Torvane Aggregates</h3><span class="mono" style="color:var(--muted)">RXM-4100</span><span class="badge slate">1 document</span></div>
         <div class="b-docs" hidden><div class="doc-row"><span class="fname">Torvane_Aggregates_Credit_Agreement_2026.pdf</span><span class="badge slate">credit agreement</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
 
         <div class="b-group pin-anchor"><h3>Veyland US Holdco LLC</h3><span class="mono" style="color:var(--muted)">RXM-6430</span><span class="badge slate">1 document</span>
@@ -494,14 +520,40 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
         </div>
         <div class="b-docs" hidden><div class="doc-row"><span class="fname">Veyland_Holdco_Q3_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
 
-        <div class="b-group"><h3>Orvalon Freight Systems</h3><span class="mono" style="color:var(--muted)">RXM-4177</span><span class="badge slate">1 document</span></div>
-        <div class="b-docs" hidden><div class="doc-row"><span class="fname">Orvalon_Freight_Refinancing_Memo_2026.pdf</span><span class="badge slate">memo</span><span class="scope-tag off">not in scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
+        <div class="b-group"><h3>Orvalon Freight Systems</h3><span class="mono" style="color:var(--muted)">RXM-5744</span><span class="badge slate">1 document</span></div>
+        <div class="b-docs" hidden><div class="doc-row"><span class="fname">Orvalon_Freight_Refinancing_Memo_2026.pdf</span><span class="badge slate">memo</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
 
         <p class="disclaimer">All data in this demonstration build is fictional.</p>
       </section>
 
       </div>
     </main>
+  </div>
+</div>
+
+<!-- ============ ADD QUESTION SET ============ -->
+<div class="overlay" id="qs-overlay" role="dialog" aria-modal="true" aria-label="Add a question set">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h"><h3>Add a question set</h3><button class="icon-btn" id="qs-close" aria-label="Close">✕</button></div>
+    <div class="modal-b">
+      <div class="dropzone compact" role="button" tabindex="0" aria-label="Upload a question file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 17v2a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2"/></svg>
+        <div class="big">Drop a question file here</div>
+        <div class="or">or browse files · CSV or XLSX, one question per row</div>
+      </div>
+      <div style="margin-top:14px">
+        <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px" for="qs-title">Title</label>
+        <input id="qs-title" type="text" style="width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:8px 11px;font-size:13px;background:var(--bg)" placeholder="e.g. Watchlist deep-dive">
+      </div>
+      <div style="margin-top:12px">
+        <label style="display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px" for="qs-desc">Description</label>
+        <input id="qs-desc" type="text" style="width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:8px 11px;font-size:13px;background:var(--bg)" placeholder="One line on what this set asks and when to use it">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+        <button class="btn outline small" id="qs-cancel">Cancel</button>
+        <button class="btn primary small" id="qs-save">Save</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -566,7 +618,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
   <button data-screen="screen-results" aria-selected="false">3 · Results</button>
   <button data-screen="screen-runs" aria-selected="false">4 · Runs</button>
   <button data-screen="screen-documents" aria-selected="false">5 · Documents</button>
-  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 13</button>
+  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 14</button>
 </nav>
 
 <script>
@@ -580,6 +632,34 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
   document.querySelectorAll('.crit-nav [data-screen]').forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.screen); }); });
   document.querySelectorAll('.rail-nav .nav-item').forEach(function(n){ n.addEventListener('click', function(){ show(n.dataset.nav); }); });
   document.querySelectorAll('tr[data-detail]').forEach(function(r){ r.addEventListener('click', function(){ document.getElementById('detail-overlay').classList.add('open'); dstack.push(document.getElementById('detail-overlay')); }); });
+
+  // question mode: segmented control + question-set cards
+  document.querySelectorAll('#qmode [data-mode]').forEach(function(bb){
+    bb.addEventListener('click', function(){
+      document.querySelectorAll('#qmode [data-mode]').forEach(function(x){ x.setAttribute('aria-checked', x===bb?'true':'false'); });
+      document.getElementById('qmode-prompt').hidden = bb.dataset.mode!=='prompt';
+      document.getElementById('qmode-qset').hidden = bb.dataset.mode!=='qset';
+    });
+  });
+  document.getElementById('qs-grid').addEventListener('click', function(e){
+    var c=e.target.closest('.qs-card'); if(!c || c.id==='qs-add') return;
+    document.querySelectorAll('.qs-card').forEach(function(x){ x.classList.remove('sel'); });
+    c.classList.add('sel');
+  });
+  var qov=document.getElementById('qs-overlay');
+  function qsClose(){ qov.classList.remove('open'); }
+  document.getElementById('qs-add').addEventListener('click', function(e){ e.stopPropagation(); qov.classList.add('open'); });
+  document.getElementById('qs-close').addEventListener('click', qsClose);
+  document.getElementById('qs-cancel').addEventListener('click', qsClose);
+  qov.addEventListener('click', function(e){ if(e.target===qov) qsClose(); });
+  document.getElementById('qs-save').addEventListener('click', function(){
+    var t=document.getElementById('qs-title').value || 'Untitled question set';
+    var d=document.getElementById('qs-desc').value || 'Uploaded question set.';
+    var card=document.createElement('button'); card.className='qs-card';
+    card.innerHTML='<h4></h4><p></p>'; card.querySelector('h4').textContent=t; card.querySelector('p').textContent=d;
+    document.getElementById('qs-grid').appendChild(card);
+    qsClose();
+  });
 
   // start -> processing -> results
   var goBtn=document.getElementById('erm-go');
@@ -620,17 +700,17 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
   var FIELDS=[["counterparty","Counterparty"],["team_lead","Team Lead (TL)"],["credit_officer","Credit Officer (CO)"],["credit_analyst","Credit Analyst (CA)"],["sector","Sector / Industry"],["pd","PD Rating"],["reg","Regulatory Rating"],["dscr","Debt Repayment Capacity"],["ev","EV Coverage"],["fccr","FCCR"],["lev","Gross Leverage"],["hd","Covenant Headroom"],["rd","Rating Direction"],["cwl","CWL Flag"],["exp","Total Exposure"],["risk","Overall Risk"],["summary","Key Risk Summary"]];
   var VIS=[["hd","Headroom"],["rd","Rating dir."],["pd","PD"],["lev","Gross lev."],["summary","Key risk summary"]];
   var ROWS=[
-    {b:"Redfenn Timber Holdings",rxm:"RXM-5108",match:38,pd:"B2",lev:"5.2x",fccr:"—",exp:"$310mm",cwl:"—",sum:"Documents on system predate Amendment No. 1 — eight answers could not be grounded.",
+    {b:"Redfenn Timber Holdings",rxm:"RXM-6292",match:38,pd:"B2",lev:"5.2x",fccr:"—",exp:"$310mm",cwl:"—",sum:"Documents on system predate Amendment No. 1 — eight answers could not be grounded.",
      f:{counterparty:["Redfenn Timber Holdings","h"],team_lead:["N/A","l","inf"],credit_officer:["R. Chen","m"],credit_analyst:["N/A","l"],sector:["Materials — Forestry (NACE 02.20)","h"],pd:["B2","m"],reg:["—","l","un"],dscr:["—","l","un"],ev:["—","l","un"],fccr:["—","l","un"],lev:["5.2x","m"],hd:["—","l","un"],rd:["—","l","un"],cwl:["—","l","un"],exp:["$310mm CMT","m"],risk:["—","l","un"],summary:["Stale document set: eight answers unsupported pending the amended agreement.","m","inf"]}},
-    {b:"Orvalon Freight Systems",rxm:"RXM-4177",match:71,pd:"Ba3",lev:"3.1x",fccr:"2.4x",exp:"$140mm",cwl:"No",sum:"Refinancing memo covers structure well; personnel and regulatory fields inferred.",
+    {b:"Orvalon Freight Systems",rxm:"RXM-5744",match:71,pd:"Ba3",lev:"3.1x",fccr:"2.4x",exp:"$140mm",cwl:"No",sum:"Refinancing memo covers structure well; personnel and regulatory fields inferred.",
      f:{counterparty:["Orvalon Freight Systems","h"],team_lead:["T. Alvarez","m","inf"],credit_officer:["M. Okafor","h"],credit_analyst:["N/A","l"],sector:["Industrials — Freight & Logistics (NACE 49.41)","h"],pd:["Ba3","h"],reg:["Pass","m","inf"],dscr:["DSCR 1.9x LTM","m"],ev:["2.6x","m"],fccr:["2.4x","h"],lev:["3.1x","h"],hd:["2.3x","h"],rd:["Stable","m"],cwl:["No","h"],exp:["$140mm CMT","h"],risk:["Low","m"],summary:["Post-refinancing leverage low; renewal concentration in two contracts.","h"]}},
     {b:"Veyland US Holdco LLC",rxm:"RXM-6430",match:84,pd:"B1",lev:"5.9x",fccr:"1.8x",exp:"$1,390mm",cwl:"No",sum:"Expected case revised down on enterprise renewal slippage; headroom compressing.",
      f:{counterparty:["Veyland US Holdco LLC","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["R. Chen","m"],sector:["TMT — Application Hosting (NACE 63.11)","h"],pd:["B1","h"],reg:["Pass","h"],dscr:["DSCR 1.6x LTM","m"],ev:["2.1x","m","inf"],fccr:["1.8x","h"],lev:["5.9x","h"],hd:["0.6x","h"],rd:["Negative","m","inf"],cwl:["No","h"],exp:["$1,240mm TLB + $150mm RCF","h"],risk:["Medium","m"],summary:["Renewal-cycle slippage drives the revised expected case; covenant headroom 0.6x.","h"]}},
-    {b:"Ambervale Foods Group",rxm:"RXM-3821",match:92,pd:"B1",lev:"6.1x",fccr:"1.5x",exp:"$820mm",cwl:"Yes",sum:"Leverage up 0.4x q/q against a tightening covenant; certificate pending.",
+    {b:"Ambervale Foods Group",rxm:"RXM-5120",match:92,pd:"B1",lev:"6.1x",fccr:"1.5x",exp:"$820mm",cwl:"Yes",sum:"Leverage up 0.4x q/q against a tightening covenant; certificate pending.",
      f:{counterparty:["Ambervale Foods Group","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["T. Alvarez","h"],sector:["Consumer — Packaged Foods (NACE 10.89)","h"],pd:["B1","h"],reg:["Special Mention","h"],dscr:["DSCR 1.3x LTM","h"],ev:["1.9x","m"],fccr:["1.5x","h"],lev:["6.1x","h"],hd:["0.4x","h","inf"],rd:["Negative","h"],cwl:["Yes","h"],exp:["$820mm CMT","h"],risk:["High","h"],summary:["Covenant headroom 0.4x at revised EBITDA; June certificate not yet provided.","h"]}},
-    {b:"Torvane Aggregates",rxm:"RXM-2214",match:88,pd:"Ba2",lev:"4.2x",fccr:"2.0x",exp:"$460mm",cwl:"No",sum:"Stable quarter; covenant grid and step-down read directly from the agreement.",
+    {b:"Torvane Aggregates",rxm:"RXM-4100",match:88,pd:"Ba2",lev:"4.2x",fccr:"2.0x",exp:"$460mm",cwl:"No",sum:"Stable quarter; covenant grid and step-down read directly from the agreement.",
      f:{counterparty:["Torvane Aggregates","h"],team_lead:["T. Alvarez","h"],credit_officer:["R. Chen","h"],credit_analyst:["N/A","l"],sector:["Materials — Aggregates (NACE 08.12)","h"],pd:["Ba2","h"],reg:["Pass","h"],dscr:["DSCR 2.1x LTM","h"],ev:["2.8x","m"],fccr:["2.0x","h"],lev:["4.2x","h"],hd:["1.1x","h"],rd:["Stable","h"],cwl:["No","h"],exp:["$460mm CMT","h"],risk:["Low","h"],summary:["Headroom 1.1x and stable; step-down to 4.75x from Q4 2027.","h"]}},
-    {b:"Northgale Health Partners",rxm:"RXM-5590",match:90,pd:"Ba3",lev:"4.8x",fccr:"1.9x",exp:"$275mm",cwl:"No",sum:"Steady performance; reimbursement mix the watch item.",
+    {b:"Northgale Health Partners",rxm:"RXM-4488",match:90,pd:"Ba3",lev:"4.8x",fccr:"1.9x",exp:"$275mm",cwl:"No",sum:"Steady performance; reimbursement mix the watch item.",
      f:{counterparty:["Northgale Health Partners","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["T. Alvarez","m"],sector:["Healthcare — Outpatient Services (NACE 86.22)","h"],pd:["Ba3","h"],reg:["Pass","h"],dscr:["DSCR 1.7x LTM","h"],ev:["2.4x","m"],fccr:["1.9x","h"],lev:["4.8x","h"],hd:["1.4x","h"],rd:["Stable","h"],cwl:["No","h"],exp:["$275mm CMT","h"],risk:["Low","h"],summary:["Headroom 1.4x; payer-mix shift monitored, no covenant pressure.","h"]}}
   ];
   function gradeOf(v){ return v[2]==="un"?"unsupported":v[2]==="inf"?"derived":"stated"; }

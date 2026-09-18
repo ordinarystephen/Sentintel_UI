@@ -69,8 +69,8 @@ test('masthead switcher: menu lists entitled apps, disables in-design, All appli
   const disabled = menu.locator('[role="menuitem"][aria-disabled="true"]')
   await expect(disabled).toHaveCount(1)
   await expect(disabled.first()).toContainText('In design')
-  // the live ERM entry navigates
-  await menu.getByRole('menuitem', { name: /ERM/ }).click()
+  // the live CPEA entry navigates
+  await menu.getByRole('menuitem', { name: /CPEA/ }).click()
   await expect(page.getByRole('heading', { name: 'Start a portfolio analysis' })).toBeVisible()
   await expect(page).toHaveURL(/\/erm$/)
   // and the switcher works from inside ERM too

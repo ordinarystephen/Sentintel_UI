@@ -123,6 +123,8 @@ export interface QuestionField {
 export interface QuestionSet {
   id: string
   name: string
+  /** One line on what this set asks and when to use it (2-line clamp on cards). */
+  description: string
   fields: QuestionField[]
 }
 
@@ -181,6 +183,24 @@ export interface PopulationAccounting {
   included: BorrowerRef[]
   excluded: Array<{ ref: BorrowerRef; reason: string }>
   indeterminate: Array<{ ref: BorrowerRef; reason: string }>
+}
+
+/** A browsable policy row (Policy search, newest revision first). */
+export interface PolicyDoc {
+  id: string
+  title: string
+  revisedOn: string
+}
+
+/**
+ * The Ask-the-policies preview answer (capability preview: the answering
+ * engine is future work — the seam is visible, the machinery arrives later).
+ */
+export interface PolicyAnswer {
+  answer: string
+  quote: string
+  citation: string
+  revisedOn: string
 }
 
 export type ErmRunState = 'queued' | 'running' | 'completed' | 'cancelled' | 'failed'
@@ -386,6 +406,8 @@ export interface Review extends ReviewSummary {
   ratings: Rating[]
   dealTypeChips: string[]
   runCompletedAt: string
+  /** The initiation-time workpaper configuration, in the evidence snapshot. */
+  workpaperConfig?: WorkpaperConfig
   /** Set when evidence was amended mid-review (the manifest's status line). */
   evidenceAmendedAt?: string
   /** While now < this, impacted checks are re-running; settled afterwards. */
@@ -525,16 +547,27 @@ export interface DocumentSearchResult {
   docTypes: string[]
 }
 
-/** The demoted "Advanced extraction settings" (§5.1). Defaults are the platform's. */
-export interface ExtractionSettings {
-  parser: 'pdfplumber' | 'pymupdf' | 'docling'
-  preset: 'ib_lending' | 'generic'
-  concurrency: 2 | 4 | 8
+/**
+ * Workpaper configuration (refinement round, 2026-09-18) — what the analyst
+ * DOES shape at initiation: template, section toggles, custom analysis
+ * topics. Option vocabulary is a deliberate placeholder (see
+ * screens/landing/config.ts); the chosen values ride the review's evidence
+ * snapshot even while placeholders. (The former "advanced extraction
+ * settings" were removed entirely — parsing is the platform's job.)
+ */
+export interface WorkpaperConfig {
+  template: string
+  /** Canonical section numbers included (1..6). */
+  sections: number[]
+  customTopics?: string
 }
-export const DEFAULT_EXTRACTION: ExtractionSettings = {
-  parser: 'pdfplumber',
-  preset: 'ib_lending',
-  concurrency: 4,
+
+export interface CreateReviewInput {
+  files: File[]
+  contextText: string
+  /** Index-store docIds pulled from the shared repository. */
+  repositoryDocIds?: string[]
+  config?: WorkpaperConfig
 }
 
 export interface ExportResult {

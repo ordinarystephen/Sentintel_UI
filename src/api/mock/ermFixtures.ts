@@ -27,6 +27,8 @@ import { expectedGrade } from '@/lib/ermModel'
 export const QUARTERLY_PULSE: QuestionSet = {
   id: 'qs-quarterly-pulse',
   name: 'Quarterly credit pulse',
+  description:
+    '17 questions across leverage, liquidity, covenants, ratings, exposure and the coverage team.',
   fields: [
     {
       id: 'counterparty',
@@ -170,6 +172,7 @@ export const QUARTERLY_PULSE: QuestionSet = {
 export const COVENANT_SWEEP: QuestionSet = {
   id: 'qs-covenant-sweep',
   name: 'Covenant sweep',
+  description: '5 questions on covenant tests, headroom and certificate currency.',
   fields: [
     {
       id: 'counterparty',
@@ -214,7 +217,294 @@ export const COVENANT_SWEEP: QuestionSet = {
   ],
 }
 
-export const QUESTION_SETS: QuestionSet[] = [QUARTERLY_PULSE, COVENANT_SWEEP]
+export const WATCHLIST_DEEP_DIVE: QuestionSet = {
+  id: 'qs-watchlist-deep-dive',
+  name: 'Watchlist deep-dive',
+  description:
+    '8 questions for names already on the watchlist — triggers, mitigants, exit options.',
+  fields: [
+    {
+      id: 'wl-trigger',
+      label: 'Watch Trigger',
+      question: 'What event or metric placed the borrower on the watchlist?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-status',
+      label: 'Trigger Status',
+      question: 'Has the triggering condition improved, worsened or held since listing?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-mitigants',
+      label: 'Mitigants',
+      question: 'What mitigants are in place and are they performing?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-liquidity',
+      label: 'Liquidity Runway',
+      question: 'What liquidity runway is evidenced at the current burn?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-sponsor',
+      label: 'Sponsor Posture',
+      question: 'What sponsor support is stated or evidenced?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-exit',
+      label: 'Exit Options',
+      question: 'What exit or de-risking options are documented?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-covenant',
+      label: 'Covenant Position',
+      question: 'What is the covenant position at the latest test?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'wl-next',
+      label: 'Next Milestone',
+      question: 'What is the next dated milestone the file commits to?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+  ],
+}
+export const SPONSOR_REFRESH: QuestionSet = {
+  id: 'qs-sponsor-refresh',
+  name: 'Sponsor & ownership refresh',
+  description: '6 questions on sponsor support, ownership changes and guarantee scope.',
+  fields: [
+    {
+      id: 'sp-owner',
+      label: 'Ownership',
+      question: 'Who owns the borrower and has ownership changed in the period?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'sp-sponsor',
+      label: 'Sponsor',
+      question: 'Who is the financial sponsor of record?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'sp-support',
+      label: 'Support Evidence',
+      question: 'What sponsor support is stated, and in what form?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'sp-guarantee',
+      label: 'Guarantee Scope',
+      question: 'What guarantees exist and what do they cover?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'sp-commitment',
+      label: 'Committed Capital',
+      question: 'What undrawn or committed sponsor capital is evidenced?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'sp-history',
+      label: 'Support History',
+      question: 'Has the sponsor injected capital before, and when?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+  ],
+}
+export const LIQUIDITY_STRESS: QuestionSet = {
+  id: 'qs-liquidity-stress',
+  name: 'Liquidity stress pulse',
+  description: '7 questions on availability, maturities and revolver utilization under stress.',
+  fields: [
+    {
+      id: 'lq-avail',
+      label: 'Availability',
+      question: 'What total liquidity availability is evidenced?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-revolver',
+      label: 'Revolver Utilization',
+      question: 'What is revolver utilization and its trend?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-maturities',
+      label: 'Near Maturities',
+      question: 'What maturities fall due inside 18 months?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-burn',
+      label: 'Cash Burn',
+      question: 'What is the evidenced cash burn or build?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-springing',
+      label: 'Springing Tests',
+      question: 'Would stress utilization spring any covenant test?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-lc',
+      label: 'LC Usage',
+      question: 'What letters of credit reduce availability?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'lq-headroom',
+      label: 'Stress Headroom',
+      question: 'What liquidity headroom remains under the stated stress case?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+  ],
+}
+export const REG_CLASSIFICATION: QuestionSet = {
+  id: 'qs-reg-classification',
+  name: 'Regulatory classification sweep',
+  description: '4 questions confirming regulatory ratings and classification currency.',
+  fields: [
+    {
+      id: 'rc-class',
+      label: 'Classification',
+      question: 'What is the current regulatory classification?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'rc-basis',
+      label: 'Classification Basis',
+      question: 'What documented basis supports the classification?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'rc-date',
+      label: 'Last Confirmed',
+      question: 'When was the classification last confirmed?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'rc-change',
+      label: 'Pending Changes',
+      question: 'Is any classification change pending or indicated?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+  ],
+}
+export const DOC_CURRENCY: QuestionSet = {
+  id: 'qs-doc-currency',
+  name: 'Documentation currency check',
+  description:
+    '5 questions on amendments, waivers and whether the file reflects the latest agreement.',
+  fields: [
+    {
+      id: 'dc-latest',
+      label: 'Latest Agreement',
+      question: 'Does the file hold the latest executed agreement?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'dc-amendments',
+      label: 'Amendments',
+      question: 'What amendments exist and are they on system?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'dc-waivers',
+      label: 'Waivers',
+      question: 'What waivers are active and when do they lapse?',
+      outputType: 'text',
+      visible: true,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'dc-certs',
+      label: 'Certificate Currency',
+      question: 'Is the latest compliance certificate on file?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+    {
+      id: 'dc-gaps',
+      label: 'Known Gaps',
+      question: 'What documentation gaps does the file itself acknowledge?',
+      outputType: 'text',
+      visible: false,
+      derivedAcceptable: true,
+    },
+  ],
+}
+
+/** The 7 saved sets on the CPEA start screen, in card order. */
+export const QUESTION_SETS: QuestionSet[] = [
+  QUARTERLY_PULSE,
+  COVENANT_SWEEP,
+  WATCHLIST_DEEP_DIVE,
+  SPONSOR_REFRESH,
+  LIQUIDITY_STRESS,
+  REG_CLASSIFICATION,
+  DOC_CURRENCY,
+]
 
 // ---------------------------------------------------------------------------
 // The ERM lens: the monitored borrower universe (repo-canonical RXMs)

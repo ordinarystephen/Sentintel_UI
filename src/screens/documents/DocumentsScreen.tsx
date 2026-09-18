@@ -13,9 +13,19 @@
  * Query and filters live in the URL and execute against the seam.
  */
 import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/api'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useDocumentSearch, useDownloadDocument } from '@/api/hooks'
-import { LOBS, type DocumentFilters, type DocumentHit, type Evidence, type Lob } from '@/api/types'
+import {
+  LOBS,
+  type BorrowerRef,
+  type DocumentFilters,
+  type DocumentHit,
+  type DocumentText,
+  type Evidence,
+  type Lob,
+} from '@/api/types'
 import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
 import { SearchInput } from '@/components/SearchInput'
@@ -28,7 +38,17 @@ import { sectionAnchor } from '@/lib/sections'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { SourceModal } from '@/components/viewers/SourceModal'
 import { strings } from '@/strings'
+import { BorrowerGroups } from '@/components/viewers/BorrowerGroups'
 import { DocumentPreviewModal } from '@/components/viewers/DocumentPreviewModal'
+import { RawDocumentModal } from '@/components/viewers/RawDocumentModal'
+
+function useRepositoryQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: ['repository', 'crr-browse'],
+    queryFn: () => api.searchRepository(''),
+    enabled,
+  })
+}
 
 const isLob = (v: string | null): v is Lob => LOBS.includes(v as Lob)
 
@@ -93,14 +113,53 @@ export function DocumentsScreen() {
   const [source, setSource] = useState<Evidence | null>(null)
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ docId: string; fileName: string } | null>(null)
+  const [raw, setRaw] = useState<{ fileName: string; doc: DocumentText | null } | null>(null)
+
+  async function openRawDoc(doc: DocRow) {
+    if (!doc.extracted) {
+      setRaw({ fileName: doc.fileName, doc: null })
+      return
+    }
+    try {
+      setRaw({ fileName: doc.fileName, doc: await api.getDocumentText(doc.docId) })
+    } catch {
+      setRaw({ fileName: doc.fileName, doc: null })
+    }
+  }
   const downloadDoc = useDownloadDocument()
   const { toast } = useToast()
 
   const browsing = debounced.trim().length === 0
-  const docRows = useMemo(
-    () => (res.data && browsing ? groupDocuments(res.data.hits) : []),
-    [res.data, browsing],
-  )
+  // Browse (v1.6): the shared repository grouped by borrower — one store,
+  // mirrored lenses. Passage-derived rows still contribute used-in links.
+  const repo = useRepositoryQuery(browsing)
+  const passageRows = useMemo(() => (res.data ? groupDocuments(res.data.hits) : []), [res.data])
+  const groups = useMemo(() => {
+    const passageById = new Map(passageRows.map((r) => [r.docId, r]))
+    const byRxm = new Map<string, { borrower: BorrowerRef; docs: DocRow[] }>()
+    for (const d of repo.data ?? []) {
+      if (counterparty !== 'all' && d.counterparty !== counterparty) continue
+      const pr = passageById.get(d.repoId)
+      const row: DocRow = {
+        docId: d.repoId,
+        fileName: d.fileName,
+        lob: pr?.lob ?? 'IB Lending',
+        date: d.uploadedAt,
+        extracted: d.parsed,
+        usedInReviewId: pr?.usedInReviewId,
+        usedInBorrower: pr?.usedInBorrower,
+        usedInSectionN: pr?.usedInSectionN,
+      }
+      const g = byRxm.get(d.rxm) ?? {
+        borrower: { rxm: d.rxm, name: d.counterparty },
+        docs: [],
+      }
+      g.docs.push(row)
+      byRxm.set(d.rxm, g)
+    }
+    return [...byRxm.values()].sort((a, b) => b.docs.length - a.docs.length)
+  }, [repo.data, passageRows, counterparty])
+  const browseDocCount = groups.reduce((n, g) => n + g.docs.length, 0)
 
   function set(key: string, value: string) {
     const next = new URLSearchParams(params)
@@ -189,45 +248,21 @@ export function DocumentsScreen() {
         </dl>
       )}
 
-      {res.data && browsing && (
+      {browsing && (
         <>
           <p className="mt-[10px] mb-3 text-dense text-faint" aria-live="polite">
-            {plural(docRows.length, s.browseCountOne, s.browseCountOther)}
+            {fmt(s.browseHint, {
+              documents: plural(browseDocCount, s.documentsOne, s.documentsOther),
+              borrowers: plural(groups.length, s.borrowersOne, s.borrowersOther),
+            })}
           </p>
-          {docRows.length === 0 && <p className="text-ui-sm text-faint">{s.empty}</p>}
-          <ul>
-            {docRows.map((doc) => {
+          {groups.length === 0 && <p className="text-ui-sm text-faint">{s.empty}</p>}
+          <BorrowerGroups
+            groups={groups}
+            renderDoc={(doc) => {
               const selected = selectedDocId === doc.docId
-              const actions: Array<
-                | {
-                    key: string
-                    label: string
-                    onClick: () => void
-                    disabled?: boolean
-                    hint?: string
-                  }
-                | { key: string; label: string; to: string }
-              > = [
-                {
-                  key: 'preview',
-                  label: s.previewAction,
-                  onClick: () => setPreview({ docId: doc.docId, fileName: doc.fileName }),
-                  disabled: !doc.extracted,
-                  hint: doc.extracted ? undefined : s.previewUnavailable,
-                },
-                { key: 'download', label: s.downloadAction, onClick: () => downloadOriginal(doc) },
-                ...(doc.usedInReviewId
-                  ? [
-                      {
-                        key: 'used',
-                        label: fmt(s.usedIn, { borrower: doc.usedInBorrower ?? '' }),
-                        to: `/crr/review/${doc.usedInReviewId}${doc.usedInSectionN ? `#${sectionAnchor(doc.usedInSectionN)}` : ''}`,
-                      },
-                    ]
-                  : []),
-              ]
               return (
-                <li
+                <div
                   key={doc.docId}
                   className={cx(
                     'mb-1.5 rounded-[10px] border border-rule bg-bg',
@@ -262,43 +297,49 @@ export function DocumentsScreen() {
                     ) : (
                       <Badge tone="slate">{s.notExtracted}</Badge>
                     )}
-                    <span className="flex-none text-dense text-faint">
-                      {strings.lobShort[doc.lob] ?? doc.lob}
-                    </span>
                     <span className="flex-none font-mono text-micro text-faint">{doc.date}</span>
                   </div>
                   {selected && (
                     <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-rule px-3.5 py-2">
-                      {actions.map((a) => (
-                        <li key={a.key}>
-                          {'to' in a ? (
-                            <Link
-                              to={a.to}
-                              className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
-                            >
-                              {a.label}
-                            </Link>
-                          ) : (
-                            <Button
-                              variant="link"
-                              disabled={a.disabled}
-                              title={a.hint}
-                              className={cx(
-                                a.disabled && 'cursor-not-allowed text-faint no-underline',
-                              )}
-                              onClick={a.onClick}
-                            >
-                              {a.label}
-                            </Button>
+                      <li>
+                        <Button
+                          variant="link"
+                          disabled={!doc.extracted}
+                          title={doc.extracted ? undefined : s.previewUnavailable}
+                          className={cx(
+                            !doc.extracted && 'cursor-not-allowed text-faint no-underline',
                           )}
+                          onClick={() => setPreview({ docId: doc.docId, fileName: doc.fileName })}
+                        >
+                          {s.previewAction}
+                        </Button>
+                      </li>
+                      <li>
+                        <Button variant="link" onClick={() => downloadOriginal(doc)}>
+                          {s.downloadAction}
+                        </Button>
+                      </li>
+                      <li>
+                        <Button variant="link" onClick={() => openRawDoc(doc)}>
+                          {s.rawAction}
+                        </Button>
+                      </li>
+                      {doc.usedInReviewId && (
+                        <li>
+                          <Link
+                            to={`/crr/review/${doc.usedInReviewId}${doc.usedInSectionN ? `#${sectionAnchor(doc.usedInSectionN)}` : ''}`}
+                            className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
+                          >
+                            {fmt(s.usedIn, { borrower: doc.usedInBorrower ?? '' })}
+                          </Link>
                         </li>
-                      ))}
+                      )}
                     </ul>
                   )}
-                </li>
+                </div>
               )
-            })}
-          </ul>
+            }}
+          />
         </>
       )}
 
@@ -369,6 +410,9 @@ export function DocumentsScreen() {
       )}
 
       {source && <SourceModal evidence={source} onClose={() => setSource(null)} />}
+      {raw && (
+        <RawDocumentModal fileName={raw.fileName} doc={raw.doc} onClose={() => setRaw(null)} />
+      )}
       {preview && (
         <DocumentPreviewModal
           docId={preview.docId}

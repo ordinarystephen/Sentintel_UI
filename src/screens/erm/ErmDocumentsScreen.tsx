@@ -14,6 +14,7 @@ import { api } from '@/api'
 import type { BorrowerRef, DocumentText, RepositoryDoc } from '@/api/types'
 import { useRuns } from '@/api/hooks'
 import { Badge } from '@/components/Badge'
+import { BorrowerGroups } from '@/components/viewers/BorrowerGroups'
 import { DocumentPreviewModal } from '@/components/viewers/DocumentPreviewModal'
 import { RawDocumentModal } from '@/components/viewers/RawDocumentModal'
 import { cx } from '@/lib/cx'
@@ -29,8 +30,6 @@ export function ErmDocumentsScreen() {
     queryKey: ['repository', 'erm', query],
     queryFn: () => api.searchRepository(query),
   })
-  // null = the default state (first group open); a Set is explicit user state
-  const [openGroups, setOpenGroups] = useState<Set<string> | null>(null)
   const [preview, setPreview] = useState<{ docId: string; fileName: string } | null>(null)
   const [raw, setRaw] = useState<{ fileName: string; doc: DocumentText | null } | null>(null)
 
@@ -54,8 +53,6 @@ export function ErmDocumentsScreen() {
   }, [repo.data, lens])
 
   const totalDocs = groups.reduce((n, g) => n + g.docs.length, 0)
-  // First group open by default until the user takes over.
-  const isOpen = (rxm: string, i: number) => (openGroups === null ? i === 0 : openGroups.has(rxm))
 
   async function openRaw(d: RepositoryDoc) {
     if (!d.docId) {
@@ -94,82 +91,47 @@ export function ErmDocumentsScreen() {
         </p>
       </div>
 
-      <div>
-        {groups.map((g, gi) => {
-          const open = isOpen(g.borrower.rxm, gi)
-          return (
-            <div key={g.borrower.rxm}>
+      <BorrowerGroups
+        groups={groups}
+        renderDoc={(d) => (
+          <div
+            key={d.repoId}
+            className="mb-2 flex flex-wrap items-center gap-3 rounded-[10px] border border-rule bg-bg px-3.5 py-[11px]"
+          >
+            <span className="min-w-0 flex-1 truncate font-mono text-[0.78125rem] font-medium">
+              {d.fileName}
+            </span>
+            <Badge tone="neutral">{d.docType}</Badge>
+            <span
+              className={cx(
+                'rounded px-[7px] text-[0.625rem] font-semibold',
+                inScope.has(d.fileName)
+                  ? 'border border-indigo-line bg-indigo-bg text-indigo'
+                  : 'border border-rule-strong bg-bg-subtle font-normal text-faint',
+              )}
+            >
+              {inScope.has(d.fileName) ? s.inScope : s.notInScope}
+            </span>
+            <span className="ml-auto flex flex-none gap-3">
               <button
                 type="button"
-                aria-expanded={open}
-                onClick={() =>
-                  setOpenGroups((prev) => {
-                    const next =
-                      prev === null
-                        ? new Set(groups.filter((_, i) => i === 0).map((x) => x.borrower.rxm))
-                        : new Set(prev)
-                    if (next.has(g.borrower.rxm)) next.delete(g.borrower.rxm)
-                    else next.add(g.borrower.rxm)
-                    return next
-                  })
-                }
-                className="mt-3.5 mb-2 flex w-full items-baseline gap-2.5 rounded-lg px-1.5 py-1 text-left select-none hover:bg-bg-hover"
+                disabled={!d.docId}
+                onClick={() => d.docId && setPreview({ docId: d.docId, fileName: d.fileName })}
+                className="text-[0.75rem] text-muted underline underline-offset-2 disabled:no-underline disabled:opacity-50"
               >
-                <span className="self-center text-[0.6875rem] text-faint">{open ? '▾' : '▸'}</span>
-                <h3 className="font-display text-[0.96875rem] font-semibold">{g.borrower.name}</h3>
-                <span className="font-mono text-[0.75rem] text-muted">{g.borrower.rxm}</span>
-                <Badge tone="neutral">
-                  {plural(g.docs.length, s.groupDocsOne, s.groupDocsOther)}
-                </Badge>
+                {s.viewExtraction}
               </button>
-              {open && (
-                <div className="max-h-[176px] overflow-y-auto px-1.5">
-                  {g.docs.map((d) => (
-                    <div
-                      key={d.repoId}
-                      className="mb-2 flex flex-wrap items-center gap-3 rounded-[10px] border border-rule bg-bg px-3.5 py-[11px]"
-                    >
-                      <span className="min-w-0 flex-1 truncate font-mono text-[0.78125rem] font-medium">
-                        {d.fileName}
-                      </span>
-                      <Badge tone="neutral">{d.docType}</Badge>
-                      <span
-                        className={cx(
-                          'rounded px-[7px] text-[0.625rem] font-semibold',
-                          inScope.has(d.fileName)
-                            ? 'border border-indigo-line bg-indigo-bg text-indigo'
-                            : 'border border-rule-strong bg-bg-subtle font-normal text-faint',
-                        )}
-                      >
-                        {inScope.has(d.fileName) ? s.inScope : s.notInScope}
-                      </span>
-                      <span className="ml-auto flex flex-none gap-3">
-                        <button
-                          type="button"
-                          disabled={!d.docId}
-                          onClick={() =>
-                            d.docId && setPreview({ docId: d.docId, fileName: d.fileName })
-                          }
-                          className="text-[0.75rem] text-muted underline underline-offset-2 disabled:no-underline disabled:opacity-50"
-                        >
-                          {s.viewExtraction}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openRaw(d)}
-                          className="text-[0.75rem] text-muted underline underline-offset-2"
-                        >
-                          {s.rawDocument}
-                        </button>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              <button
+                type="button"
+                onClick={() => openRaw(d)}
+                className="text-[0.75rem] text-muted underline underline-offset-2"
+              >
+                {s.rawDocument}
+              </button>
+            </span>
+          </div>
+        )}
+      />
 
       {preview && (
         <DocumentPreviewModal

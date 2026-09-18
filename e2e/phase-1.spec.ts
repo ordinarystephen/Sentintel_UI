@@ -17,7 +17,7 @@ const ROUTES: ReadonlyArray<[string, string]> = [
   ['/crr/reviews', 'Reviews'],
   ['/crr/reviews/all', 'Reviews'],
   ['/crr/documents', 'Documents'],
-  ['/crr/policy', 'Policy library'],
+  ['/crr/policy', 'Policy search'],
   ['/crr/review/rev-veyland-2026-08', 'Veyland US Holdco LLC'],
 ]
 

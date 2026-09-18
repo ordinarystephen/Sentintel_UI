@@ -44,6 +44,44 @@ export const strings = {
     textSizeLarge: 'Large text',
   },
 
+  /* ════════ Shared borrower-group document anatomy ════════ */
+  docGroups: {
+    docsOne: '1 document',
+    docsOther: '{n} documents',
+  },
+
+  /* ════════ Shared upload rows (per-file progress + named-rule rejection) ════════ */
+  upload: {
+    overLimit: '{size} MB — over the {limit} MB limit',
+    wrongType: 'not a supported file type here',
+    remove: 'Remove',
+  },
+
+  /* ════════ Command palette (⌘K) ════════ */
+  palette: {
+    trigger: 'Search',
+    triggerAria: 'Search everything',
+    triggerTitle: 'Search — ⌘K',
+    placeholder: 'Search borrowers, RXM, documents — or type a command…',
+    inputAria: 'Search everything',
+    groupReviews: 'Reviews',
+    groupDocuments: 'Documents',
+    groupActions: 'Actions',
+    kbdEsc: 'esc',
+    navigate: 'navigate',
+    open: 'open',
+    close: 'close',
+    empty: 'Nothing matches — try a borrower name, an RXM, or a command.',
+    actStartReview: 'Start a review',
+    actStartAnalysis: 'Start a portfolio analysis',
+    actAllReviews: 'All reviews',
+    actCrrDocuments: 'Documents (CRR)',
+    actCpeaRuns: 'Runs (CPEA)',
+    actPolicy: 'Policy search',
+    statusInProgress: '{n} open',
+    statusReady: 'completed',
+  },
+
   /* ════════ Suite landing + application switcher ════════ */
   suite: {
     apps: {
@@ -53,9 +91,11 @@ export const strings = {
         full: 'Credit Risk Review',
         description: 'Deep-dive credit review files, purpose-built for CRR.',
       },
+      /* Renamed 2026-09-18 (refinement round); routes stay /erm — the
+         rename is presentation. */
       erm: {
-        short: 'ERM',
-        full: 'Enterprise Risk Management',
+        short: 'CPEA',
+        full: 'Credit Portfolio Event Assessment',
         description: 'Portfolio-level insights and analysis.',
       },
       vantage: {
@@ -75,18 +115,38 @@ export const strings = {
 
   /* ════════ ERM application (start · processing · results · runs · documents) ════════ */
   erm: {
-    nav: { home: 'Home', runs: 'Runs', documents: 'Documents', aria: 'ERM navigation' },
+    nav: {
+      home: 'Home',
+      runs: 'Runs',
+      documents: 'Documents',
+      aria: 'Credit Portfolio Event Assessment navigation',
+    },
     start: {
       title: 'Start a portfolio analysis',
       sub: 'Ask a question of any population — documents you bring, documents on system, or a whole portfolio slice.',
-      questionZone: 'The question',
-      questionAside: 'a prompt, a saved question set, or both',
+      questionZone: 'What to ask',
+      questionAside: 'one prompt, or a saved question set',
+      modeAria: 'Question mode',
+      modePrompt: 'Prompt only',
+      modeQset: 'Question set',
+      addNew: 'Add new',
+      addNewHint: '· upload a question set',
+      qsCardCount: '{n} questions',
+      /* Add-a-question-set modal */
+      qsModalTitle: 'Add a question set',
+      qsModalClose: 'Close',
+      qsDropTitle: 'Drop a question file here',
+      qsDropHint: 'or browse files · CSV or XLSX, one question per row',
+      qsDropAria: 'Upload a question file',
+      qsTitleLabel: 'Title',
+      qsTitlePlaceholder: 'e.g. Watchlist deep-dive',
+      qsDescLabel: 'Description',
+      qsDescPlaceholder: 'One line on what this set asks and when to use it',
+      qsSave: 'Save',
+      qsCancel: 'Cancel',
       promptAria: 'Prompt',
       promptPlaceholder:
         'What do you want to know? e.g. Which borrowers have covenant headroom below 1.0x at the latest test?',
-      questionSetAria: 'Question set',
-      questionSetOption: 'Question set: {name} · {n} questions',
-      adHocOption: 'Ad hoc — prompt only',
       documentsZone: 'The documents',
       documentsAside: 'optional — leave empty to run on the population below',
       dropTitle: 'Drop documents here',
@@ -185,10 +245,10 @@ export const strings = {
     },
     documents: {
       title: 'Documents',
-      sub: 'Everything on system that ERM can see — search it, and choose what feeds the monitor.',
+      sub: 'Everything on system this application can see — search it, and choose what feeds the monitor.',
       searchPlaceholder: 'Search by borrower / counterparty name or RXM',
       searchAria: 'Search documents',
-      hint: '{documents} · {borrowers} on system for ERM — click a borrower to expand',
+      hint: '{documents} · {borrowers} on system for this application — click a borrower to expand',
       docsOne: '1 document',
       docsOther: '{n} documents',
       borrowersOne: '1 borrower',
@@ -265,8 +325,8 @@ export const strings = {
     dropAria: 'Upload documents',
     chooseFilesAria: 'Choose PDF files',
     fileListAria: 'Documents to review',
+    pickedListAria: 'Documents from the repository',
     removeFile: 'Remove file',
-    onlyPdf: 'Only PDF files can be reviewed — skipped:',
     contextLabel: 'Anything Sentinel should know?',
     optional: 'optional',
     contextPlaceholder:
@@ -274,10 +334,16 @@ export const strings = {
     begin: 'Begin review',
     documentCountOne: '1 document',
     documentCountOther: '{n} documents',
-    advanced: 'Advanced extraction settings',
-    parser: 'Parser',
-    preset: 'Section preset',
-    concurrency: 'Concurrency',
+    fromRepo: 'or pull from the repository',
+    beginCount: 'Begin review · {documents}',
+    /* Workpaper configuration (option vocabulary is a deliberate placeholder
+       — see screens/landing/config.ts). */
+    wpcSummary: 'Workpaper configuration',
+    wpcHint: 'defaults applied — open to adjust',
+    wpcTemplate: 'Template',
+    wpcSections: 'Sections',
+    wpcTopics: 'Custom analysis topics',
+    wpcTopicsPlaceholder: 'Add a topic — appends to the template, never replaces',
     recent: 'Recent',
     noRecents: 'Your reviews will appear here once you start one.',
     newReview: 'New review — reading…',
@@ -538,8 +604,11 @@ export const strings = {
     orderRecent: 'most recent first',
     extracted: 'extracted',
     notExtracted: 'not yet extracted',
-    browseCountOne: '1 document · newest first',
-    browseCountOther: '{n} documents · newest first',
+    browseHint:
+      '{documents} · {borrowers} — click a borrower to expand · keyword queries still search every parsed passage',
+    borrowersOne: '1 borrower',
+    borrowersOther: '{n} borrowers',
+    rawAction: 'Raw document',
     selectDocAria: 'Select document: {fileName}',
     previewAction: 'Preview extracted text',
     previewUnavailable: 'Available once extraction completes',
@@ -559,9 +628,25 @@ export const strings = {
     empty: 'No passages match. Loosen a filter, or try different words.',
   },
 
-  /* ════════ Policy library stub (/policy) ════════ */
+  /* ════════ Policy search (/policy) ════════ */
   policy: {
-    stub: 'The policy corpus the checks run against. Browsing arrives after the MVP.',
+    eyebrow: 'Policy library',
+    title: 'Policy search',
+    sub: 'Ask a question of the policies pulled into the application — or search and browse them directly.',
+    searchPlaceholder:
+      "Ask anything — 'When must valuation inputs be re-verified?' — or search by number, title, keyword",
+    searchAria: 'Ask or search policies',
+    ask: 'Ask',
+    answerLabel: 'Answer',
+    capabilityPreview: 'capability preview',
+    revised: 'rev. {date}',
+    viewPolicy: 'View policy',
+    browseHeading: 'Browse policies',
+    browseAside: 'newest revision first',
+    view: 'View',
+    empty: 'No policies match — try a number, a word from the title, or ask a question.',
+    disclaimer: 'All policy content in this demonstration build is fictional.',
+    viewNotReady: 'Policy text viewing is not wired in this build.',
   },
 
   /* ════════ Render-error screen (route error boundary) ════════ */

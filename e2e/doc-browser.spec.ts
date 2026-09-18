@@ -18,9 +18,14 @@ test('browse → select → action bar → preview modal → download; search sw
   page,
 }) => {
   await page.goto('/crr/documents')
-  await expect(page.getByText('9 documents · newest first')).toBeVisible()
+  await expect(
+    page.getByText(
+      '20 documents · 10 borrowers — click a borrower to expand · keyword queries still search every parsed passage',
+    ),
+  ).toBeVisible()
   await expect(page.locator('mark')).toHaveCount(0)
 
+  await page.getByRole('button', { name: /Veyland US Holdco RXM-6430/ }).click()
   await q3Row(page).click()
   await expect(q3Row(page)).toHaveAttribute('aria-pressed', 'true')
   await page.waitForTimeout(900) // let the settle stagger finish before the screenshot
@@ -56,6 +61,7 @@ test('browse → select → action bar → preview modal → download; search sw
 
 test('not-yet-extracted document: preview disabled, download still works', async ({ page }) => {
   await page.goto('/crr/documents')
+  await page.getByRole('button', { name: /Farrowdale Logistics RXM-8093/ }).click()
   await page
     .getByRole('button', { name: 'Select document: Farrowdale_Logistics_Q2_Update.pdf' })
     .click()
@@ -67,6 +73,7 @@ test('not-yet-extracted document: preview disabled, download still works', async
 
 test('keyboard: rows are focusable, Enter selects, actions reachable', async ({ page }) => {
   await page.goto('/crr/documents')
+  await page.getByRole('button', { name: /Veyland US Holdco RXM-6430/ }).click()
   await q3Row(page).focus()
   await page.keyboard.press('Enter')
   await expect(q3Row(page)).toHaveAttribute('aria-pressed', 'true')
@@ -78,7 +85,12 @@ test('cobalt-dark screenshots', async ({ page }) => {
   await setTheme(page, 'cobalt', true)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/crr/documents')
-  await expect(page.getByText('9 documents · newest first')).toBeVisible()
+  await expect(
+    page.getByText(
+      '20 documents · 10 borrowers — click a borrower to expand · keyword queries still search every parsed passage',
+    ),
+  ).toBeVisible()
+  await page.getByRole('button', { name: /Veyland US Holdco RXM-6430/ }).click()
   await q3Row(page).click()
   await page.getByRole('button', { name: 'Preview extracted text' }).click()
   await expect(page.getByRole('dialog')).toContainText('extracted text')

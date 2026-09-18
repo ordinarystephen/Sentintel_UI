@@ -26,6 +26,10 @@ import type {
   AttentionItem,
   ErmRun,
   ErmRunState,
+  PolicyAnswer,
+  PolicyDoc,
+  QuestionSet,
+  WorkpaperConfig,
   PopulationCriteria,
   RepositoryDoc,
   ClearReason,
@@ -36,7 +40,6 @@ import type {
   DocumentSearchResult,
   DocumentText,
   ExportResult,
-  ExtractionSettings,
   Policy,
   PriorComparison,
   ProcessingPhase,
@@ -84,6 +87,13 @@ export const MESSAGES = {
   whyRequired: "A rationale is required — it is recorded in the review's evidence log.",
   noRepoDoc: 'No repository document {id} for this borrower.',
   noRun: 'No run with id {id}.',
+  qsNameRequired: 'A title is required to save a question set.',
+  qsPlaceholderLabel: 'Question {n}',
+  qsPlaceholderQuestion:
+    'Placeholder question {n} for "{name}" — the uploaded file is not parsed in this build.',
+  qsPlaceholderDesc:
+    'Saved set "{name}" — placeholder questions (file parsing arrives with the backend).',
+  emptyQuestion: 'Type a question or a search term first.',
   alreadyInReview: '{file} is already part of this review.',
   respondEmpty: 'Say what to re-check, correct, or add before sending.',
   rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
@@ -93,7 +103,7 @@ export const MESSAGES = {
   stillProcessing: 'This review is still processing — export once it is ready.',
   exportFailed:
     'Export failed: the render service returned no document for {rxm} (render-service: 502 Bad Gateway).',
-  parseFailed: 'Could not parse {file}: the file is encrypted or damaged (parser: pdfplumber).',
+  parseFailed: 'Could not parse {file}: the file is encrypted or damaged.',
   statusReading: 'Reading {file}…',
   statusReadingFallback: 'Reading the documents…',
   statusIndexing: 'Indexing {pages} pages…',
@@ -119,9 +129,49 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * (v1.1.2 — every borrower name, review/doc id, and filename changed);
  * 6 = amend evidence (v1.4 — documents carry origin/addedAt/why/docId,
  * reviews carry evidenceAmendedAt/amendSettlesAt, CL ids became RXM);
- * 7 = the ERM slice (v1.5 — persisted state gains erm.runs).
+ * 7 = the ERM slice (v1.5 — persisted state gains erm.runs);
+ * 8 = refinement round (v1.6 — the former initiation-time parser controls
+ * REMOVED from the processing seed, reviews/seeds gain workpaperConfig +
+ * repository picks,
+ * persisted state gains ermQuestionSets).
  */
-export const STATE_VERSION = 7
+export const STATE_VERSION = 8
+
+/**
+ * Policy search fixtures (v1.6): the browse rows (newest revision first)
+ * and the ONE capability-preview answer. All policy content is fictional;
+ * citations use the illustrative ProcMan-DEMO id.
+ */
+const POLICY_DOCS = [
+  {
+    id: 'ProcMan-DEMO · §4.2',
+    title: 'Reliance on extracted valuation inputs',
+    revisedOn: '2026-06-01',
+  },
+  {
+    id: 'ProcMan-DEMO · §5.1',
+    title: 'Evidence and citation standards for review workpapers',
+    revisedOn: '2026-04-15',
+  },
+  {
+    id: 'POLICY · ib-lending/ev-support',
+    title: 'Enterprise-value coverage as a downgrade trigger',
+    revisedOn: '2026-03-02',
+  },
+  {
+    id: 'POLICY · ib-lending/covenants',
+    title: 'Springing covenant testing and headroom disclosure',
+    revisedOn: '2025-11-20',
+  },
+] satisfies PolicyDoc[]
+
+const POLICY_PREVIEW_ANSWER: PolicyAnswer = {
+  answer:
+    "Valuation inputs must be re-verified whenever a source document is amended or superseded; reliance without re-verification requires a recorded rationale in the review's evidence log.",
+  quote: 'Valuation inputs must be verified against source documents before reliance.',
+  citation: 'ProcMan-DEMO · §4.2',
+  revisedOn: '2026-06-01',
+}
 
 /** How long "impacted checks re-running" lasts after an evidence amend. */
 export const AMEND_SETTLE_MS = 6_000
@@ -140,8 +190,10 @@ interface ProcessingSeed {
   id: string
   startedAt: number
   files: Array<{ name: string; size: number }>
+  /** Index-store docIds pulled from the shared repository at initiation. */
+  repositoryDocIds?: string[]
   contextText: string
-  settings?: ExtractionSettings
+  config?: WorkpaperConfig
   cancelledAt?: number
 }
 
@@ -169,6 +221,8 @@ interface PersistedState {
   reRuns: Record<string, { until: number; text: string }>
   /** ERM (v1.5): user-started runs, by runId. */
   ermRuns: Record<string, PersistedErmRun>
+  /** CPEA (v1.6): user-saved question sets, in save order. */
+  ermQuestionSets: QuestionSet[]
 }
 
 export interface MockOptions {
@@ -213,6 +267,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       processing: {},
       reRuns: {},
       ermRuns: {},
+      ermQuestionSets: [],
     }
     try {
       const raw = storage?.getItem(STORAGE_KEY)
@@ -266,7 +321,9 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     const population = clone(ERM_POPULATION)
     population.criteria = { ...rec.criteria }
     const completed = stateName === 'completed'
-    const qTotal = QUESTION_SETS.find((q) => q.id === rec.questionSetId)?.fields.length ?? 17
+    const qTotal =
+      [...QUESTION_SETS, ...state.ermQuestionSets].find((q) => q.id === rec.questionSetId)?.fields
+        .length ?? 17
     const run: ErmRun = {
       runId: rec.runId,
       startedAt: rec.startedAt,
@@ -372,13 +429,30 @@ export function createMockApi(options: MockOptions = {}): MockApi {
   function processingRecord(seed: ProcessingSeed): ReviewRecord {
     const elapsed = now() - seed.startedAt
     const detected = elapsed >= PROCESSING.detectBorrowerAt
-    const documents: ReviewDocument[] = seed.files.map((f, i) => ({
-      fileName: f.name,
-      kind: i === 0 ? 'annual review' : 'quarterly update',
-      date: new Date(seed.startedAt).toISOString().slice(0, 10),
-      pages: Math.max(1, Math.round(f.size / 90_000)),
-      sizeBytes: f.size,
-    }))
+    const documents: ReviewDocument[] = [
+      ...seed.files.map((f, i) => ({
+        fileName: f.name,
+        kind: i === 0 ? 'annual review' : 'quarterly update',
+        date: new Date(seed.startedAt).toISOString().slice(0, 10),
+        pages: Math.max(1, Math.round(f.size / 90_000)),
+        sizeBytes: f.size,
+      })),
+      // repository picks resolve from the ONE index store (v1.6)
+      ...(seed.repositoryDocIds ?? []).flatMap((rid) => {
+        const d = DOCUMENTS.find((x) => x.docId === rid)
+        return d
+          ? [
+              {
+                fileName: d.fileName,
+                kind: d.docType,
+                date: d.date,
+                pages: d.pages,
+                docId: d.extracted ? d.docId : undefined,
+              },
+            ]
+          : []
+      }),
+    ]
     const pages = documents.reduce((n, d) => n + (d.pages ?? 0), 0)
     const base: Omit<ProcessingReview, 'status' | 'phase' | 'statusLine'> = {
       id: seed.id,
@@ -439,6 +513,8 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     r.createdAt = new Date(seed.startedAt).toISOString()
     r.runCompletedAt = new Date(seed.startedAt + PROCESSING.total).toISOString()
     r.documents = documents
+    // the initiation-time workpaper configuration rides the evidence snapshot
+    r.workpaperConfig = seed.config
     r.story.docsLine = documents.map((d) => `${d.fileName} — ${d.kind}, ${d.date}`).join(' · ')
     r.priorReviewId = VEYLAND_ID
     r.repeatIndex = 3
@@ -579,7 +655,14 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
   return {
     reset: () => {
-      state = { version: STATE_VERSION, overrides: {}, processing: {}, reRuns: {}, ermRuns: {} }
+      state = {
+        version: STATE_VERSION,
+        overrides: {},
+        processing: {},
+        reRuns: {},
+        ermRuns: {},
+        ermQuestionSets: [],
+      }
       try {
         storage?.removeItem(STORAGE_KEY)
       } catch {
@@ -618,16 +701,20 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       return rec ? delay(rec) : fail(fmt(MESSAGES.noReview, { id }))
     },
 
-    createReview: (files, contextText, settings) => {
-      if (files.length === 0) return fail(MESSAGES.emptyUpload)
+    createReview: (input) => {
+      const repoIds = input.repositoryDocIds ?? []
+      if (input.files.length === 0 && repoIds.length === 0) return fail(MESSAGES.emptyUpload)
+      const badRepo = repoIds.find((rid) => !DOCUMENTS.some((d) => d.docId === rid))
+      if (badRepo) return fail(fmt(MESSAGES.noDocument, { id: badRepo }))
       const startedAt = now()
       const id = `rev-new-${startedAt.toString(36)}`
       state.processing[id] = {
         id,
         startedAt,
-        files: files.map((f) => ({ name: f.name, size: f.size })),
-        contextText,
-        settings,
+        files: input.files.map((f) => ({ name: f.name, size: f.size })),
+        repositoryDocIds: repoIds,
+        contextText: input.contextText,
+        config: input.config,
       }
       save()
       return delay({ id })
@@ -974,7 +1061,41 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     // ---- ERM (v1.5) ------------------------------------------------------
 
-    getQuestionSets: () => delay(clone(QUESTION_SETS)),
+    getQuestionSets: () => delay(clone([...QUESTION_SETS, ...state.ermQuestionSets])),
+
+    addQuestionSet: (input) => {
+      const name = input.name.trim()
+      if (!name) return fail(MESSAGES.qsNameRequired)
+      // The mock parses no file: a saved set gets a placeholder question
+      // list (5 generic questions), labeled honestly in its description.
+      const id = `qs-user-${(now() % 1e8).toString(36)}`
+      const fields = Array.from({ length: 5 }, (_, i) => ({
+        id: `${id}-q${i + 1}`,
+        label: fmt(MESSAGES.qsPlaceholderLabel, { n: i + 1 }),
+        question: fmt(MESSAGES.qsPlaceholderQuestion, { n: i + 1, name }),
+        outputType: 'text' as const,
+        visible: i < 2,
+        derivedAcceptable: true,
+      }))
+      const set: QuestionSet = {
+        id,
+        name,
+        description: input.description.trim() || fmt(MESSAGES.qsPlaceholderDesc, { name }),
+        fields,
+      }
+      state.ermQuestionSets.push(set)
+      save()
+      return delay(clone(set))
+    },
+
+    listPolicyDocs: () => delay(clone(POLICY_DOCS)),
+
+    askPolicies: (question) => {
+      if (!question.trim()) return fail(MESSAGES.emptyQuestion)
+      // CAPABILITY PREVIEW: the answering engine is future work — every
+      // question returns the one fixture answer so the UI contract is real.
+      return delay(clone(POLICY_PREVIEW_ANSWER))
+    },
 
     resolvePopulation: (criteria) => {
       // The demo resolves ONE population regardless of criteria — the

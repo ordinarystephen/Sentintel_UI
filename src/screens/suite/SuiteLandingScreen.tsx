@@ -11,6 +11,7 @@
  */
 import { Link } from 'react-router-dom'
 import { APPS, type SentinelApp } from '@/apps'
+import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
 
 const s = strings.suite
@@ -37,12 +38,18 @@ function ArrowIcon({ className }: { className?: string }) {
 }
 
 function CardBody({ app }: { app: SentinelApp }) {
+  const fullLead = app.landingTitle === 'full'
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex flex-wrap items-baseline gap-2.5 font-display text-[1.25rem] font-semibold tracking-[-0.01em]">
-        {app.short}
+      <div
+        className={cx(
+          'flex flex-wrap items-baseline gap-2.5 font-display font-semibold tracking-[-0.01em]',
+          fullLead ? 'text-[1.0625rem]' : 'text-[1.25rem]',
+        )}
+      >
+        {fullLead ? app.full : app.short}
         <span className="font-body text-[0.75rem] font-normal tracking-[0.02em] text-faint">
-          {app.full}
+          {fullLead ? app.short : app.full}
         </span>
       </div>
       <p className="mt-1 max-w-[56ch] text-ui-sm text-muted">{app.description}</p>

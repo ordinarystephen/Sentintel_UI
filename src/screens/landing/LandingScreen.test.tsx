@@ -32,17 +32,20 @@ describe('landing', () => {
     expect(within(list).getByText('Veyland_Holdco_Annual_Review_FY25.pdf')).toBeInTheDocument()
     expect(within(list).getByText('2.4 MB')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('notes.txt')
-    expect(screen.getByText('1 document')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Begin review · 1 document' })).toBeInTheDocument()
     await user.click(
-      screen.getByRole('button', { name: 'Remove file Veyland_Holdco_Annual_Review_FY25.pdf' }),
+      screen.getByRole('button', { name: 'Remove Veyland_Holdco_Annual_Review_FY25.pdf' }),
     )
+    expect(screen.queryByText('Veyland_Holdco_Annual_Review_FY25.pdf')).toBeNull()
+    // dismissing the rejected row too empties the shared list entirely
+    await user.click(screen.getByRole('button', { name: 'Remove notes.txt' }))
     expect(screen.queryByRole('list', { name: 'Documents to review' })).toBeNull()
   })
 
   it('Begin with nothing added surfaces the API message; Begin with files lands on the processing state', async () => {
     const user = userEvent.setup()
     renderAt('/crr')
-    await user.click(screen.getByRole('button', { name: 'Begin review' }))
+    await user.click(screen.getByRole('button', { name: /^Begin review/ }))
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Add at least one PDF to begin a review.',
     )
@@ -55,7 +58,7 @@ describe('landing', () => {
       screen.getByLabelText('Anything Sentinel should know?'),
       'Focus on covenant headroom.',
     )
-    await user.click(screen.getByRole('button', { name: 'Begin review' }))
+    await user.click(screen.getByRole('button', { name: /^Begin review/ }))
     await waitFor(() =>
       expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Reading the documents'),
     )
@@ -66,14 +69,19 @@ describe('landing', () => {
     expect(screen.getByRole('region', { name: 'New review — reading…' })).toBeInTheDocument()
   })
 
-  it('advanced extraction settings are demoted behind the link and persist', async () => {
+  it('workpaper configuration is a quiet disclosure with placeholder vocabulary', async () => {
     const user = userEvent.setup()
     renderAt('/crr')
-    expect(screen.queryByLabelText('Parser')).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Advanced extraction settings' }))
-    await user.selectOptions(screen.getByLabelText('Parser'), 'docling')
-    expect(JSON.parse(localStorage.getItem('sentinel.extraction.settings')!)).toMatchObject({
-      parser: 'docling',
-    })
+    const wpcToggle = screen.getByRole('button', { name: /Workpaper configuration/ })
+    expect(wpcToggle).toHaveAttribute('aria-expanded', 'false')
+    expect(wpcToggle).toHaveTextContent('defaults applied — open to adjust')
+    await user.click(wpcToggle)
+    expect(wpcToggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByLabelText('Template')).toBeInTheDocument()
+    // six section chips, all on by default; toggling one flips its state
+    const chip = screen.getByRole('button', { name: /4 Portfolio Management/ })
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+    await user.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'false')
   })
 })

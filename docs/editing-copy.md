@@ -11,10 +11,14 @@ Every word the app shows lives in one of three files — never in a component. C
 | Brand name, "ready" badge, skip link | `src/strings.ts` › **app** |
 | Theme names, dark-mode toggle, the text-size control (S/M/L labels + their spoken names) | `src/strings.ts` › **theme** |
 | Suite landing + app switcher — application names/descriptions, "Open", "In design", "All applications", the fictional-data footer | `src/strings.ts` › **suite** |
-| ERM — start/processing/results/runs/documents wording, grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
+| CPEA (routes `/erm`) — start/processing/results/runs/documents wording, question-mode control, grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
+| Policy search — searchbar copy, the Ask answer card, browse rows | `src/strings.ts` › **policy** |
+| Command palette — placeholder, group names, kbd footer, actions | `src/strings.ts` › **palette** |
+| Upload rows — the over-limit and wrong-type rejections, Remove | `src/strings.ts` › **upload** (limit: `src/components/upload/config.ts`) |
+| Workpaper-configuration labels (placeholder vocabulary: `src/screens/landing/config.ts`) | `src/strings.ts` › **landing** |
 | ERM demo data — question sets, borrowers, answers, runs, population reasons | `src/api/mock/ermFixtures.ts` |
 | Left-rail items (Home, My reviews, All reviews, Documents, Policy library, Overview, Collapse sidebar) | `src/strings.ts` › **nav** |
-| Landing page — "Start a review", the drop-zone wording, "Anything Sentinel should know?", "Begin review", Advanced extraction settings, "Recent", "New review — reading…" | `src/strings.ts` › **landing** |
+| Landing page — "Start a review", the drop-zone wording (incl. "or pull from the repository"), "Anything Sentinel should know?", "Begin review · N documents", Workpaper configuration, "Recent", "New review — reading…" | `src/strings.ts` › **landing** |
 | Processing screen — "Reading the documents", the "you can leave" line, "Cancel this review" | `src/strings.ts` › **processing** |
 | The cycling status line while processing ("Reading … / Indexing … pages…") | `src/api/mock/mockApi.ts` › **MESSAGES** (backend-owned copy) |
 | Review page — "Export Review", "The story", "Needs your attention", "Work paper", section pills, the flagged-value line, the disclaimer | `src/strings.ts` › **review** |

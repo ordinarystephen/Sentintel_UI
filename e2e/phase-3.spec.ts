@@ -42,7 +42,7 @@ test('demo path: drop → Begin → processing (refresh-safe) → review with th
     .getByLabel('Anything Sentinel should know?')
     .fill('What is revolver availability at close?')
   await page.screenshot({ path: 'e2e/screenshots/phase-3/landing-with-files-stone-light-1440.png' })
-  await page.getByRole('button', { name: 'Begin review' }).click()
+  await page.getByRole('button', { name: /^Begin review/ }).click()
 
   await expect(page).toHaveURL(/\/review\/rev-new-/)
   const url = page.url()
@@ -89,7 +89,7 @@ test('export failure is loud and in-app', async ({ page }) => {
 test('cancel keeps the record and says so', async ({ page }) => {
   await page.goto('/crr')
   await page.getByLabel('Choose PDF files').setInputFiles([PDF('Doc.pdf')])
-  await page.getByRole('button', { name: 'Begin review' }).click()
+  await page.getByRole('button', { name: /^Begin review/ }).click()
   await expect(page).toHaveURL(/\/review\/rev-new-/)
   await page.getByRole('button', { name: 'Cancel this review' }).click()
   await expect(page.getByText('This review was cancelled.')).toBeVisible()
@@ -101,7 +101,7 @@ test('a damaged file fails with the specific parser message', async ({ page }) =
   test.setTimeout(30_000)
   await page.goto('/crr')
   await page.getByLabel('Choose PDF files').setInputFiles([PDF('Veyland_corrupt_scan.pdf')])
-  await page.getByRole('button', { name: 'Begin review' }).click()
+  await page.getByRole('button', { name: /^Begin review/ }).click()
   await expect(page.getByRole('alert')).toContainText('Could not parse Veyland_corrupt_scan.pdf', {
     timeout: 12_000,
   })
