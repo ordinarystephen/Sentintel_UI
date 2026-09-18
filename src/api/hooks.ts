@@ -9,7 +9,9 @@ import type {
   AmendSource,
   ClearReason,
   DocumentFilters,
+  ErmRun,
   ExtractionSettings,
+  PopulationCriteria,
   ReviewFilters,
 } from './types'
 
@@ -24,9 +26,53 @@ export const queryKeys = {
   policies: (reviewId: string) => ['policies', reviewId] as const,
   documents: (query: string, filters: DocumentFilters) => ['documents', query, filters] as const,
   documentText: (docId: string) => ['documentText', docId] as const,
+  questionSets: ['erm', 'questionSets'] as const,
+  population: (criteria: PopulationCriteria) => ['erm', 'population', criteria] as const,
+  runs: ['erm', 'runs'] as const,
+  run: (runId: string) => ['erm', 'run', runId] as const,
 }
 
 export const useMe = () => useQuery({ queryKey: queryKeys.me, queryFn: () => api.me() })
+
+// ---- ERM (v1.5) ----
+
+export const useQuestionSets = () =>
+  useQuery({ queryKey: queryKeys.questionSets, queryFn: () => api.getQuestionSets() })
+
+export const useResolvePopulation = (criteria: PopulationCriteria) =>
+  useQuery({
+    queryKey: queryKeys.population(criteria),
+    queryFn: () => api.resolvePopulation(criteria),
+    placeholderData: keepPreviousData,
+  })
+
+/** Polls while the run is queued/running so processing advances live. */
+export const useRun = (runId: string) =>
+  useQuery({
+    queryKey: queryKeys.run(runId),
+    queryFn: () => api.getRun(runId),
+    refetchInterval: (q) => {
+      const state = (q.state.data as ErmRun | undefined)?.state
+      return state === 'queued' || state === 'running' ? 400 : false
+    },
+  })
+
+export const useRuns = () => useQuery({ queryKey: queryKeys.runs, queryFn: () => api.listRuns() })
+
+export function useErmMutations() {
+  const qc = useQueryClient()
+  const invalidateRuns = () => qc.invalidateQueries({ queryKey: ['erm'] })
+  return {
+    startRun: useMutation({
+      mutationFn: (input: Parameters<typeof api.startRun>[0]) => api.startRun(input),
+      onSuccess: invalidateRuns,
+    }),
+    cancelRun: useMutation({
+      mutationFn: (runId: string) => api.cancelRun(runId),
+      onSuccess: invalidateRuns,
+    }),
+  }
+}
 
 export const useMyReviews = () =>
   useQuery({ queryKey: queryKeys.myReviews, queryFn: () => api.listMyReviews() })

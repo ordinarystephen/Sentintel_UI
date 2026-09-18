@@ -42,7 +42,7 @@ export function AddDocumentModal({
 
   const repo = useQuery({
     queryKey: ['repository', review.id, query],
-    queryFn: () => api.searchRepository(review.id, query),
+    queryFn: () => api.searchRepository(query, { rxm: review.rxm, notInReviewId: review.id }),
   })
 
   const source: AmendSource | null = file

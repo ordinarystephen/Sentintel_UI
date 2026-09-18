@@ -143,7 +143,8 @@ test('RXM search keys: reviews list and documents screen, prefix-less included',
   await search.fill('6430')
   await expect(page.getByText('2 reviews · showing most recent')).toBeVisible()
   await search.fill('rxm-8093')
-  await expect(page.getByRole('link', { name: /Farrowdale Logistics/ })).toBeVisible()
+  // one borrower, one RXM: BOTH Farrowdale reviews (current + prior) match
+  await expect(page.getByRole('link', { name: /Farrowdale Logistics/ })).toHaveCount(2)
 
   await page.goto('/crr/documents')
   const dsearch = page.getByLabel('Search documents')

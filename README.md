@@ -8,7 +8,7 @@ _All company, person, and transaction data in this application is fictional; any
 
 ## Start here
 
-**The development team inherits the `v1.4.1` tag** — clone `main` at that tag (docs-hygiene patch over `v1.4.0`, the amend-evidence round: Add document mid-review with the required rationale, the evidence manifest, RXM identity + search keys).
+**The development team inherits the `v1.5.0` tag** — clone `main` at that tag (ERM round over `v1.4.1`: the suite's second live application — start → processing → results with per-answer grading, population accounting, runs as records, and the shared repository/verification surfaces).
 
 **Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
 

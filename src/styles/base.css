@@ -123,6 +123,22 @@
     animation-delay: 0.48s;
   }
 }
+/* ERM processing crawl (v1.5): the honest slow bar */
+@keyframes crawl {
+  0% {
+    width: 8%;
+  }
+  40% {
+    width: 38%;
+  }
+  75% {
+    width: 62%;
+  }
+  100% {
+    width: 88%;
+  }
+}
+
 /* Deep-link target flash: one neutral fade, never a status color (§3.3) */
 @keyframes flash-once {
   from {

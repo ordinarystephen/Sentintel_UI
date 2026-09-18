@@ -88,6 +88,7 @@ export interface RepositoryDoc {
   repoId: string
   /** Borrower/counterparty this document belongs to, RXM scheme. */
   rxm: string
+  counterparty: string
   fileName: string
   docType: string
   uploadedAt: string
@@ -99,6 +100,120 @@ export interface RepositoryDoc {
 
 export type AmendSource =
   { kind: 'repo'; repoId: string } | { kind: 'upload'; fileName: string; sizeBytes: number }
+
+// ---------------------------------------------------------------------------
+// ERM (v1.5): question sets, per-answer grades, population accounting, runs
+// ---------------------------------------------------------------------------
+
+/** One question in a set. `visible` marks a monitor-table column. */
+export interface QuestionField {
+  id: string
+  label: string
+  question: string
+  outputType: 'text' | 'number' | 'ratio' | 'rating' | 'flag'
+  visible: boolean
+  /**
+   * Governance hook (ratified 2026-09-18): whether a derived answer is
+   * acceptable for this field. Carried in config; UNENFORCED this round.
+   */
+  derivedAcceptable: boolean
+}
+
+/** A first-class question-set config object. */
+export interface QuestionSet {
+  id: string
+  name: string
+  fields: QuestionField[]
+}
+
+/**
+ * Per-answer grade — the decision table (ratified 2026-09-18):
+ * `stated` only with an entailing quote attached (evidenceRefs non-empty),
+ * `derived` only with `inferredFrom` naming stated inputs, else
+ * `unsupported`. Retrieval similarity never grades. Grades live ONLY on
+ * answers — no row-level grade exists anywhere; a row's flag count is
+ * computed (count of unsupported answers).
+ */
+export type AnswerGrade = 'stated' | 'derived' | 'unsupported'
+
+export interface AnswerEvidenceRef {
+  fileName: string
+  sectionName: string
+  page: number
+  quote: string
+  /** Extracted-text id when the document is on system. */
+  docId?: string
+  imageKind?: 'section' | 'page' | 'none'
+  imageRef?: string
+}
+
+/** One record per (borrower × question). */
+export interface ErmAnswer {
+  rxm: string
+  questionId: string
+  value: string
+  grade: AnswerGrade
+  conf: 'high' | 'medium' | 'low'
+  /** For derived answers: the questionIds of the stated inputs. */
+  inferredFrom?: string[]
+  evidenceRefs: AnswerEvidenceRef[]
+  /** Rationale cards; the LABEL set is per-application config. */
+  rationale?: { memoFacts: string; basis: string }
+  /** Shown in the limitations strip of the detail modal, when present. */
+  limitations?: string
+}
+
+export interface BorrowerRef {
+  rxm: string
+  name: string
+}
+
+export interface PopulationCriteria {
+  portfolio: string
+  subPortfolio: string
+  region: string
+  asOf: string
+}
+
+/** Population accounting — exclusions are named, never silent. */
+export interface PopulationAccounting {
+  criteria: PopulationCriteria
+  included: BorrowerRef[]
+  excluded: Array<{ ref: BorrowerRef; reason: string }>
+  indeterminate: Array<{ ref: BorrowerRef; reason: string }>
+}
+
+export type ErmRunState = 'queued' | 'running' | 'completed' | 'cancelled' | 'failed'
+
+/** The staged processing readout while a run is `running`. */
+export interface ErmRunProgress {
+  populationResolved: boolean
+  indexCurrent: boolean
+  questionsDone: number
+  documentsDone: number
+  computing: boolean
+}
+
+/**
+ * A run is a record: every state is kept and revisitable; nothing
+ * overwrites. Answers are attached once completed.
+ */
+export interface ErmRun {
+  runId: string
+  startedAt: string
+  questionSetId: string
+  prompt?: string
+  criteria: PopulationCriteria
+  state: ErmRunState
+  population: PopulationAccounting
+  /** fileNames in this run's document scope. */
+  documents: string[]
+  answers: ErmAnswer[]
+  progress?: ErmRunProgress
+  cancelledAt?: string
+  /** Present only when state is `failed`. */
+  error?: string
+}
 
 export interface StoryChange {
   date: string

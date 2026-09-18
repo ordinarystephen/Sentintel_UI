@@ -10,11 +10,19 @@
  *   /crr/policy      policy library (stub)
  *   /crr/review/:id  the review page; `#sec-N` anchors deep-link into sections
  *   /crr/styleguide  dev-only type/token reference — not linked from navigation
- * ERM and Vantage have no routes — their landing cards are not links.
+ *   /erm             ERM start (portfolio analysis)   /erm/runs   runs kept
+ *   /erm/runs/:runId  results (a running run renders processing at its URL)
+ *   /erm/documents    the shared repository through ERM's lens
+ * Vantage has no routes — its landing card is not a link.
  */
 import { createBrowserRouter, createHashRouter, Navigate, type RouteObject } from 'react-router-dom'
 import { EntryScreen } from '@/screens/suite/EntryScreen'
 import { SuiteLandingScreen } from '@/screens/suite/SuiteLandingScreen'
+import { ErmDocumentsScreen } from '@/screens/erm/ErmDocumentsScreen'
+import { ErmRunScreen } from '@/screens/erm/ErmRunScreen'
+import { ErmRunsScreen } from '@/screens/erm/ErmRunsScreen'
+import { ErmShell } from '@/screens/erm/ErmShell'
+import { ErmStartScreen } from '@/screens/erm/ErmStartScreen'
 import { DocumentsScreen } from '@/screens/documents/DocumentsScreen'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { NotFoundScreen } from '@/screens/NotFoundScreen'
@@ -55,8 +63,25 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Unknown top-level paths (a typed /erm, a stale link) go back through
-      // the entry decision rather than a bare 404.
+      {
+        path: 'erm',
+        element: <ErmShell />,
+        errorElement: <RouteErrorScreen />,
+        children: [
+          {
+            errorElement: <RouteErrorScreen />,
+            children: [
+              { index: true, element: <ErmStartScreen /> },
+              { path: 'runs', element: <ErmRunsScreen /> },
+              { path: 'runs/:runId', element: <ErmRunScreen /> },
+              { path: 'documents', element: <ErmDocumentsScreen /> },
+              { path: '*', element: <Navigate to="/erm" replace /> },
+            ],
+          },
+        ],
+      },
+      // Unknown top-level paths (a typed /vantage, a stale link) go back
+      // through the entry decision rather than a bare 404.
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

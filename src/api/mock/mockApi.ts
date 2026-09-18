@@ -20,9 +20,14 @@
  * shape so stale persisted state is discarded.
  */
 import { fmt } from '@/lib/fmt'
+import { ERM_ANSWERS, ERM_POPULATION, ERM_RUN_SCOPE, ERM_RUNS, QUESTION_SETS } from './ermFixtures'
 import { ApiError, type SentinelApi } from '../client'
 import type {
   AttentionItem,
+  ErmRun,
+  ErmRunState,
+  PopulationCriteria,
+  RepositoryDoc,
   ClearReason,
   DebatePosition,
   Disposition,
@@ -49,7 +54,6 @@ import type {
 import {
   buildReviews,
   DOCUMENTS,
-  REPOSITORY,
   CONFIDENCE_FLOOR,
   DEBATES,
   EXPORT_FAILS_ID,
@@ -79,6 +83,7 @@ export const MESSAGES = {
   readOnly: 'This review belongs to {owner} — you can read it, but editing stays with its owner.',
   whyRequired: "A rationale is required — it is recorded in the review's evidence log.",
   noRepoDoc: 'No repository document {id} for this borrower.',
+  noRun: 'No run with id {id}.',
   alreadyInReview: '{file} is already part of this review.',
   respondEmpty: 'Say what to re-check, correct, or add before sending.',
   rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
@@ -113,9 +118,10 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * reviews — same scenario-A shadowing logic); 5 = fictional-name hygiene
  * (v1.1.2 — every borrower name, review/doc id, and filename changed);
  * 6 = amend evidence (v1.4 — documents carry origin/addedAt/why/docId,
- * reviews carry evidenceAmendedAt/amendSettlesAt, CL ids became RXM).
+ * reviews carry evidenceAmendedAt/amendSettlesAt, CL ids became RXM);
+ * 7 = the ERM slice (v1.5 — persisted state gains erm.runs).
  */
-export const STATE_VERSION = 6
+export const STATE_VERSION = 7
 
 /** How long "impacted checks re-running" lasts after an evidence amend. */
 export const AMEND_SETTLE_MS = 6_000
@@ -139,12 +145,30 @@ interface ProcessingSeed {
   cancelledAt?: number
 }
 
+/**
+ * A user-started ERM run as persisted: meta only — running state derives
+ * from elapsed time (so "you can leave" is true), and a completed run's
+ * answers/population are materialized from the canonical demo payload on
+ * read rather than stored (keeps localStorage small).
+ */
+interface PersistedErmRun {
+  runId: string
+  startedAt: string
+  questionSetId: string
+  prompt?: string
+  criteria: PopulationCriteria
+  documents: string[]
+  cancelledAt?: string
+}
+
 interface PersistedState {
   version: number
   overrides: Record<string, Review>
   processing: Record<string, ProcessingSeed>
   /** itemId → epoch ms when the re-run lands. */
   reRuns: Record<string, { until: number; text: string }>
+  /** ERM (v1.5): user-started runs, by runId. */
+  ermRuns: Record<string, PersistedErmRun>
 }
 
 export interface MockOptions {
@@ -188,6 +212,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       overrides: {},
       processing: {},
       reRuns: {},
+      ermRuns: {},
     }
     try {
       const raw = storage?.getItem(STORAGE_KEY)
@@ -216,6 +241,76 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
   function stored(id: string): Review | undefined {
     return state.overrides[id] ?? fixtures.get(id)
+  }
+
+  /**
+   * ERM run timeline (ms since startedAt). State derives from elapsed time,
+   * so a run completes even if the user leaves — "you can leave" is true.
+   */
+  const ERM_TIMELINE = { resolved: 900, indexed: 2000, computing: 7200, done: 8800 }
+
+  function ermRunOf(runId: string): ErmRun | null {
+    const fixture = ERM_RUNS.find((r) => r.runId === runId)
+    if (fixture) return clone(fixture)
+    const rec = state.ermRuns[runId]
+    if (!rec) return null
+    const elapsed = now() - Date.parse(rec.startedAt)
+    const cancelled = !!rec.cancelledAt
+    const doneAt = cancelled ? Date.parse(rec.cancelledAt!) - Date.parse(rec.startedAt) : Infinity
+    const eff = Math.min(elapsed, doneAt)
+    let stateName: ErmRunState
+    if (cancelled && eff < ERM_TIMELINE.done) stateName = 'cancelled'
+    else if (elapsed >= ERM_TIMELINE.done || (cancelled && eff >= ERM_TIMELINE.done))
+      stateName = 'completed'
+    else stateName = elapsed < 250 ? 'queued' : 'running'
+    const population = clone(ERM_POPULATION)
+    population.criteria = { ...rec.criteria }
+    const completed = stateName === 'completed'
+    const qTotal = QUESTION_SETS.find((q) => q.id === rec.questionSetId)?.fields.length ?? 17
+    const run: ErmRun = {
+      runId: rec.runId,
+      startedAt: rec.startedAt,
+      questionSetId: rec.questionSetId,
+      prompt: rec.prompt,
+      criteria: { ...rec.criteria },
+      state: stateName,
+      population,
+      documents: [...rec.documents],
+      // completed runs materialize the canonical demo payload
+      answers: completed ? clone(ERM_ANSWERS) : [],
+      cancelledAt: rec.cancelledAt,
+      progress:
+        stateName === 'running' || stateName === 'queued'
+          ? {
+              populationResolved: eff >= ERM_TIMELINE.resolved,
+              indexCurrent: eff >= ERM_TIMELINE.indexed,
+              questionsDone:
+                eff < ERM_TIMELINE.indexed
+                  ? 0
+                  : Math.min(
+                      qTotal,
+                      Math.floor(
+                        ((eff - ERM_TIMELINE.indexed) /
+                          (ERM_TIMELINE.computing - ERM_TIMELINE.indexed)) *
+                          qTotal,
+                      ),
+                    ),
+              documentsDone:
+                eff < ERM_TIMELINE.indexed
+                  ? 0
+                  : Math.min(
+                      rec.documents.length,
+                      Math.floor(
+                        ((eff - ERM_TIMELINE.indexed) /
+                          (ERM_TIMELINE.computing - ERM_TIMELINE.indexed)) *
+                          rec.documents.length,
+                      ),
+                    ),
+              computing: eff >= ERM_TIMELINE.computing,
+            }
+          : undefined,
+    }
+    return run
   }
 
   /** Mutable copy in overrides (cloning the fixture on first write). */
@@ -484,7 +579,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
   return {
     reset: () => {
-      state = { version: STATE_VERSION, overrides: {}, processing: {}, reRuns: {} }
+      state = { version: STATE_VERSION, overrides: {}, processing: {}, reRuns: {}, ermRuns: {} }
       try {
         storage?.removeItem(STORAGE_KEY)
       } catch {
@@ -808,16 +903,33 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     // ---- amend evidence (v1.4) ------------------------------------------
 
-    searchRepository: (reviewId, query) => {
-      const review = stored(reviewId)
-      if (!review) return fail(fmt(MESSAGES.noReview, { id: reviewId }))
+    searchRepository: (query, scope) => {
+      // ONE document store, many lenses (v1.5): the repository view derives
+      // from the index store — repoId IS the docId. Ratified search keys:
+      // borrower/counterparty name or RXM (with or without the prefix),
+      // case-insensitive substring; empty query = the whole scoped list.
       const q = query.trim().toLowerCase()
-      const inReview = new Set(review.documents.map((d) => d.fileName))
-      const scoped = REPOSITORY.filter((r) => r.rxm === review.rxm && !inReview.has(r.fileName))
-      // The modal searches by the ratified keys: borrower/counterparty name
-      // or RXM (with or without the prefix). Empty query = the scoped list.
-      const keyHay = `${review.borrowerName} ${review.rxm}`.toLowerCase()
-      const out = q.length === 0 || keyHay.includes(q) ? scoped : []
+      let docs = DOCUMENTS.filter((d) => d.rxm)
+      if (scope?.rxm) docs = docs.filter((d) => d.rxm === scope.rxm)
+      if (scope?.notInReviewId) {
+        const review = stored(scope.notInReviewId)
+        if (!review) return fail(fmt(MESSAGES.noReview, { id: scope.notInReviewId }))
+        const inReview = new Set(review.documents.map((d) => d.fileName))
+        docs = docs.filter((d) => !inReview.has(d.fileName))
+      }
+      if (q.length > 0)
+        docs = docs.filter((d) => `${d.counterparty} ${d.rxm}`.toLowerCase().includes(q))
+      const out: RepositoryDoc[] = docs.map((d) => ({
+        repoId: d.docId,
+        rxm: d.rxm!,
+        counterparty: d.counterparty,
+        fileName: d.fileName,
+        docType: d.docType,
+        uploadedAt: d.date,
+        pages: d.pages,
+        parsed: d.extracted,
+        docId: d.extracted ? d.docId : undefined,
+      }))
       return delay(clone(out))
     },
 
@@ -828,16 +940,16 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       const addedAt = new Date(now()).toISOString()
       let doc: ReviewDocument
       if (source.kind === 'repo') {
-        const repo = REPOSITORY.find((r) => r.repoId === source.repoId && r.rxm === review.rxm)
+        const repo = DOCUMENTS.find((d) => d.docId === source.repoId && d.rxm === review.rxm)
         if (!repo) return fail(fmt(MESSAGES.noRepoDoc, { id: source.repoId }))
         if (review.documents.some((d) => d.fileName === repo.fileName))
           return fail(fmt(MESSAGES.alreadyInReview, { file: repo.fileName }))
         doc = {
           fileName: repo.fileName,
           kind: repo.docType,
-          date: repo.uploadedAt,
+          date: repo.date,
           pages: repo.pages,
-          docId: repo.docId,
+          docId: repo.extracted ? repo.docId : undefined,
           origin: 'amended',
           addedAt,
           why: why.trim(),
@@ -858,6 +970,59 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       review.amendSettlesAt = new Date(now() + AMEND_SETTLE_MS).toISOString()
       save()
       return delay(clone(review))
+    },
+
+    // ---- ERM (v1.5) ------------------------------------------------------
+
+    getQuestionSets: () => delay(clone(QUESTION_SETS)),
+
+    resolvePopulation: (criteria) => {
+      // The demo resolves ONE population regardless of criteria — the
+      // dropdown vocabulary is a deliberate placeholder (ratified
+      // 2026-09-18); the criteria are echoed into the accounting so the
+      // disclosure sentence reflects what was asked.
+      const population = clone(ERM_POPULATION)
+      population.criteria = { ...criteria }
+      return delay({ population, documentCount: ERM_RUN_SCOPE.length })
+    },
+
+    startRun: (input) => {
+      const runId = `erm-run-${new Date(now()).toISOString().slice(0, 10)}-${(now() % 1e7).toString(36)}`
+      state.ermRuns[runId] = {
+        runId,
+        startedAt: new Date(now()).toISOString(),
+        questionSetId: input.questionSetId,
+        prompt: input.prompt,
+        criteria: { ...input.criteria },
+        // population scope and explicit documents union into one run
+        documents: [...new Set([...ERM_RUN_SCOPE, ...(input.documents ?? [])])],
+      }
+      save()
+      return delay({ runId })
+    },
+
+    getRun: (runId) => {
+      const run = ermRunOf(runId)
+      if (!run) return fail(fmt(MESSAGES.noRun, { id: runId }))
+      return delay(run)
+    },
+
+    listRuns: () => {
+      const started = Object.keys(state.ermRuns).map((id) => ermRunOf(id)!)
+      const all = [...started, ...clone(ERM_RUNS)]
+      all.sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+      return delay(all)
+    },
+
+    cancelRun: (runId) => {
+      const rec = state.ermRuns[runId]
+      if (!rec) return fail(fmt(MESSAGES.noRun, { id: runId }))
+      const run = ermRunOf(runId)!
+      if (run.state === 'running' || run.state === 'queued') {
+        rec.cancelledAt = new Date(now()).toISOString()
+        save()
+      }
+      return delay(ermRunOf(runId)!)
     },
 
     exportReview: (id) => {

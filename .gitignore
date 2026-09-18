@@ -8,3 +8,6 @@ e2e/screenshots/
 *.local
 __pycache__/
 .pytest_cache/
+
+# local scratch drops (not project files)
+Claude outputs/

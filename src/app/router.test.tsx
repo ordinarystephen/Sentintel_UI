@@ -16,9 +16,12 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/crr',
     )
-    expect(screen.getAllByText('In design')).toHaveLength(2)
-    // design-status cards are not links
-    expect(screen.getAllByRole('link')).toHaveLength(1)
+    // ERM is live (v1.5): two active cards, Vantage still in design
+    expect(
+      screen.getByRole('link', { name: /ERM.*Enterprise Risk Management.*Open/s }),
+    ).toHaveAttribute('href', '/erm')
+    expect(screen.getAllByText('In design')).toHaveLength(1)
+    expect(screen.getAllByRole('link')).toHaveLength(2)
   })
 
   it('/ redirects to the last-used entitled app', async () => {

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel · ERM — POC concept</title>
+<style>
+/* ============================================================
+   SENTINEL · ERM — POC concept r1
+   Portfolio-level insights and analysis. Sibling of
+   sentinel-mvp-concept.html — same token contract, same voice.
+   Pink pins = design rationale. Fictional data.
+   ============================================================ */
+:root{
+  --ink:#1c1917; --ink-soft:#44403c; --muted:#746d67; --faint:#8a837b;
+  --bg:#fdfdfc; --bg-subtle:#f8f7f5; --bg-hover:#f1efec;
+  --rule:#e9e6e2; --rule-strong:#d8d4cf;
+  --on-ink:#fdfdfc;
+  --success:#15803d; --success-bg:#f0fdf4; --success-line:#bbf7d0;
+  --warn:#a16207; --warn-bg:#fdf9e7; --warn-line:#eedc9e;
+  --error:#991b1b; --error-bg:#fdf2f2;
+  --indigo:#4f46e5; --indigo-bg:#eef0fd; --indigo-line:#c7d2fe;
+  --note:#db2777; --note-bg:#fdf2f8;
+  --shadow-sm:0 1px 2px rgba(28,25,23,.06);
+  --shadow-md:0 4px 16px rgba(28,25,23,.10);
+  --primary:#1c1917;
+  --rail-bg:#f8f7f5; --rail-fg:#44403c; --rail-fg-muted:#8a837b; --rail-hover:#f1efec;
+  --rail-rule:#e9e6e2; --rail-active-bg:#f1efec; --rail-active-fg:#1c1917; --rail-bar:#1c1917;
+  /* v1.2: the app bundles Inter Variable + Source Serif 4 Variable
+     (@fontsource, no external hosts). This standalone mockup ships no font
+     files, so it renders the system fallbacks that follow. */
+  --font-body:"Inter Variable",-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
+  --font-display:"Source Serif 4 Variable","New York",ui-serif,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+body.theme-cobalt{
+  --ink:#0b0f1d; --ink-soft:#39415a; --muted:#5b6478; --faint:#76839d;
+  --bg:#ffffff; --bg-subtle:#f3f5fb; --bg-hover:#e9edf7;
+  --rule:#e2e6f0; --rule-strong:#c9d1e4;
+  --on-ink:#f3f5f9;
+  --indigo:#19398d; --indigo-bg:#e8edf9; --indigo-line:#b9c7ec;
+  --warn-bg:#fdf7e4; --warn-line:#ecd995;
+  --error:#9b0033; --error-bg:#fdf0f4;
+  --primary:#19398d;
+  --rail-bg:#001b3c; --rail-fg:#e6ebf5; --rail-fg-muted:#7f93b5; --rail-hover:#0e2c55;
+  --rail-rule:#16355e; --rail-active-bg:#0e2c55; --rail-active-fg:#ffffff; --rail-bar:#e6ebf5;
+  --shadow-sm:0 1px 2px rgba(26,33,55,.05);
+  --shadow-md:0 4px 16px rgba(26,33,55,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{font-family:var(--font-body);color:var(--ink);background:var(--bg-subtle);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* crit chrome */
+.crit-banner{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;max-width:1360px;margin:0 auto;padding:14px 20px 0;color:var(--note);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.crit-banner .sub{color:var(--muted);letter-spacing:.02em;text-transform:none;font-weight:400;font-size:12px}
+.crit-nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:60;display:flex;gap:4px;align-items:center;background:var(--ink);border-radius:999px;padding:5px 6px;box-shadow:var(--shadow-md)}
+.crit-nav button{color:#d4d4d8;font-size:12px;padding:6px 13px;border-radius:999px;white-space:nowrap}
+.crit-nav button[aria-selected="true"]{background:#3f3f46;color:#fff}
+.crit-nav .notes-toggle{color:#f9a8d4}
+.crit-nav .notes-toggle[aria-pressed="true"]{background:var(--note);color:#fff}
+.pin-anchor{position:relative}
+.pin{position:absolute;z-index:40;width:20px;height:20px;border-radius:50%;background:var(--note);color:#fff;font-size:11px;font-weight:700;line-height:20px;text-align:center;box-shadow:0 0 0 3px var(--note-bg),var(--shadow-sm);display:none;font-family:var(--font-body)}
+body.notes-on .pin{display:block}
+.pin-pop{display:none;position:absolute;z-index:50;top:26px;right:-6px;width:280px;background:var(--bg);border:1px solid var(--note);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:400;line-height:1.5;color:var(--ink-soft);text-align:left;box-shadow:var(--shadow-md);text-transform:none;letter-spacing:0}
+.pin-pop .eyebrow{display:block;color:var(--note);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.pin.open .pin-pop{display:block}
+.pin.pin-left .pin-pop{right:auto;left:-6px}
+
+/* shell */
+.frame{max-width:1360px;height:calc(100vh - 62px);min-height:520px;margin:10px auto 0;background:var(--bg);border:1px solid var(--rule);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.masthead{display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;border-bottom:1px solid var(--rule);background:var(--bg);flex:none}
+.masthead .brand{font-weight:600;font-size:15px;letter-spacing:-.01em}
+.masthead .brand .app{color:var(--muted);font-weight:500}
+.masthead .spacer{flex:1}
+.theme-cycle{font-size:11px;color:var(--muted);border:1px solid var(--rule-strong);border-radius:6px;padding:3px 9px;background:var(--bg)}
+.theme-cycle:hover{background:var(--bg-hover)}
+.shell-row{display:flex;flex:1;min-height:0;align-items:stretch}
+.rail-nav{width:236px;flex:none;border-right:1px solid var(--rail-rule);background:var(--rail-bg);padding:14px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.nav-item{position:relative;display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:7px;padding:7px 10px;font-size:13px;color:var(--rail-fg)}
+.nav-item:hover{background:var(--rail-hover)}
+.nav-item svg{width:16px;height:16px;flex:none;color:var(--rail-fg-muted)}
+.nav-item.active{background:var(--rail-active-bg);font-weight:600;color:var(--rail-active-fg)}
+.nav-item.active svg{color:var(--rail-active-fg)}
+.nav-item.active::before{content:"";position:absolute;left:-12px;top:7px;bottom:7px;width:3px;border-radius:0 2px 2px 0;background:var(--rail-bar)}
+main.canvas{flex:1;min-width:0;overflow-y:auto;padding:26px 36px 90px;background:var(--bg)}
+.canvas-inner{max-width:1080px;margin:0 auto}
+.screen{display:none}
+.screen.active{display:block}
+@keyframes settle{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.screen.active > *{animation:settle .3s ease both}
+.screen.active > *:nth-child(2){animation-delay:.08s}
+.screen.active > *:nth-child(3){animation-delay:.16s}
+.screen.active > *:nth-child(4){animation-delay:.24s}
+
+/* atoms */
+.micro{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mono{font-family:var(--font-mono);font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rule-strong);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--ink-soft);background:var(--bg)}
+.badge.green{border-color:var(--success-line);color:var(--success);background:var(--success-bg)}
+.badge.amber{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+.badge.slate{border-color:var(--rule-strong);color:var(--muted);background:var(--bg-subtle)}
+.badge.indigo{border-color:var(--indigo-line);color:var(--indigo);background:var(--indigo-bg)}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500;border:1px solid transparent}
+.btn.primary{background:var(--primary);color:var(--on-ink)}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.outline{border-color:var(--rule-strong);background:var(--bg)}
+.btn.outline:hover{background:var(--bg-hover)}
+.btn.small{padding:5px 11px;font-size:12px;border-radius:6px}
+.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px;font-size:12px;cursor:pointer}
+.link.quiet{color:var(--muted)}
+.disclaimer{font-size:11px;color:var(--faint);margin-top:30px;border-top:1px solid var(--rule);padding-top:12px}
+h1.page{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
+.sub{font-size:13px;color:var(--muted);margin-bottom:20px;max-width:56ch}
+
+/* intake */
+.dropzone{border:1.5px dashed var(--rule-strong);border-radius:12px;background:var(--bg-subtle);padding:34px 24px;text-align:center;transition:border-color .12s,background .12s;cursor:pointer}
+.dropzone:hover{border-color:var(--faint);background:var(--bg-hover)}
+.dropzone svg{width:26px;height:26px;color:var(--faint);margin-bottom:10px}
+.dropzone .big{font-size:15px;font-weight:600}
+.dropzone .or{font-size:12.5px;color:var(--muted);margin-top:3px}
+.dropzone .hint{font-size:11px;color:var(--faint);margin-top:12px;letter-spacing:.04em}
+.zone-h{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px}
+.zone-h h3{font-family:var(--font-display);font-size:16px;font-weight:600}
+.zone-h .aside{font-size:12px;color:var(--faint)}
+.doc-row{display:flex;align-items:center;gap:12px;border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:11px 14px;margin-bottom:8px;cursor:pointer;transition:background .12s}
+.doc-row:hover{background:var(--bg-hover)}
+.doc-row .fname{font-family:var(--font-mono);font-size:12.5px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-row .who{font-size:11.5px;color:var(--muted);flex:none}
+.crawl{height:4px;border-radius:999px;background:var(--rule);overflow:hidden;width:120px;flex:none}
+.crawl i{display:block;height:100%;width:64%;background:var(--ink-soft);border-radius:999px}
+
+/* document / section browser */
+.doc-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.doc-head .fname{font-family:var(--font-mono);font-size:14px;font-weight:600}
+.browse-grid{display:flex;gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden;min-height:420px;background:var(--bg)}
+.sec-side{width:230px;flex:none;border-right:1px solid var(--rule);background:var(--bg-subtle);padding:10px 8px;overflow-y:auto}
+.sec-side h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:2px 8px 8px}
+.sec-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border-radius:7px;padding:6px 10px;font-size:12.5px;color:var(--ink-soft)}
+.sec-item:hover{background:var(--bg-hover)}
+.sec-item[aria-current="true"]{background:var(--bg);font-weight:600;color:var(--ink);box-shadow:var(--shadow-sm)}
+.sec-item .pg{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--faint)}
+.sec-main{flex:1;min-width:0;padding:20px 24px;overflow-y:auto}
+.sec-main h3{font-family:var(--font-display);font-size:17px;font-weight:600;margin-bottom:2px}
+.sec-main .pgref{font-family:var(--font-mono);font-size:11px;color:var(--faint);margin-bottom:12px}
+.sec-text{font-size:13.5px;color:var(--ink-soft);line-height:1.6;max-width:60ch}
+.sec-text table{border-collapse:collapse;margin-top:10px;font-size:12.5px}
+.sec-text td,.sec-text th{border:1px solid var(--rule-strong);padding:4px 10px;text-align:right}
+.sec-text th{background:var(--bg-subtle);font-weight:600;text-align:left}
+.img-panel{margin-top:18px;border:1px solid var(--rule);border-radius:8px;background:var(--bg-subtle)}
+.img-panel .cap{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--rule);padding:7px 12px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.img-panel .body{padding:12px;display:flex;justify-content:center}
+
+/* ask */
+textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:10px 12px;font-size:13px;resize:vertical;min-height:76px;background:var(--bg)}
+.ask-bar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.ask-scope{font-size:12px;color:var(--muted)}
+.res-row{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:13px 15px;margin-bottom:10px}
+.res-row .q{font-weight:600;font-size:13.5px;margin-bottom:4px}
+.res-row .a{font-size:13px;color:var(--ink-soft);max-width:64ch}
+.res-row .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.conf{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.conf.low{color:var(--warn)}
+
+
+/* portfolio monitor table */
+.mon-wrap{border:1px solid var(--rule);border-radius:12px;overflow-x:auto;background:var(--bg)}
+table.mon{width:100%;border-collapse:collapse;font-size:13px}
+.mon th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule-strong);background:var(--bg-subtle);cursor:pointer;white-space:nowrap}
+.mon th:hover{color:var(--ink)}
+.mon th.sorted::after{content:" ↑";color:var(--ink)}
+.mon th.sorted.desc::after{content:" ↓"}
+.mon td{padding:10px 12px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.mon tbody tr:last-child td{border-bottom:none}
+.mon tbody tr{cursor:pointer;transition:background .12s}
+.mon tbody tr:hover{background:var(--bg-hover)}
+.mon .bname{font-weight:600}
+.mon .delta{font-size:10.5px;color:var(--faint);margin-left:4px}
+.rag{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.rag.green{background:var(--success)}
+.rag.amber{background:var(--warn)}
+.rag.red{background:var(--error)}
+/* start screen */
+select.ctl{border:1px solid var(--rule-strong);border-radius:7px;padding:7px 9px;font-size:12.5px;background:var(--bg);color:var(--ink-soft);width:100%}
+.pop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
+.pop-grid label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px}
+@media(max-width:900px){.pop-grid{grid-template-columns:repeat(2,1fr)}}
+.dropzone.compact{padding:20px 18px}
+.dropzone.compact svg{width:20px;height:20px;margin-bottom:6px}
+.dropzone.compact .big{font-size:13.5px}
+/* processing screen */
+.step{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
+.step:last-child{border-bottom:none}
+.step .ic{width:18px;height:18px;flex:none;display:grid;place-items:center;border-radius:50%}
+.step.done .ic{color:var(--success)}
+.step.now .ic{color:var(--ink)}
+.step.todo{color:var(--faint)}
+.step .mono{margin-left:auto;color:var(--faint)}
+.crawl-lg{height:5px;border-radius:999px;background:var(--rule);overflow:hidden;margin:18px 0 6px}
+.crawl-lg i{display:block;height:100%;width:58%;background:var(--ink-soft);border-radius:999px;animation:crawl 8s ease forwards}
+@keyframes crawl{0%{width:8%}40%{width:38%}75%{width:62%}100%{width:88%}}
+/* group-by tabs */
+.tabs{display:inline-flex;background:var(--bg-subtle);border-radius:8px;padding:2px;gap:2px}
+.tabs button{padding:5px 13px;border-radius:6px;font-size:12px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:500}
+/* results: summary, group-by, scroll-top */
+.sum-card{border:1px solid var(--rule);border-radius:12px;background:var(--bg-subtle);padding:16px 18px;margin-bottom:16px}
+.sum-line{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px;margin-bottom:10px}
+.sum-line b{font-family:var(--font-display);font-size:15px}
+.sum-stats{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+.refdata2{border-top:1px solid var(--rule);margin-top:12px;padding-top:10px}
+.refdata2 summary{cursor:pointer;font-size:12.5px;font-weight:600;display:flex;gap:10px;align-items:baseline;list-style:none}
+.refdata2 summary::before{content:"▸";font-size:10px;color:var(--faint)}
+.refdata2[open] summary::before{content:"▾"}
+.refdata2 summary .mono{color:var(--faint);font-weight:400}
+.excl-row{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--rule);font-size:12.5px;flex-wrap:wrap}
+.excl-row:first-of-type{border-top:none}
+.excl-row .who{font-weight:600}
+.excl-row .reason{color:var(--muted)}
+.q-block{border:1px solid var(--rule);border-radius:12px;background:var(--bg);margin-bottom:12px;overflow:hidden}
+.q-block .qh{font-family:var(--font-display);font-weight:600;font-size:14.5px;padding:12px 16px;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:baseline}
+.q-block .qh .mono{color:var(--faint);font-weight:400}
+.q-row{display:flex;gap:12px;align-items:center;padding:9px 16px;border-bottom:1px solid var(--rule);font-size:13px}
+.q-row:last-child{border-bottom:none}
+.q-row .bn{font-weight:600;width:220px;flex:none}
+.q-row .ans{flex:1;min-width:0;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.totop{position:sticky;bottom:14px;display:flex;justify-content:flex-end;pointer-events:none}
+.totop button{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule-strong);border-radius:999px;padding:6px 14px;font-size:12px;background:var(--bg);color:var(--muted);box-shadow:var(--shadow-sm)}
+.totop button:hover{background:var(--bg-hover);color:var(--ink)}
+/* per-answer grade marks in cells */
+td .dv{border-bottom:1px dotted var(--faint);cursor:help}
+td .uns{color:var(--warn);font-weight:600}
+.flags-badge{font-size:10px;border-radius:999px;padding:0 7px;border:1px solid var(--warn-line);color:var(--warn);background:var(--warn-bg);font-weight:600}
+.flags-none{color:var(--faint)}
+/* expandable row: full field breakdown */
+tr.d-row{cursor:pointer}
+tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px solid var(--rule)}
+.x-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;padding:12px 6px 0}
+.x-field{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--rule);font-size:12.5px}
+.x-field .fl{width:170px;flex:none;color:var(--muted);font-size:11.5px}
+.x-field .fv{flex:1;min-width:0}
+.x-field .chips{display:flex;gap:4px;flex:none}
+.chip2{font-size:10px;border:1px solid var(--rule-strong);border-radius:4px;padding:0 5px;color:var(--muted);background:var(--bg)}
+.chip2.warn{border-color:var(--warn-line);color:var(--warn);background:var(--warn-bg)}
+.x-foot{display:flex;gap:14px;padding:10px 6px 0;font-size:11.5px;color:var(--faint);flex-wrap:wrap}
+/* runs history */
+.run-row{display:flex;gap:14px;align-items:center;border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:12px 16px;margin-bottom:10px;flex-wrap:wrap}
+.run-row .when{font-family:var(--font-mono);font-size:12px;color:var(--muted);width:130px;flex:none}
+.run-row .what{flex:1;min-width:200px}
+.run-row .what .qs{font-weight:600}
+.run-row .what .scope{font-size:12px;color:var(--muted)}
+/* documents grouped by borrower (collapsible; 3 docs visible, then scroll) */
+.b-group{margin:14px 0 8px;display:flex;gap:10px;align-items:baseline;cursor:pointer;user-select:none;border-radius:8px;padding:4px 6px}
+.b-group:hover{background:var(--bg-hover)}
+.b-group::before{content:"▸";font-size:11px;color:var(--faint);align-self:center}
+.b-group.open::before{content:"▾"}
+.b-docs{max-height:176px;overflow-y:auto;padding:0 6px}
+.b-group h3{font-family:var(--font-display);font-size:15.5px;font-weight:600}
+.doc-acts{display:flex;gap:12px;margin-left:auto;flex:none}
+/* documents search */
+.searchbar{position:relative;margin-bottom:10px}
+.searchbar input{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:9px 12px 9px 32px;font-size:13px;background:var(--bg)}
+.searchbar svg{position:absolute;left:10px;top:11px;width:14px;height:14px;color:var(--faint)}
+.hit-count{font-size:11.5px;color:var(--faint);margin:4px 0 12px}
+.scope-tag{font-size:10px;border-radius:4px;padding:1px 7px;border:1px solid var(--indigo-line);color:var(--indigo);background:var(--indigo-bg);font-weight:600}
+.scope-tag.off{border-color:var(--rule-strong);color:var(--faint);background:var(--bg-subtle);font-weight:400}
+
+/* modal system (shared with the suite) */
+.overlay{position:fixed;inset:0;background:rgba(24,24,27,.45);z-index:70;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--bg);border-radius:12px;max-width:720px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow-md)}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.modal-h h3{font-size:14px;font-weight:600;flex:1}
+.modal-b{padding:16px 18px}
+.icon-btn{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:hover{background:var(--bg-hover)}
+.prov{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:14px}
+.rat-card{border:1px solid var(--rule);border-radius:8px;background:var(--bg-subtle);padding:11px 13px;margin-bottom:8px}
+.rat-card .h{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin-bottom:3px}
+.rat-card p{font-size:12.5px;color:var(--ink-soft)}
+.ev-item{border:1px solid var(--rule);border-radius:8px;background:var(--bg-subtle);padding:11px 13px;margin-bottom:8px}
+.ev-item .where{display:flex;gap:8px;align-items:center;font-size:11.5px;margin-bottom:7px}
+.ev-item .where .sec{background:var(--bg);border-radius:4px;padding:1px 7px;font-weight:600}
+.ev-item blockquote{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink);border-left:2px solid var(--rule-strong);padding-left:12px;max-height:96px;overflow-y:auto}
+.ev-item .foot{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
+.ev-item .foot .link{margin-left:auto}
+.src-quote{font-family:var(--font-display);font-style:italic;font-size:14.5px;color:var(--ink);border-left:2px solid var(--rule-strong);padding:6px 0 6px 14px;max-height:120px;overflow-y:auto;margin-bottom:14px}
+.src-img{border:1px solid var(--rule);border-radius:8px;background:var(--bg-subtle);padding:14px;display:flex;justify-content:center}
+.limit{font-size:12px;color:var(--muted);margin-top:12px}
+.limit b{color:var(--warn);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:11px}
+</style>
+</head>
+<body class="notes-on">
+
+<div class="crit-banner">SENTINEL · ERM CONCEPT<span class="sub">Portfolio-level insights and analysis, on the Sentinel design system. Pink pins = rationale. Fictional data.</span></div>
+
+<div class="frame">
+  <div class="masthead">
+    <span class="brand">Sentinel <span class="app">· ERM ▾</span></span>
+    <span class="spacer"></span>
+    <button class="theme-cycle" id="themer" type="button">Theme: Stone</button>
+  </div>
+  <div class="shell-row">
+    <nav class="rail-nav" aria-label="ERM navigation">
+      <button class="nav-item active" data-nav="screen-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V20h14V9.5"/></svg>Home</button>
+      <button class="nav-item" data-nav="screen-runs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>Runs</button>
+      <button class="nav-item" data-nav="screen-documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>Documents</button>
+    </nav>
+    <main class="canvas">
+      <div class="canvas-inner">
+
+      <!-- ============ SCREEN · START ============ -->
+      <section class="screen active" id="screen-start" aria-label="Start an analysis">
+        <div class="pin-anchor">
+          <h1 class="page">Start a portfolio analysis</h1>
+          <p class="sub">Ask a question of any population — documents you bring, documents on system, or a whole portfolio slice.</p>
+          <span class="pin pin-left" style="top:-4px;left:290px" data-pin>E6<span class="pin-pop"><span class="eyebrow">Note E6 · the same arc as CRR</span>Steve's reframing: the monitor is a RESULT, not a home. ERM now speaks the suite's three-beat rhythm — start, processing, results — with the POC workspace intact at the end. The start screen takes the prompt, the documents (uploaded or picked), and the population scope in one place; "go" means go.</span></span>
+        </div>
+        <div class="zone-h" style="margin-top:4px"><h3>The question</h3><span class="aside">a prompt, a saved question set, or both</span></div>
+        <textarea class="qbox" aria-label="Prompt" placeholder="What do you want to know? e.g. Which borrowers have covenant headroom below 1.0x at the latest test?"></textarea>
+        <div style="max-width:340px;margin-top:8px">
+          <select class="ctl" aria-label="Question set">
+            <option>Question set: Quarterly credit pulse · 17 questions</option>
+            <option>Question set: Covenant sweep · 5 questions</option>
+            <option>Ad hoc — prompt only</option>
+          </select>
+        </div>
+        <div class="zone-h"><h3>The documents</h3><span class="aside">optional — leave empty to run on the population below</span></div>
+        <div class="dropzone compact" role="button" tabindex="0" aria-label="Upload documents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 17v2a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2"/></svg>
+          <div class="big">Drop documents here</div>
+          <div class="or">or browse files · or <span class="link">select from the repository</span></div>
+        </div>
+        <div class="zone-h pin-anchor"><h3>The population</h3><span class="aside">full-population search — scope resolved on system</span>
+          <span class="pin" style="top:-8px;right:-10px" data-pin>E7<span class="pin-pop"><span class="eyebrow">Note E7 · deliberate placeholders</span>Steve's instruction verbatim: the population vocabulary isn't settled, so these are dropdowns with placeholder values — portfolios, sub-portfolios, regions, as-of. The shape (a labeled dropdown row that composes with explicit documents) is the design; the words in the lists are not. Population scope and hand-picked documents union into one run.</span></span>
+        </div>
+        <div class="pop-grid">
+          <div><label>Portfolio</label><select class="ctl"><option>All portfolios</option><option>IB Lending</option><option>Wealth Management</option><option>Counterparty Credit Risk</option></select></div>
+          <div><label>Sub-portfolio</label><select class="ctl"><option>All sub-portfolios</option><option>Leveraged Lending</option><option>Fund Finance</option><option>Commodity Trade Finance</option></select></div>
+          <div><label>Region</label><select class="ctl"><option>All regions</option><option>Americas</option><option>EMEA</option><option>APAC</option></select></div>
+          <div><label>As of</label><select class="ctl"><option>Latest on system</option><option>Q2 2026</option><option>Q1 2026</option></select></div>
+        </div>
+        <div class="ask-bar" style="margin-top:20px">
+          <span class="ask-scope">Will run against: <b>IB Lending · All sub-portfolios · All regions</b> — resolves to 6 borrowers · 11 documents</span>
+          <span style="flex:1"></span>
+          <button class="btn primary" id="erm-go">Run analysis</button>
+        </div>
+        <p class="disclaimer">All data in this demonstration build is fictional.</p>
+      </section>
+
+      <!-- ============ SCREEN · PROCESSING ============ -->
+      <section class="screen" id="screen-processing" aria-label="Processing">
+        <div style="max-width:640px;margin:40px auto 0">
+          <h1 class="page">Running the analysis</h1>
+          <p class="sub">Quarterly credit pulse · 17 questions · IB Lending — 6 borrowers, 11 documents.</p>
+          <div class="crawl-lg"><i></i></div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><p style="font-size:11.5px;color:var(--faint);flex:1">You can leave — the run continues and lands in Runs.</p><button class="btn outline small" data-goto="screen-start">Cancel run</button></div>
+          <div class="step done"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m4 12.5 5 5L20 6.5"/></svg></span>Population resolved<span class="mono">6 borrowers · 11 documents</span></div>
+          <div class="step done"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m4 12.5 5 5L20 6.5"/></svg></span>Document index current<span class="mono">no re-parsing needed</span></div>
+          <div class="step now"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="14 8"/></svg></span>Running 17 questions across 11 documents<span class="mono">7 of 11</span></div>
+          <div class="step todo"><span class="ic">○</span>Computing status &amp; materiality</div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN · PORTFOLIO MONITOR ============ -->
+      <section class="screen" id="screen-results" aria-label="Results">
+        <div class="pin-anchor">
+          <h1 class="page">Portfolio monitor</h1>
+          <p class="sub">Run completed 09:12 · Quarterly credit pulse · IB Lending — one row per borrower, every answer match-rated.</p>
+          <span class="pin pin-left" style="top:-4px;left:250px" data-pin>E1<span class="pin-pop"><span class="eyebrow">Note E1 · the POC mode, re-expressed</span>This is the parent POC's Portfolio Monitor on Sentinel's design system: a fixed question set runs against every selected document in parallel and pivots into one row per borrower. Color is reserved for status — the RAG dots are the only color on the canvas.</span></span>
+        </div>
+        <div class="ask-bar" style="margin-bottom:14px">
+          <button class="btn outline small" data-goto="screen-start">New analysis</button>
+          <span style="flex:1"></span>
+          <button class="btn outline small">Export summary (Excel)</button>
+          <button class="btn outline small pin-anchor">Export summary (Word)<span class="pin" style="top:-12px;right:-12px" data-pin>E3<span class="pin-pop"><span class="eyebrow">Note E3 · the export question — your ruling</span>The POC exported this table to Excel. CRR's one-export-Word rule was scoped to the review deliverable — a portfolio summary table is arguably a different deliverable. Both affordances drawn, now at the top per Steve's call: keep Excel, keep Word, or keep both.</span></span></button>
+        </div>
+        <div class="sum-card pin-anchor">
+          <div class="sum-line"><b>Summary</b><span class="badge indigo">Quarterly credit pulse · 17 questions</span><span class="mono" style="color:var(--faint)">run 09:12 · IB Lending · latest on system</span></div>
+          <div class="sum-stats">
+            <span><b>6</b> borrowers analyzed · 11 documents · 17 questions · 102 answers</span>
+            <span class="badge slate">89 stated</span><span class="badge slate">5 derived</span><span class="badge amber">8 unsupported</span>
+            <span style="color:var(--muted)">Most attention needed: <b>Redfenn Timber Holdings</b> — 8 of 17 answers unsupported; documents predate Amendment No. 1</span>
+          </div>
+          <details class="refdata2">
+            <summary>Population — why these borrowers<span class="mono">6 included · 3 excluded · 1 indeterminate</span></summary>
+            <div style="margin-top:8px;font-size:12.5px;color:var(--muted)">Criteria: IB Lending · all sub-portfolios · all regions · latest documents on system. Exclusions are named, never silent:</div>
+            <div style="margin-top:6px">
+              <div class="excl-row"><span class="who">Seldwyn Marine Finance</span><span class="mono">RXM-7742</span><span class="reason">excluded — no documents on system as of the run</span></div>
+              <div class="excl-row"><span class="who">Verloway AgriChem</span><span class="mono">RXM-8105</span><span class="reason">excluded — outside selected portfolio (Wealth Management)</span></div>
+              <div class="excl-row"><span class="who">Aurelock Dental Group</span><span class="mono">RXM-9033</span><span class="reason">excluded — no exposure at the as-of date</span></div>
+              <div class="excl-row"><span class="who">Farrowdale Logistics</span><span class="mono">RXM-6617</span><span class="reason" style="color:var(--warn)">indeterminate — insufficient look-through information; included in the count, flagged for review</span></div>
+            </div>
+          </details>
+          <span class="pin" style="top:-9px;right:-6px" data-pin>E8<span class="pin-pop"><span class="eyebrow">Note E8 · the population accounts for itself</span>Steve's new requirement, made structural: every run opens with a summary — question set, status counts, the headline finding — and a disclosure that answers "why was this population chosen and why were some borrowers excluded." Exclusions carry named reasons; the indeterminate class (insufficient look-through) is reported, never silently defaulted. The run is an auditable object, not just a table.</span></span>
+        </div>
+        <div class="ask-bar" style="margin-bottom:10px">
+          <div class="tabs" role="tablist" id="groupby">
+            <button aria-selected="true" data-view="view-borrower">By borrower</button>
+            <button aria-selected="false" data-view="view-question">By question</button>
+          </div>
+          <span class="pin-anchor" style="width:18px">&nbsp;<span class="pin" style="top:-10px;left:-4px" data-pin>E9<span class="pin-pop"><span class="eyebrow">Note E9 · two cuts of one result</span>Steve wanted organization by question or by borrower and suspected both — so both: one toggle, same underlying answers. By borrower is the POC monitor table; by question turns each question into a block with per-borrower answers. Neither is a re-run; they're two sorts of the same evidence.</span></span></span>
+        </div>
+        <div id="view-borrower"><div class="mon-wrap pin-anchor">
+          <table class="mon" id="mon-table">
+            <thead><tr>
+              <th data-sort="text">Borrower</th><th data-sort="text">RXM</th><th data-sort="num" class="sorted desc">Flags</th><th data-sort="num">Headroom</th><th data-sort="text">Rating dir.</th><th data-sort="text">PD</th><th data-sort="num">Gross lev.</th><th data-sort="text">Key risk summary</th>
+            </tr></thead>
+            <tbody id="mon-body"></tbody>
+          </table>
+          <span class="pin" style="top:-9px;right:-6px" data-pin>E2<span class="pin-pop"><span class="eyebrow">Note E2 · every cell is a claim</span>Each value came from a question run against that borrower's documents — click a row and it expands in place to every field in the question set, each with its confidence, inferred flag, and match tier; evidence links open the same verification modal as everywhere else in Sentinel.</span></span>
+          <span class="pin" style="top:-9px;right:120px" data-pin>E12<span class="pin-pop"><span class="eyebrow">Note E12 · grades belong to answers, not rows</span>Steve's corner-check, applied: an answer is <b>stated</b> (a quote passes the entailment check), <b>derived</b> (computed from stated inputs, derivation shown), or <b>unsupported</b> (nothing grounds it) — a decision table, no percentages, and retrieval similarity never grades. A row of many answers carries no grade at all — only a flag count, CRR's attention-badge idiom. Whether "derived" is acceptable is per-field question-set configuration.</span></span>
+        </div>
+        <p style="font-size:11.5px;color:var(--faint);margin-top:8px" class="pin-anchor">8 of 17 columns shown — expand a row for every answer · default sort: most flags first · column picker TBD<span class="pin" style="top:-10px;right:-8px" data-pin>E13<span class="pin-pop"><span class="eyebrow">Note E13 · a flexible surface</span>Question sets vary in size, so columns derive from the question set — identity columns stay pinned, the question columns flex, the grid scrolls when wide, and the expanded row always shows everything. The 15-field canonical set is one question set, not a fixed schema.</span></span></p>
+        </div>
+        <div id="view-question" hidden>
+          <div class="q-block">
+            <div class="qh">Which borrowers have covenant headroom below 1.0x at the latest test?<span class="mono">Q3 of 9</span></div>
+            <div class="q-row"><span class="chip2">stated</span><span class="bn">Ambervale Foods Group</span><span class="ans">0.4x — headroom narrowed from 0.9x on the Q2 EBITDA revision; certificate pending</span></div>
+            <div class="q-row"><span class="chip2">stated</span><span class="bn">Veyland US Holdco LLC</span><span class="ans">0.6x — springing covenant, tested; revised expected case drives the compression</span></div>
+            <div class="q-row"><span class="chip2 warn">unsupported</span><span class="bn">Redfenn Timber Holdings</span><span class="ans">answer could not be grounded — documents on system predate Amendment No. 1</span></div>
+            <div class="q-row"><span class="chip2">stated</span><span class="bn">3 others</span><span class="ans">above 1.0x — Torvane 1.1x, Northgale 1.4x, Orvalon 2.3x</span></div>
+          </div>
+          <div class="q-block">
+            <div class="qh">Which borrowers show a negative rating direction?<span class="mono">Q5 of 9</span></div>
+            <div class="q-row"><span class="chip2">stated</span><span class="bn">Ambervale Foods Group</span><span class="ans">Negative — leverage up 0.4x q/q against a tightening covenant</span></div>
+            <div class="q-row"><span class="chip2">derived</span><span class="bn">Veyland US Holdco LLC</span><span class="ans">Negative — inferred from the expected-case revision; not stated as a rating action</span></div>
+          </div>
+          <p style="font-size:11.5px;color:var(--faint)">7 more questions · every answer opens the same detail-and-evidence modal</p>
+        </div>
+        <div class="totop"><button type="button" id="totop-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>Top</button></div>
+        <p class="disclaimer">All data in this demonstration build is fictional.</p>
+      </section>
+
+      <!-- ============ SCREEN · RUNS ============ -->
+      <section class="screen" id="screen-runs" aria-label="Runs">
+        <div class="pin-anchor">
+          <h1 class="page">Runs</h1>
+          <p class="sub">Every analysis, kept — open any prior run's results exactly as they stood.</p>
+          <span class="pin pin-left" style="top:-4px;left:110px" data-pin>E10<span class="pin-pop"><span class="eyebrow">Note E10 · runs are records</span>Steve's requirement: with multiple runs, prior results stay reachable. Each run is a frozen, revisitable object — question set, population accounting, and results as of its moment. Re-running creates a new record; it never overwrites an old one.</span></span>
+        </div>
+        <div class="run-row" style="border-color:var(--rule-strong)">
+          <span class="when">Today 09:12</span>
+          <span class="what"><span class="qs">Quarterly credit pulse</span> · 17 questions<br><span class="scope">IB Lending · all sub-portfolios · all regions — 6 borrowers · 11 documents</span></span>
+          <span class="badge slate">89 stated</span><span class="badge slate">5 derived</span><span class="badge amber">8 unsupported</span>
+          <button class="btn outline small" data-goto="screen-results">View results</button>
+        </div>
+        <div class="run-row">
+          <span class="when">2026-09-11 14:30</span>
+          <span class="what"><span class="qs">Covenant sweep</span> · 5 questions<br><span class="scope">IB Lending · Leveraged Lending — 4 borrowers · 7 documents</span></span>
+          <span class="badge slate">all stated</span>
+          <button class="btn outline small" data-goto="screen-results">View results</button>
+        </div>
+        <div class="run-row">
+          <span class="when">2026-08-28 09:00</span>
+          <span class="what"><span class="qs">Quarterly credit pulse</span> · 17 questions<br><span class="scope">IB Lending · all sub-portfolios — 6 borrowers · 10 documents</span></span>
+          <span class="badge slate">96 stated</span><span class="badge amber">4 unsupported</span>
+          <button class="btn outline small" data-goto="screen-results">View results</button>
+        </div>
+        <p class="disclaimer">All data in this demonstration build is fictional.</p>
+      </section>
+
+      <!-- ============ SCREEN · DOCUMENTS ============ -->
+      <section class="screen" id="screen-documents" aria-label="Documents">
+        <div class="pin-anchor">
+          <h1 class="page">Documents</h1>
+          <p class="sub">Everything on system that ERM can see — search it, and choose what feeds the monitor.</p>
+          <span class="pin pin-left" style="top:-4px;left:180px" data-pin>E5<span class="pin-pop"><span class="eyebrow">Note E5 · one repository, an ERM lens</span>Steve's gap: the monitor said "11 documents" with nowhere to see or search them. This screen is the shared platform repository viewed through ERM's lens — same search keys (name or RXM), plus one ERM-only control: whether a document is in the monitor's scope. Nothing here is a second document store.</span></span>
+        </div>
+        <div class="searchbar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" placeholder="Search by borrower / counterparty name or RXM" aria-label="Search documents">
+        </div>
+        <div class="hit-count">17 documents · 7 borrowers on system for ERM — click a borrower to expand</div>
+
+        <div class="b-group open"><h3>Ambervale Foods Group</h3><span class="mono" style="color:var(--muted)">RXM-3821</span><span class="badge slate">5 documents</span></div>
+        <div class="b-docs">
+        <div class="doc-row"><span class="fname">Ambervale_Foods_Q2_Performance_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
+        <div class="doc-row"><span class="fname">Ambervale_Foods_Covenant_Cert_2026-06.pdf</span><span class="badge slate">compliance certificate</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
+        <div class="doc-row"><span class="fname">Ambervale_Foods_Annual_Review_FY25.pdf</span><span class="badge slate">annual review</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
+        <div class="doc-row"><span class="fname">Ambervale_Foods_Sponsor_Support_Letter.pdf</span><span class="badge slate">letter</span><span class="scope-tag off">not in scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
+        <div class="doc-row"><span class="fname">Ambervale_Foods_Q1_Performance_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag off">not in scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div>
+        </div>
+
+        <div class="b-group"><h3>Torvane Aggregates</h3><span class="mono" style="color:var(--muted)">RXM-2214</span><span class="badge slate">1 document</span></div>
+        <div class="b-docs" hidden><div class="doc-row"><span class="fname">Torvane_Aggregates_Credit_Agreement_2026.pdf</span><span class="badge slate">credit agreement</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
+
+        <div class="b-group pin-anchor"><h3>Veyland US Holdco LLC</h3><span class="mono" style="color:var(--muted)">RXM-6430</span><span class="badge slate">1 document</span>
+          <span class="pin" style="top:-8px;right:-10px" data-pin>E11<span class="pin-pop"><span class="eyebrow">Note E11 · documents, grouped and inspectable</span>Steve's spec: search by borrower, see each borrower's document group, and open both faces of a document without leaving the UI — the extraction (what the machine read, section by section) and the raw document (the rendered pages). Same platform viewers as CRR and Vantage; ERM adds only the grouping and the scope chip.</span></span>
+        </div>
+        <div class="b-docs" hidden><div class="doc-row"><span class="fname">Veyland_Holdco_Q3_Update.pdf</span><span class="badge slate">quarterly update</span><span class="scope-tag">in monitor scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
+
+        <div class="b-group"><h3>Orvalon Freight Systems</h3><span class="mono" style="color:var(--muted)">RXM-4177</span><span class="badge slate">1 document</span></div>
+        <div class="b-docs" hidden><div class="doc-row"><span class="fname">Orvalon_Freight_Refinancing_Memo_2026.pdf</span><span class="badge slate">memo</span><span class="scope-tag off">not in scope</span><span class="doc-acts"><button class="link quiet" data-viewex>View extraction</button><button class="link quiet">Raw document</button></span></div></div>
+
+        <p class="disclaimer">All data in this demonstration build is fictional.</p>
+      </section>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ============ VERIFICATION MODAL ============ -->
+<div class="overlay" id="detail-overlay" role="dialog" aria-modal="true" aria-label="Answer detail">
+  <div class="modal">
+    <div class="modal-h"><h3>Ambervale Foods Group — covenant headroom 0.4x</h3><button class="icon-btn" id="detail-close" aria-label="Close">✕</button></div>
+    <div class="modal-b">
+      <div class="prov">
+        <span class="mono">Ambervale_Foods_Q2_Performance_Update.pdf</span>
+        <span class="badge amber">confidence: medium</span>
+        <span class="conf low">conf 84%</span>
+        <span class="badge slate" title="How much of the document the model saw">context: sections</span>
+        <span class="badge amber">M: 8</span>
+      </div>
+      <p class="micro" style="margin-bottom:6px">Answer</p>
+      <p style="font-size:14px;margin-bottom:14px">Covenant headroom of approximately <b>0.4x</b> against the 6.5x springing first-lien net leverage covenant, at the revised Q2 EBITDA. Headroom has narrowed from 0.9x at the prior test date on the EBITDA revision.</p>
+      <p class="micro" style="margin-bottom:6px">Rationale</p>
+      <div class="rat-card"><div class="h">Memo facts</div><p>Q2 update states gross leverage of 6.1x against the 6.5x covenant; the prior quarter reported 5.6x against the same test. Headroom computed from the stated figures.</p></div>
+      <div class="rat-card"><div class="h">Basis</div><p>The 0.4x figure is computed, not quoted — both inputs are directly stated, the subtraction is ours. Flagged medium confidence pending the covenant certificate.</p></div>
+      <p class="micro" style="margin-bottom:6px">Evidence (2)</p>
+      <div class="ev-item">
+        <div class="where"><span class="sec">Covenant Compliance</span><span class="mono" style="color:var(--muted)">p. 16</span></div>
+        <blockquote>"Gross first-lien net leverage of 6.1x as of quarter end, against the springing covenant of 6.5x tested when revolver utilization exceeds 35% of commitments."</blockquote>
+        <div class="foot"><span>The current test inputs.</span><button class="link" id="open-source">View source →</button></div>
+      </div>
+      <div class="ev-item">
+        <div class="where"><span class="sec">Financial Performance</span><span class="mono" style="color:var(--muted)">p. 9</span></div>
+        <blockquote>"LTM EBITDA revised to $412mm following the Q2 restatement of the co-manufacturing segment."</blockquote>
+        <div class="foot"><span>The EBITDA revision driving the headroom change.</span><button class="link">View source →</button></div>
+      </div>
+      <p class="limit"><b>Limitations</b> — the June compliance certificate has not been provided; the computed headroom is unverified against the certified figures.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SOURCE IMAGE MODAL (chained) ============ -->
+<div class="overlay" id="source-overlay" role="dialog" aria-modal="true" aria-label="Evidence source">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-h"><h3>Evidence — Covenant Compliance</h3><button class="icon-btn" id="source-close" aria-label="Close">✕</button></div>
+    <div class="modal-b pin-anchor">
+      <div class="prov">
+        <span class="mono">Ambervale_Foods_Q2_Performance_Update.pdf</span>
+        <span class="mono">page 16</span>
+        <span class="badge green">section image</span>
+        <span class="badge slate">confidence: medium</span>
+      </div>
+      <div class="src-quote">"Gross first-lien net leverage of 6.1x as of quarter end, against the springing covenant of 6.5x tested when revolver utilization exceeds 35% of commitments."</div>
+      <div class="src-img">
+        <svg width="640" height="220" viewBox="0 0 640 220" aria-label="Source section image placeholder"><rect x="1" y="1" width="638" height="218" rx="4" fill="var(--bg)" stroke="var(--rule-strong)"/><text x="24" y="30" font-size="11" fill="var(--ink-soft)" font-family="Georgia,serif" font-style="italic">Covenant Compliance.</text><line x1="24" y1="46" x2="616" y2="46" stroke="var(--rule)"/><line x1="24" y1="70" x2="616" y2="70" stroke="var(--rule)"/><line x1="24" y1="94" x2="616" y2="94" stroke="var(--rule)"/><rect x="24" y="112" width="480" height="72" fill="var(--bg-subtle)" stroke="var(--rule-strong)"/><line x1="184" y1="112" x2="184" y2="184" stroke="var(--rule-strong)"/><line x1="344" y1="112" x2="344" y2="184" stroke="var(--rule-strong)"/><line x1="24" y1="136" x2="504" y2="136" stroke="var(--rule-strong)"/><line x1="24" y1="160" x2="504" y2="160" stroke="var(--rule)"/><text x="32" y="128" font-size="9" fill="var(--faint)" font-family="monospace">TEST PERIOD</text><text x="192" y="128" font-size="9" fill="var(--faint)" font-family="monospace">MAX FLNL</text><text x="352" y="128" font-size="9" fill="var(--faint)" font-family="monospace">MIN ICR</text><text x="32" y="152" font-size="9" fill="var(--ink-soft)" font-family="monospace">Through Q4 2027</text><text x="192" y="152" font-size="9" fill="var(--ink-soft)" font-family="monospace">5.25x</text><text x="352" y="152" font-size="9" fill="var(--ink-soft)" font-family="monospace">2.00x</text><text x="32" y="176" font-size="9" fill="var(--ink-soft)" font-family="monospace">Thereafter</text><text x="192" y="176" font-size="9" fill="var(--ink-soft)" font-family="monospace">4.75x</text><text x="352" y="176" font-size="9" fill="var(--ink-soft)" font-family="monospace">2.25x</text><text x="24" y="206" font-size="9" fill="var(--faint)" font-family="monospace">p. 16 · section crop (placeholder rendering)</text></svg>
+      </div>
+      <p class="limit" style="margin-top:10px"><span style="color:var(--ink);font-weight:600">Confidence rationale:</span> leverage and covenant values read from a native table; the headroom is computed from them, pending the certificate.</p>
+      <span class="pin" style="top:8px;right:6px" data-pin>E4<span class="pin-pop"><span class="eyebrow">Note E4 · same evidence, everywhere</span>The source-image modal is the platform's shared verification surface — identical in CRR, ERM, and Vantage. A number in a portfolio table earns exactly the same right to be checked against the page as a number in a workpaper.</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- crit nav -->
+<nav class="crit-nav" aria-label="Mockup navigation">
+  <button data-screen="screen-start" aria-selected="true">1 · Start</button>
+  <button data-screen="screen-processing" aria-selected="false">2 · Processing</button>
+  <button data-screen="screen-results" aria-selected="false">3 · Results</button>
+  <button data-screen="screen-runs" aria-selected="false">4 · Runs</button>
+  <button data-screen="screen-documents" aria-selected="false">5 · Documents</button>
+  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 13</button>
+</nav>
+
+<script>
+(function(){
+  // screens
+  function show(id){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('active', s.id===id); });
+    document.querySelectorAll('.crit-nav [data-screen]').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.screen===id?'true':'false'); });
+    document.querySelectorAll('.rail-nav .nav-item').forEach(function(n){ n.classList.toggle('active', n.dataset.nav===id); });
+  }
+  document.querySelectorAll('.crit-nav [data-screen]').forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.screen); }); });
+  document.querySelectorAll('.rail-nav .nav-item').forEach(function(n){ n.addEventListener('click', function(){ show(n.dataset.nav); }); });
+  document.querySelectorAll('tr[data-detail]').forEach(function(r){ r.addEventListener('click', function(){ document.getElementById('detail-overlay').classList.add('open'); dstack.push(document.getElementById('detail-overlay')); }); });
+
+  // start -> processing -> results
+  var goBtn=document.getElementById('erm-go');
+  if(goBtn) goBtn.addEventListener('click', function(){
+    show('screen-processing');
+    setTimeout(function(){ show('screen-results'); }, 2400);
+  });
+  document.querySelectorAll('[data-goto]').forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.goto); }); });
+
+  // group-by toggle
+  document.querySelectorAll('#groupby [data-view]').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('#groupby [data-view]').forEach(function(x){ x.setAttribute('aria-selected', x===t?'true':'false'); });
+      document.getElementById('view-borrower').hidden = t.dataset.view!=='view-borrower';
+      document.getElementById('view-question').hidden = t.dataset.view!=='view-question';
+    });
+  });
+  // scroll to top
+  var tt=document.getElementById('totop-btn');
+  if(tt) tt.addEventListener('click', function(){ document.querySelector('main.canvas').scrollTo({top:0,behavior:'smooth'}); });
+  // collapsible borrower groups (3 docs visible, then scroll)
+  document.querySelectorAll('.b-group').forEach(function(g){
+    g.addEventListener('click', function(e){
+      if(e.target.closest('.pin')) return;
+      var docs=g.nextElementSibling;
+      if(!docs || !docs.classList.contains('b-docs')) return;
+      var open=g.classList.toggle('open');
+      docs.hidden=!open;
+    });
+  });
+
+  // documents: view extraction opens the shared source viewer
+  document.querySelectorAll('[data-viewex]').forEach(function(b){
+    b.addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('source-overlay').classList.add('open'); });
+  });
+
+  // portfolio rows: rendered from data (columns derive from the question set)
+  var FIELDS=[["counterparty","Counterparty"],["team_lead","Team Lead (TL)"],["credit_officer","Credit Officer (CO)"],["credit_analyst","Credit Analyst (CA)"],["sector","Sector / Industry"],["pd","PD Rating"],["reg","Regulatory Rating"],["dscr","Debt Repayment Capacity"],["ev","EV Coverage"],["fccr","FCCR"],["lev","Gross Leverage"],["hd","Covenant Headroom"],["rd","Rating Direction"],["cwl","CWL Flag"],["exp","Total Exposure"],["risk","Overall Risk"],["summary","Key Risk Summary"]];
+  var VIS=[["hd","Headroom"],["rd","Rating dir."],["pd","PD"],["lev","Gross lev."],["summary","Key risk summary"]];
+  var ROWS=[
+    {b:"Redfenn Timber Holdings",rxm:"RXM-5108",match:38,pd:"B2",lev:"5.2x",fccr:"—",exp:"$310mm",cwl:"—",sum:"Documents on system predate Amendment No. 1 — eight answers could not be grounded.",
+     f:{counterparty:["Redfenn Timber Holdings","h"],team_lead:["N/A","l","inf"],credit_officer:["R. Chen","m"],credit_analyst:["N/A","l"],sector:["Materials — Forestry (NACE 02.20)","h"],pd:["B2","m"],reg:["—","l","un"],dscr:["—","l","un"],ev:["—","l","un"],fccr:["—","l","un"],lev:["5.2x","m"],hd:["—","l","un"],rd:["—","l","un"],cwl:["—","l","un"],exp:["$310mm CMT","m"],risk:["—","l","un"],summary:["Stale document set: eight answers unsupported pending the amended agreement.","m","inf"]}},
+    {b:"Orvalon Freight Systems",rxm:"RXM-4177",match:71,pd:"Ba3",lev:"3.1x",fccr:"2.4x",exp:"$140mm",cwl:"No",sum:"Refinancing memo covers structure well; personnel and regulatory fields inferred.",
+     f:{counterparty:["Orvalon Freight Systems","h"],team_lead:["T. Alvarez","m","inf"],credit_officer:["M. Okafor","h"],credit_analyst:["N/A","l"],sector:["Industrials — Freight & Logistics (NACE 49.41)","h"],pd:["Ba3","h"],reg:["Pass","m","inf"],dscr:["DSCR 1.9x LTM","m"],ev:["2.6x","m"],fccr:["2.4x","h"],lev:["3.1x","h"],hd:["2.3x","h"],rd:["Stable","m"],cwl:["No","h"],exp:["$140mm CMT","h"],risk:["Low","m"],summary:["Post-refinancing leverage low; renewal concentration in two contracts.","h"]}},
+    {b:"Veyland US Holdco LLC",rxm:"RXM-6430",match:84,pd:"B1",lev:"5.9x",fccr:"1.8x",exp:"$1,390mm",cwl:"No",sum:"Expected case revised down on enterprise renewal slippage; headroom compressing.",
+     f:{counterparty:["Veyland US Holdco LLC","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["R. Chen","m"],sector:["TMT — Application Hosting (NACE 63.11)","h"],pd:["B1","h"],reg:["Pass","h"],dscr:["DSCR 1.6x LTM","m"],ev:["2.1x","m","inf"],fccr:["1.8x","h"],lev:["5.9x","h"],hd:["0.6x","h"],rd:["Negative","m","inf"],cwl:["No","h"],exp:["$1,240mm TLB + $150mm RCF","h"],risk:["Medium","m"],summary:["Renewal-cycle slippage drives the revised expected case; covenant headroom 0.6x.","h"]}},
+    {b:"Ambervale Foods Group",rxm:"RXM-3821",match:92,pd:"B1",lev:"6.1x",fccr:"1.5x",exp:"$820mm",cwl:"Yes",sum:"Leverage up 0.4x q/q against a tightening covenant; certificate pending.",
+     f:{counterparty:["Ambervale Foods Group","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["T. Alvarez","h"],sector:["Consumer — Packaged Foods (NACE 10.89)","h"],pd:["B1","h"],reg:["Special Mention","h"],dscr:["DSCR 1.3x LTM","h"],ev:["1.9x","m"],fccr:["1.5x","h"],lev:["6.1x","h"],hd:["0.4x","h","inf"],rd:["Negative","h"],cwl:["Yes","h"],exp:["$820mm CMT","h"],risk:["High","h"],summary:["Covenant headroom 0.4x at revised EBITDA; June certificate not yet provided.","h"]}},
+    {b:"Torvane Aggregates",rxm:"RXM-2214",match:88,pd:"Ba2",lev:"4.2x",fccr:"2.0x",exp:"$460mm",cwl:"No",sum:"Stable quarter; covenant grid and step-down read directly from the agreement.",
+     f:{counterparty:["Torvane Aggregates","h"],team_lead:["T. Alvarez","h"],credit_officer:["R. Chen","h"],credit_analyst:["N/A","l"],sector:["Materials — Aggregates (NACE 08.12)","h"],pd:["Ba2","h"],reg:["Pass","h"],dscr:["DSCR 2.1x LTM","h"],ev:["2.8x","m"],fccr:["2.0x","h"],lev:["4.2x","h"],hd:["1.1x","h"],rd:["Stable","h"],cwl:["No","h"],exp:["$460mm CMT","h"],risk:["Low","h"],summary:["Headroom 1.1x and stable; step-down to 4.75x from Q4 2027.","h"]}},
+    {b:"Northgale Health Partners",rxm:"RXM-5590",match:90,pd:"Ba3",lev:"4.8x",fccr:"1.9x",exp:"$275mm",cwl:"No",sum:"Steady performance; reimbursement mix the watch item.",
+     f:{counterparty:["Northgale Health Partners","h"],team_lead:["J. Lindqvist","h"],credit_officer:["M. Okafor","h"],credit_analyst:["T. Alvarez","m"],sector:["Healthcare — Outpatient Services (NACE 86.22)","h"],pd:["Ba3","h"],reg:["Pass","h"],dscr:["DSCR 1.7x LTM","h"],ev:["2.4x","m"],fccr:["1.9x","h"],lev:["4.8x","h"],hd:["1.4x","h"],rd:["Stable","h"],cwl:["No","h"],exp:["$275mm CMT","h"],risk:["Low","h"],summary:["Headroom 1.4x; payer-mix shift monitored, no covenant pressure.","h"]}}
+  ];
+  function gradeOf(v){ return v[2]==="un"?"unsupported":v[2]==="inf"?"derived":"stated"; }
+  function flagsOf(r){ var n=0; FIELDS.forEach(function(fd){ var v=r.f[fd[0]]; if(v && v[2]==="un") n++; }); return n; }
+  function esc(t){ var d=document.createElement("div"); d.textContent=t; return d.innerHTML; }
+  var mb=document.getElementById("mon-body");
+  function cellHtml(v){
+    if(!v) return "<td>—</td>";
+    var g=gradeOf(v);
+    if(g==="unsupported") return '<td><span class="uns">—</span></td>';
+    if(g==="derived") return '<td><span class="dv" title="Derived from stated inputs — expand for the derivation">'+esc(v[0])+'</span></td>';
+    return '<td>'+esc(v[0])+'</td>';
+  }
+  function renderRows(list){
+    mb.innerHTML="";
+    list.forEach(function(r){
+      var fl=flagsOf(r);
+      var tr=document.createElement("tr"); tr.className="d-row"; tr.dataset.rxm=r.rxm;
+      var h='<td class="bname">'+esc(r.b)+'</td><td class="mono">'+r.rxm+'</td>'+
+        '<td>'+(fl>0?'<span class="flags-badge">'+fl+' unsupported</span>':'<span class="flags-none">—</span>')+'</td>';
+      VIS.forEach(function(c){ if(c[0]==="summary"){ var v=r.f.summary; h+='<td style="max-width:320px;overflow:hidden;text-overflow:ellipsis">'+(v?esc(v[0]):"—")+'</td>'; } else h+=cellHtml(r.f[c[0]]); });
+      tr.innerHTML=h;
+      var xr=document.createElement("tr"); xr.className="x-row"; xr.hidden=true;
+      var g='<td colspan="8"><div class="x-grid">';
+      FIELDS.forEach(function(fd){
+        var v=r.f[fd[0]]||["—","l","un"]; var gr=gradeOf(v);
+        var chips = gr==="unsupported" ? '<span class="chip2 warn">unsupported</span>'
+                  : '<span class="chip2">'+gr+'</span><span class="chip2">conf '+v[1]+'</span>';
+        g+='<div class="x-field"><span class="fl">'+fd[1]+'</span><span class="fv">'+esc(v[0])+'</span><span class="chips">'+chips+'</span></div>';
+      });
+      g+='</div><div class="x-foot"><span>Grades are per answer: stated (quote passes entailment) · derived (computed from stated inputs) · unsupported (nothing grounds it)</span><button class="link quiet" data-openevidence>Detail &amp; evidence →</button></div></td>';
+      xr.innerHTML=g;
+      tr.addEventListener("click", function(){ xr.hidden=!xr.hidden; });
+      mb.appendChild(tr); mb.appendChild(xr);
+    });
+    mb.querySelectorAll("[data-openevidence]").forEach(function(bb){ bb.addEventListener("click", function(e){ e.stopPropagation(); document.getElementById("detail-overlay").classList.add("open"); }); });
+  }
+  ROWS.sort(function(a,b){ return flagsOf(b)-flagsOf(a); }); // most flags first
+  renderRows(ROWS.slice()); // default: most flags first
+
+  // sortable columns — pair-aware (data row + its expansion move together)
+  document.querySelectorAll('#mon-table th[data-sort]').forEach(function(th, ci){
+    th.addEventListener('click', function(){
+      var desc=th.classList.contains('sorted') && !th.classList.contains('desc');
+      document.querySelectorAll('#mon-table th').forEach(function(h){ h.classList.remove('sorted','desc'); });
+      th.classList.add('sorted'); if(desc) th.classList.add('desc');
+      var pairs=[]; var rows=Array.prototype.slice.call(mb.querySelectorAll('tr.d-row'));
+      rows.forEach(function(r){ pairs.push([r, r.nextElementSibling]); });
+      pairs.sort(function(a,b){
+        var av=a[0].cells[ci].textContent.trim(), bv=b[0].cells[ci].textContent.trim();
+        if(th.dataset.sort==='num'){ av=parseFloat(av.replace(/[^0-9.\-]/g,''))||0; bv=parseFloat(bv.replace(/[^0-9.\-]/g,''))||0; }
+        return (av<bv?-1:av>bv?1:0) * (desc?-1:1);
+      });
+      pairs.forEach(function(p){ mb.appendChild(p[0]); mb.appendChild(p[1]); });
+    });
+  });
+
+  // pins
+  document.getElementById('notes-toggle').addEventListener('click', function(){
+    var on=document.body.classList.toggle('notes-on');
+    this.setAttribute('aria-pressed', on?'true':'false');
+  });
+  document.querySelectorAll('.pin').forEach(function(p){
+    p.addEventListener('click', function(e){ e.stopPropagation(); document.querySelectorAll('.pin.open').forEach(function(o){ if(o!==p) o.classList.remove('open'); }); p.classList.toggle('open'); });
+  });
+  document.addEventListener('click', function(){ document.querySelectorAll('.pin.open').forEach(function(o){ o.classList.remove('open'); }); });
+
+  // modal stack: Escape closes the top-most only (inherited pattern)
+  var stack=[]; var dstack=stack;
+  function wire(overlayId, openers, closeId){
+    var ov=document.getElementById(overlayId);
+    openers.forEach(function(sel){ var el=document.getElementById(sel); if(el) el.addEventListener('click', function(e){ e.stopPropagation(); ov.classList.add('open'); stack.push(ov); }); });
+    function close(){ ov.classList.remove('open'); var i=stack.lastIndexOf(ov); if(i!==-1) stack.splice(i,1); }
+    document.getElementById(closeId).addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+    return close;
+  }
+  var closeDetail=wire('detail-overlay',['open-detail'],'detail-close');
+  var closeSource=wire('source-overlay',['open-source'],'source-close');
+  document.addEventListener('keydown', function(e){
+    if(e.key!=='Escape'||stack.length===0) return;
+    var top=stack[stack.length-1];
+    if(top.id==='source-overlay') closeSource(); else closeDetail();
+  });
+
+  // theme
+  var states=[{cls:"notes-on",label:"Stone"},{cls:"notes-on theme-cobalt",label:"Cobalt"}];
+  var ti=0, tb=document.getElementById('themer');
+  tb.addEventListener('click', function(){
+    ti=(ti+1)%states.length;
+    var notes=document.body.classList.contains('notes-on');
+    document.body.className=states[ti].cls;
+    if(!notes) document.body.classList.remove('notes-on');
+    tb.textContent="Theme: "+states[ti].label;
+  });
+})();
+</script>
+</body>
+</html>

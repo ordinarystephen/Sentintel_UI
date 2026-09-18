@@ -35,6 +35,22 @@ test('stone-light: every screen', async ({ page }) => {
   await settle(page)
   await page.screenshot({ path: `${OUT}/00-suite-landing.png` })
 
+  await page.goto('/erm/runs/erm-run-2026-09-18-0912')
+  await expect(page.getByRole('heading', { name: 'Portfolio monitor' })).toBeVisible()
+  await page.getByRole('button', { name: /Population — why these borrowers/ }).click()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/18-erm-results.png` })
+
+  await page.goto('/erm')
+  await expect(page.getByRole('heading', { name: 'Start a portfolio analysis' })).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/19-erm-start.png` })
+
+  await page.goto('/erm/documents')
+  await expect(page.getByText(/on system for ERM/)).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/20-erm-documents.png` })
+
   await page.goto('/crr')
   await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
   await settle(page)

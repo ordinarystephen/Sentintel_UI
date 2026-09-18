@@ -33,7 +33,7 @@ export const APPS: readonly SentinelApp[] = [
     short: strings.suite.apps.erm.short,
     full: strings.suite.apps.erm.full,
     description: strings.suite.apps.erm.description,
-    status: 'design',
+    status: 'active',
     home: '/erm',
   },
   {

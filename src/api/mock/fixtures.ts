@@ -19,7 +19,6 @@
  */
 import type {
   AssessmentArea,
-  RepositoryDoc,
   AttentionItem,
   DocumentText,
   DebatePosition,
@@ -854,6 +853,16 @@ const GENERATED_NAMES: Array<[string, string, Lob]> = [
   ['Meadowvane Farms Cooperative', 'Agriculture', 'IB Lending'],
 ]
 
+/**
+ * One borrower, one RXM — the two vetted repeats in the pool are PRIOR
+ * reviews of named borrowers and must carry the same identity (fixed
+ * v1.5; previously they re-derived a fresh RXM).
+ */
+const RXM_OVERRIDES: Record<string, string> = {
+  'Seldwyn Marine Finance': 'RXM-7712',
+  'Farrowdale Logistics': 'RXM-8093',
+}
+
 function generated(): SummarySeed[] {
   // Deterministic spread: newest 2026-08-27, stepping back ~13 days each, so
   // the tail (index ≥ 28) falls outside the 12-month period filter.
@@ -864,7 +873,7 @@ function generated(): SummarySeed[] {
     return {
       id: `rev-gen-${i}`,
       borrowerName: name,
-      rxm: `RXM-${((3100 + i * 137) % 9000) + 1000}`,
+      rxm: RXM_OVERRIDES[name] ?? `RXM-${((3100 + i * 137) % 9000) + 1000}`,
       lob,
       ownerId,
       createdAt: at,
@@ -913,36 +922,6 @@ export function summaryOf(r: Review): ReviewSummary {
     sector,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Repository (amend-evidence round): documents on system for a borrower that
-// are NOT part of any review's opening set — what "From the repository"
-// searches. Both Veyland entries also have extracted text in DOCUMENTS below
-// (so Preview works after they join a review).
-// ---------------------------------------------------------------------------
-
-export const REPOSITORY: RepositoryDoc[] = [
-  {
-    repoId: 'repo-veyland-cov',
-    rxm: 'RXM-6430',
-    fileName: 'Veyland_Holdco_Covenant_Cert_2026-06.pdf',
-    docType: 'compliance certificate',
-    uploadedAt: '2026-06-30',
-    pages: 4,
-    parsed: true,
-    docId: 'doc-veyland-cov',
-  },
-  {
-    repoId: 'repo-veyland-ra2',
-    rxm: 'RXM-6430',
-    fileName: 'Veyland_Holdco_Revolver_Amend_No2.pdf',
-    docType: 'credit agreement',
-    uploadedAt: '2026-05-12',
-    pages: 38,
-    parsed: true,
-    docId: 'doc-veyland-ra2',
-  },
-]
 
 // ---------------------------------------------------------------------------
 // Documents
@@ -1227,6 +1206,226 @@ export const DOCUMENTS: DocumentRecord[] = [
         pageStart: 1,
         pageEnd: 38,
         text: 'Extends the revolving facility maturity and resets the letter-of-credit sublimit. All other terms of the credit agreement remain in full force and effect.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-ambervale-q2u',
+    fileName: 'Ambervale_Foods_Q2_Performance_Update.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
+    docType: 'quarterly update',
+    date: '2026-07-20',
+    pages: 18,
+    parsedAt: '2026-07-20T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Covenant Compliance',
+        pageStart: 1,
+        pageEnd: 18,
+        text: 'Gross first-lien net leverage of 6.1x as of quarter end, against the springing covenant of 6.5x tested when revolver utilization exceeds 35% of commitments. LTM EBITDA revised to $412mm following the Q2 restatement of the co-manufacturing segment.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-ambervale-cov',
+    fileName: 'Ambervale_Foods_Covenant_Cert_2026-06.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
+    docType: 'compliance certificate',
+    date: '2026-06-30',
+    pages: 4,
+    parsedAt: '2026-06-30T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Covenant Compliance Certificate',
+        pageStart: 1,
+        pageEnd: 4,
+        text: 'For the fiscal quarter ended 2026-06-30 the borrower certifies compliance with each covenant under the credit agreement, at the figures then reported.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-ambervale-ssl',
+    fileName: 'Ambervale_Foods_Sponsor_Support_Letter.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
+    docType: 'letter',
+    date: '2026-05-02',
+    pages: 2,
+    parsedAt: '2026-05-02T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Sponsor Support',
+        pageStart: 1,
+        pageEnd: 2,
+        text: 'The sponsor confirms its intention to support working-capital needs through the current covenant period. The letter is not a guarantee.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-ambervale-q1u',
+    fileName: 'Ambervale_Foods_Q1_Performance_Update.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Ambervale Foods Group',
+    rxm: 'RXM-5120',
+    docType: 'quarterly update',
+    date: '2026-04-18',
+    pages: 16,
+    parsedAt: '2026-04-18T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Financial Performance',
+        pageStart: 1,
+        pageEnd: 16,
+        text: 'Gross leverage of 5.7x at Q1 close against the 6.5x covenant; headroom of 0.9x at the then-current EBITDA.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-torvane-ca',
+    fileName: 'Torvane_Aggregates_Credit_Agreement_2026.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Torvane Aggregates',
+    rxm: 'RXM-4100',
+    docType: 'credit agreement',
+    date: '2026-02-11',
+    pages: 54,
+    parsedAt: '2026-02-11T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Financial Covenants',
+        pageStart: 1,
+        pageEnd: 54,
+        text: 'Maximum first-lien net leverage of 5.25x through Q4 2027, stepping down to 4.75x thereafter; minimum interest coverage of 2.00x rising to 2.25x on the same schedule.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-orvalon-rm',
+    fileName: 'Orvalon_Freight_Refinancing_Memo_2026.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Orvalon Freight Systems',
+    rxm: 'RXM-5744',
+    docType: 'memo',
+    date: '2026-06-05',
+    pages: 22,
+    parsedAt: '2026-06-05T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Refinancing Structure',
+        pageStart: 1,
+        pageEnd: 22,
+        text: 'The refinancing extends maturities to 2031 and reduces gross leverage to 3.1x at close; fixed-charge coverage of 2.4x at the pro-forma run rate. Renewal concentration in two customer contracts is the residual risk.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-redfenn-ar',
+    fileName: 'Redfenn_Timber_Annual_Review_FY25.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Redfenn Timber Holdings',
+    rxm: 'RXM-6292',
+    docType: 'annual review',
+    date: '2025-11-30',
+    pages: 20,
+    parsedAt: '2025-11-30T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Business Overview',
+        pageStart: 1,
+        pageEnd: 20,
+        text: 'Gross leverage of 5.2x at FY25 close. This review predates Amendment No. 1 to the facility agreement; covenant and pricing terms described here are superseded.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-redfenn-fa',
+    fileName: 'Redfenn_Timber_Facility_Agreement_2024.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Redfenn Timber Holdings',
+    rxm: 'RXM-6292',
+    docType: 'facility agreement',
+    date: '2024-08-15',
+    pages: 61,
+    parsedAt: '2024-08-15T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Covenants',
+        pageStart: 1,
+        pageEnd: 61,
+        text: 'Financial covenants as originally executed. Amendment No. 1 (2026) modifies this section; the amended agreement is not on system.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-northgale-q2u',
+    fileName: 'Northgale_Health_Q2_Update.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Northgale Health Partners',
+    rxm: 'RXM-4488',
+    docType: 'quarterly update',
+    date: '2026-07-28',
+    pages: 14,
+    parsedAt: '2026-07-28T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Financial Update',
+        pageStart: 1,
+        pageEnd: 14,
+        text: 'Gross leverage of 4.8x; covenant headroom of 1.4x at the current test. Payer-mix shift toward public reimbursement is monitored; no covenant pressure.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-northgale-ar',
+    fileName: 'Northgale_Health_Annual_Review_FY25.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Northgale Health Partners',
+    rxm: 'RXM-4488',
+    docType: 'annual review',
+    date: '2026-01-20',
+    pages: 19,
+    parsedAt: '2026-01-20T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Business Overview',
+        pageStart: 1,
+        pageEnd: 19,
+        text: 'Outpatient services platform with steady census growth; leverage trajectory stable across the projection period.',
+      },
+    ],
+  },
+  {
+    docId: 'doc-farrowdale-fleet',
+    fileName: 'Farrowdale_Logistics_Fleet_Report_2026.pdf',
+    lob: 'IB Lending',
+    counterparty: 'Farrowdale Logistics',
+    rxm: 'RXM-8093',
+    docType: 'report',
+    date: '2026-06-14',
+    pages: 9,
+    parsedAt: '2026-06-14T12:00:00Z',
+    extracted: true,
+    sections: [
+      {
+        title: 'Fleet Utilization',
+        pageStart: 1,
+        pageEnd: 9,
+        text: 'Fleet utilization recovered to 87% in Q2. Entity-level financials are reported at the parent; look-through to the borrowing entity is not provided in this report.',
       },
     ],
   },

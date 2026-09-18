@@ -9,6 +9,10 @@
 import { createMockApi } from './mock/mockApi'
 import type {
   AmendSource,
+  ErmRun,
+  PopulationAccounting,
+  PopulationCriteria,
+  QuestionSet,
   RepositoryDoc,
   ApiErrorShape,
   ClearReason,
@@ -158,13 +162,18 @@ export interface SentinelApi {
   searchDocuments(query: string, filters: DocumentFilters): Promise<DocumentSearchResult>
 
   /**
-   * Amend-evidence support (v1.4): documents on system for THIS review's
-   * borrower (matched by RXM) that are not yet part of the review's
-   * evidence set. `query` matches borrower/counterparty name or RXM
-   * (case-insensitive substring; RXM with or without the prefix); empty
-   * query returns the full scoped list.
+   * The SHARED repository search (v1.4, re-signed v1.5 as the platform
+   * picker contract — ERM's picker today, the future CRR picker's too).
+   * `query` matches borrower/counterparty name or RXM (case-insensitive
+   * substring; RXM with or without the prefix); empty query returns the
+   * scoped list. `scope.rxm` restricts to one borrower;
+   * `scope.notInReviewId` additionally drops documents already in that
+   * review's evidence set (CRR's amend-evidence case).
    */
-  searchRepository(reviewId: string, query: string): Promise<RepositoryDoc[]>
+  searchRepository(
+    query: string,
+    scope?: { rxm?: string; notInReviewId?: string },
+  ): Promise<RepositoryDoc[]>
 
   /**
    * Add a document to a review's evidence set mid-review ("Add document").
@@ -176,6 +185,42 @@ export interface SentinelApi {
    * the same states. Returns the updated review.
    */
   amendEvidence(reviewId: string, source: AmendSource, why: string): Promise<Review>
+
+  // ---- ERM (v1.5) ----
+
+  /** The question sets the start screen can select. */
+  getQuestionSets(): Promise<QuestionSet[]>
+
+  /**
+   * Resolve a population from criteria WITHOUT starting a run: the start
+   * screen's scope-preview line. Returns full accounting (included /
+   * named exclusions / indeterminate) plus the in-scope document count.
+   */
+  resolvePopulation(
+    criteria: PopulationCriteria,
+  ): Promise<{ population: PopulationAccounting; documentCount: number }>
+
+  /**
+   * Start a run. Returns immediately with the runId; the run advances
+   * server-side (mock: derived from elapsed time, so it completes even if
+   * the user leaves) — poll with getRun. `documents` (fileNames) union
+   * with the population's document scope.
+   */
+  startRun(input: {
+    questionSetId: string
+    prompt?: string
+    criteria: PopulationCriteria
+    documents?: string[]
+  }): Promise<{ runId: string }>
+
+  /** One run, any state — queued/running (with progress), completed, cancelled, failed. */
+  getRun(runId: string): Promise<ErmRun>
+
+  /** Newest first. Every run ever started is kept and revisitable. */
+  listRuns(): Promise<ErmRun[]>
+
+  /** Cancel a running run: it becomes `cancelled` and stays in Runs. */
+  cancelRun(runId: string): Promise<ErmRun>
 
   /**
    * The extracted text of one document, organized by the DOCUMENT's own

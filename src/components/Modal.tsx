@@ -2,7 +2,14 @@
  * Modal dialog: overlay on the `--overlay` token, Esc and overlay-click close,
  * focus moves to the close button on open, is trapped inside, and returns on close.
  */
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
+
+/**
+ * Open-dialog stack (v1.5): with chained modals (answer detail → source),
+ * Escape must close the TOP-MOST only. Each Modal registers on mount; the
+ * keydown handler acts only when it is on top.
+ */
+const dialogStack: symbol[] = []
 
 export function Modal({
   title,
@@ -18,13 +25,19 @@ export function Modal({
   const closeRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const restoreRef = useRef<HTMLElement | null>(null)
+  const idRef = useRef(Symbol('modal'))
+  // Unique per instance: nested modals must not share a title id, or the
+  // inner dialog's accessible name resolves to the outer's (duplicate ids).
+  const titleId = useId()
 
   useEffect(() => {
+    const id = idRef.current
+    dialogStack.push(id)
     restoreRef.current = document.activeElement as HTMLElement | null
     closeRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        if (dialogStack[dialogStack.length - 1] === id) onClose()
         return
       }
       // Focus stays inside the dialog: Tab / Shift+Tab wrap around.
@@ -50,6 +63,8 @@ export function Modal({
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
+      const i = dialogStack.lastIndexOf(id)
+      if (i !== -1) dialogStack.splice(i, 1)
       restoreRef.current?.focus?.()
     }
   }, [onClose])
@@ -65,11 +80,11 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
         className="max-h-[88vh] w-full max-w-[760px] overflow-auto rounded-xl bg-bg shadow-md"
       >
         <div className="flex items-center gap-[10px] border-b border-rule px-[18px] py-[14px]">
-          <h3 id="modal-title" className="flex-1 text-[0.875rem] font-semibold">
+          <h3 id={titleId} className="flex-1 text-[0.875rem] font-semibold">
             {title}
           </h3>
           <button

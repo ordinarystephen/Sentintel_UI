@@ -26,9 +26,9 @@ import { download } from '@/lib/download'
 import { fmt, plural } from '@/lib/fmt'
 import { sectionAnchor } from '@/lib/sections'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
-import { SourceModal } from '@/screens/review/SourceModal'
+import { SourceModal } from '@/components/viewers/SourceModal'
 import { strings } from '@/strings'
-import { DocumentPreviewModal } from './DocumentPreviewModal'
+import { DocumentPreviewModal } from '@/components/viewers/DocumentPreviewModal'
 
 const isLob = (v: string | null): v is Lob => LOBS.includes(v as Lob)
 

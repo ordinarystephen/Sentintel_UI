@@ -25,10 +25,11 @@ test('first visit: / shows the landing; Open enters CRR and records last-used', 
   await expect(nav).toBeVisible()
   // no app chrome on the suite landing
   await expect(page.getByRole('navigation', { name: 'App navigation' })).toHaveCount(0)
-  await expect(nav.getByText('In design')).toHaveCount(2)
-  await expect(nav.getByRole('link')).toHaveCount(1)
+  // ERM is live (v1.5): two active cards, Vantage still in design
+  await expect(nav.getByText('In design')).toHaveCount(1)
+  await expect(nav.getByRole('link')).toHaveCount(2)
 
-  await nav.getByRole('link', { name: /Open/ }).click()
+  await nav.getByRole('link', { name: /CRR.*Open/s }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
   await expect(page).toHaveURL(/\/crr$/)
   expect(await page.evaluate(() => localStorage.getItem('sentinel.lastApp'))).toBe('crr')
@@ -49,8 +50,9 @@ test('/apps always shows the landing; unknown top-level paths re-enter the decis
   await page.addInitScript(() => localStorage.setItem('sentinel.lastApp', 'crr'))
   await page.goto('/apps')
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
-  // /erm has no route: back through the entry decision → last-used app
-  await page.goto('/erm')
+  // /erm is a live app now (v1.5); /vantage has no route: back through
+  // the entry decision → last-used app
+  await page.goto('/vantage')
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
 })
 
@@ -65,9 +67,15 @@ test('masthead switcher: menu lists entitled apps, disables in-design, All appli
   const menu = page.getByRole('menu')
   await expect(menu).toBeVisible()
   const disabled = menu.locator('[role="menuitem"][aria-disabled="true"]')
-  await expect(disabled).toHaveCount(2)
+  await expect(disabled).toHaveCount(1)
   await expect(disabled.first()).toContainText('In design')
-  await menu.getByRole('menuitem', { name: 'All applications' }).click()
+  // the live ERM entry navigates
+  await menu.getByRole('menuitem', { name: /ERM/ }).click()
+  await expect(page.getByRole('heading', { name: 'Start a portfolio analysis' })).toBeVisible()
+  await expect(page).toHaveURL(/\/erm$/)
+  // and the switcher works from inside ERM too
+  await page.getByRole('button', { name: 'Switch application' }).click()
+  await page.getByRole('menu').getByRole('menuitem', { name: 'All applications' }).click()
   await expect(page).toHaveURL(/\/apps$/)
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
 })

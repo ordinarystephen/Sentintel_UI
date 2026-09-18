@@ -481,26 +481,31 @@ describe('export', () => {
 })
 
 describe('amend evidence (v1.4)', () => {
-  it('searchRepository scopes to the borrower, honors the ratified keys, excludes in-review docs', async () => {
+  it('searchRepository (shared contract): scopes by rxm/review, honors the ratified keys', async () => {
     const api = make()
-    const all = await api.searchRepository(VEYLAND_ID, '')
-    expect(all.map((r) => r.repoId)).toEqual(['repo-veyland-cov', 'repo-veyland-ra2'])
+    const scope = { rxm: 'RXM-6430', notInReviewId: VEYLAND_ID }
+    const all = await api.searchRepository('', scope)
+    expect(all.map((r) => r.repoId).sort()).toEqual(['doc-veyland-cov', 'doc-veyland-ra2'])
     // name or RXM, with or without the prefix — case-insensitive
-    expect((await api.searchRepository(VEYLAND_ID, 'veyland')).length).toBe(2)
-    expect((await api.searchRepository(VEYLAND_ID, '6430')).length).toBe(2)
-    expect((await api.searchRepository(VEYLAND_ID, 'RXM-6430')).length).toBe(2)
-    expect((await api.searchRepository(VEYLAND_ID, 'northgale')).length).toBe(0)
+    expect((await api.searchRepository('veyland', scope)).length).toBe(2)
+    expect((await api.searchRepository('6430', scope)).length).toBe(2)
+    expect((await api.searchRepository('RXM-6430', scope)).length).toBe(2)
+    expect((await api.searchRepository('northgale', scope)).length).toBe(0)
+    // unscoped: the whole shared repository (every on-system doc with an RXM)
+    const everything = await api.searchRepository('')
+    expect(everything.length).toBeGreaterThanOrEqual(19)
+    expect(everything.every((r) => r.rxm && r.counterparty)).toBe(true)
   })
 
   it('amendEvidence requires a rationale, records origin/addedAt/why, re-runs then settles', async () => {
     const api = make()
     await expect(
-      api.amendEvidence(VEYLAND_ID, { kind: 'repo', repoId: 'repo-veyland-cov' }, '   '),
+      api.amendEvidence(VEYLAND_ID, { kind: 'repo', repoId: 'doc-veyland-cov' }, '   '),
     ).rejects.toThrow(/rationale/i)
 
     const r = await api.amendEvidence(
       VEYLAND_ID,
-      { kind: 'repo', repoId: 'repo-veyland-cov' },
+      { kind: 'repo', repoId: 'doc-veyland-cov' },
       'Credit officer provided the June compliance certificate after the review opened',
     )
     expect(r.documents).toHaveLength(3)
@@ -513,9 +518,11 @@ describe('amend evidence (v1.4)', () => {
     expect(amendReRunning(r, T0)).toBe(true)
     expect(amendReRunning(r, T0 + AMEND_SETTLE_MS + 1)).toBe(false)
     // the repository no longer offers what the review already holds
-    expect((await api.searchRepository(VEYLAND_ID, '')).map((x) => x.repoId)).toEqual([
-      'repo-veyland-ra2',
-    ])
+    expect(
+      (await api.searchRepository('', { rxm: 'RXM-6430', notInReviewId: VEYLAND_ID })).map(
+        (x) => x.repoId,
+      ),
+    ).toEqual(['doc-veyland-ra2'])
     // an upload path lands too, without a docId (not yet parsed)
     const r2 = await api.amendEvidence(
       VEYLAND_ID,

@@ -30,7 +30,7 @@ test('hash deep link into a review section renders and scrolls', async ({ page }
 test('entry decision and landing work in the fragment', async ({ page }) => {
   await page.reload()
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
-  await page.getByRole('link', { name: /Open/ }).click()
+  await page.getByRole('link', { name: /CRR.*Open/s }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
   expect(page.url()).toContain('#/crr')
   // return visit goes straight in
@@ -39,6 +39,13 @@ test('entry decision and landing work in the fragment', async ({ page }) => {
   // /apps in the fragment always lands on the landing page
   await page.goto('/#/apps')
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
+})
+
+test('ERM deep entry works in the fragment (a run URL renders its results)', async ({ page }) => {
+  await page.goto('/#/erm/runs/erm-run-2026-09-18-0912')
+  await expect(page.getByRole('heading', { name: 'Portfolio monitor' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Portfolio monitor' })).toBeVisible()
 })
 
 test('in-app navigation stays in the fragment and refresh is safe', async ({ page }) => {

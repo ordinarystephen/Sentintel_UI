@@ -11,6 +11,8 @@ Every word the app shows lives in one of three files — never in a component. C
 | Brand name, "ready" badge, skip link | `src/strings.ts` › **app** |
 | Theme names, dark-mode toggle, the text-size control (S/M/L labels + their spoken names) | `src/strings.ts` › **theme** |
 | Suite landing + app switcher — application names/descriptions, "Open", "In design", "All applications", the fictional-data footer | `src/strings.ts` › **suite** |
+| ERM — start/processing/results/runs/documents wording, grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
+| ERM demo data — question sets, borrowers, answers, runs, population reasons | `src/api/mock/ermFixtures.ts` |
 | Left-rail items (Home, My reviews, All reviews, Documents, Policy library, Overview, Collapse sidebar) | `src/strings.ts` › **nav** |
 | Landing page — "Start a review", the drop-zone wording, "Anything Sentinel should know?", "Begin review", Advanced extraction settings, "Recent", "New review — reading…" | `src/strings.ts` › **landing** |
 | Processing screen — "Reading the documents", the "you can leave" line, "Cancel this review" | `src/strings.ts` › **processing** |
