@@ -21,11 +21,15 @@
  */
 import { fmt } from '@/lib/fmt'
 import { ERM_ANSWERS, ERM_POPULATION, ERM_RUN_SCOPE, ERM_RUNS, QUESTION_SETS } from './ermFixtures'
+import { VANTAGE_DEMO_BLOCKS, VANTAGE_RUNS } from './vantageFixtures'
 import { ApiError, type SentinelApi } from '../client'
 import type {
   AttentionItem,
   ErmRun,
   ErmRunState,
+  VantageDocument,
+  VantageRun,
+  VantageRunState,
   PolicyAnswer,
   PolicyDoc,
   QuestionSet,
@@ -94,6 +98,10 @@ export const MESSAGES = {
   qsPlaceholderDesc:
     'Saved set "{name}" — placeholder questions (file parsing arrives with the backend).',
   emptyQuestion: 'Type a question or a search term first.',
+  vantageReading: 'Reading {file} — {meta}…',
+  vantageAnswering: 'Answering…',
+  vantageNeedsBoth: 'Bring at least one document and ask one question.',
+  noVantageRun: 'No run with id {id}.',
   alreadyInReview: '{file} is already part of this review.',
   respondEmpty: 'Say what to re-check, correct, or add before sending.',
   rationaleRequired: 'Add a one-line rationale — it is recorded with the clear.',
@@ -133,9 +141,10 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * 8 = refinement round (v1.6 — the former initiation-time parser controls
  * REMOVED from the processing seed, reviews/seeds gain workpaperConfig +
  * repository picks,
- * persisted state gains ermQuestionSets).
+ * persisted state gains ermQuestionSets);
+ * 9 = the Vantage slice (v1.7 — persisted state gains vantageRuns).
  */
-export const STATE_VERSION = 8
+export const STATE_VERSION = 9
 
 /**
  * Policy search fixtures (v1.6): the browse rows (newest revision first)
@@ -223,6 +232,16 @@ interface PersistedState {
   ermRuns: Record<string, PersistedErmRun>
   /** CPEA (v1.6): user-saved question sets, in save order. */
   ermQuestionSets: QuestionSet[]
+  /** Vantage (v1.7): user-started runs, by runId (meta only — see ermRuns). */
+  vantageRuns: Record<string, PersistedVantageRun>
+}
+
+interface PersistedVantageRun {
+  runId: string
+  question: string
+  documents: VantageDocument[]
+  startedAt: string
+  cancelledAt?: string
 }
 
 export interface MockOptions {
@@ -268,6 +287,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       reRuns: {},
       ermRuns: {},
       ermQuestionSets: [],
+      vantageRuns: {},
     }
     try {
       const raw = storage?.getItem(STORAGE_KEY)
@@ -368,6 +388,54 @@ export function createMockApi(options: MockOptions = {}): MockApi {
           : undefined,
     }
     return run
+  }
+
+  /**
+   * Vantage run timeline: ~1.1s reading per document, then answering.
+   * State derives from elapsed time — "you can leave" is true.
+   */
+  const VANTAGE_READ_MS = 1_100
+  const VANTAGE_ANSWER_MS = 1_600
+
+  function vantageRunOf(runId: string): VantageRun | null {
+    const fixture = VANTAGE_RUNS.find((r) => r.runId === runId)
+    if (fixture) return clone(fixture)
+    const rec = state.vantageRuns[runId]
+    if (!rec) return null
+    const readTotal = rec.documents.length * VANTAGE_READ_MS
+    const doneAt = readTotal + VANTAGE_ANSWER_MS
+    const cancelled = !!rec.cancelledAt
+    const rawElapsed = now() - Date.parse(rec.startedAt)
+    const eff = cancelled
+      ? Math.min(rawElapsed, Date.parse(rec.cancelledAt!) - Date.parse(rec.startedAt))
+      : rawElapsed
+    let stateName: VantageRunState
+    if (eff >= doneAt) stateName = 'completed'
+    else if (cancelled) stateName = 'cancelled'
+    else stateName = rawElapsed < 200 ? 'queued' : 'running'
+    const docsRead = Math.min(rec.documents.length, Math.floor(eff / VANTAGE_READ_MS))
+    const answering = eff >= readTotal
+    const reading = rec.documents[Math.min(docsRead, rec.documents.length - 1)]
+    return {
+      runId: rec.runId,
+      question: rec.question,
+      documents: clone(rec.documents),
+      state: stateName,
+      startedAt: rec.startedAt,
+      cancelledAt: rec.cancelledAt,
+      // completed runs materialize the canonical demo answer payload
+      blocks: stateName === 'completed' ? clone(VANTAGE_DEMO_BLOCKS) : [],
+      progress:
+        stateName === 'running' || stateName === 'queued'
+          ? {
+              docsRead,
+              answering,
+              statusLine: answering
+                ? MESSAGES.vantageAnswering
+                : fmt(MESSAGES.vantageReading, { file: reading.name, meta: reading.meta }),
+            }
+          : undefined,
+    }
   }
 
   /** Mutable copy in overrides (cloning the fixture on first write). */
@@ -662,6 +730,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         reRuns: {},
         ermRuns: {},
         ermQuestionSets: [],
+        vantageRuns: {},
       }
       try {
         storage?.removeItem(STORAGE_KEY)
@@ -1144,6 +1213,45 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         save()
       }
       return delay(ermRunOf(runId)!)
+    },
+
+    // ---- Vantage (v1.7) --------------------------------------------------
+
+    askDocuments: (question, documents) => {
+      if (!question.trim() || documents.length === 0) return fail(MESSAGES.vantageNeedsBoth)
+      const runId = `vantage-run-${new Date(now()).toISOString().slice(0, 10)}-${(now() % 1e7).toString(36)}`
+      state.vantageRuns[runId] = {
+        runId,
+        question: question.trim(),
+        documents: clone(documents),
+        startedAt: new Date(now()).toISOString(),
+      }
+      save()
+      return delay({ runId })
+    },
+
+    getVantageRun: (runId) => {
+      const run = vantageRunOf(runId)
+      if (!run) return fail(fmt(MESSAGES.noVantageRun, { id: runId }))
+      return delay(run)
+    },
+
+    listVantageRuns: () => {
+      const started = Object.keys(state.vantageRuns).map((id) => vantageRunOf(id)!)
+      const all = [...started, ...clone(VANTAGE_RUNS)]
+      all.sort((a, b) => b.startedAt.localeCompare(a.startedAt))
+      return delay(all)
+    },
+
+    cancelVantageRun: (runId) => {
+      const rec = state.vantageRuns[runId]
+      if (!rec) return fail(fmt(MESSAGES.noVantageRun, { id: runId }))
+      const run = vantageRunOf(runId)!
+      if (run.state === 'running' || run.state === 'queued') {
+        rec.cancelledAt = new Date(now()).toISOString()
+        save()
+      }
+      return delay(vantageRunOf(runId)!)
     },
 
     exportReview: (id) => {

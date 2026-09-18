@@ -25,9 +25,9 @@ test('first visit: / shows the landing; Open enters CRR and records last-used', 
   await expect(nav).toBeVisible()
   // no app chrome on the suite landing
   await expect(page.getByRole('navigation', { name: 'App navigation' })).toHaveCount(0)
-  // ERM is live (v1.5): two active cards, Vantage still in design
-  await expect(nav.getByText('In design')).toHaveCount(1)
-  await expect(nav.getByRole('link')).toHaveCount(2)
+  // all three applications are live (v1.7)
+  await expect(nav.getByText('In design')).toHaveCount(0)
+  await expect(nav.getByRole('link')).toHaveCount(3)
 
   await nav.getByRole('link', { name: /CRR.*Open/s }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
@@ -50,9 +50,9 @@ test('/apps always shows the landing; unknown top-level paths re-enter the decis
   await page.addInitScript(() => localStorage.setItem('sentinel.lastApp', 'crr'))
   await page.goto('/apps')
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
-  // /erm is a live app now (v1.5); /vantage has no route: back through
+  // every app is live now; an unknown top-level path goes back through
   // the entry decision → last-used app
-  await page.goto('/vantage')
+  await page.goto('/nonesuch')
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
 })
 
@@ -66,9 +66,7 @@ test('masthead switcher: menu lists entitled apps, disables in-design, All appli
   await brand.click()
   const menu = page.getByRole('menu')
   await expect(menu).toBeVisible()
-  const disabled = menu.locator('[role="menuitem"][aria-disabled="true"]')
-  await expect(disabled).toHaveCount(1)
-  await expect(disabled.first()).toContainText('In design')
+  await expect(menu.locator('[role="menuitem"][aria-disabled="true"]')).toHaveCount(0)
   // the live CPEA entry navigates
   await menu.getByRole('menuitem', { name: /CPEA/ }).click()
   await expect(page.getByRole('heading', { name: 'Start a portfolio analysis' })).toBeVisible()

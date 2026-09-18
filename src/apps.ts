@@ -47,7 +47,7 @@ export const APPS: readonly SentinelApp[] = [
     short: strings.suite.apps.vantage.short,
     full: strings.suite.apps.vantage.full,
     description: strings.suite.apps.vantage.description,
-    status: 'design',
+    status: 'active',
     home: '/vantage',
   },
 ]

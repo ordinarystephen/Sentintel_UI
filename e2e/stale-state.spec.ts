@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test'
 
 const VEYLAND = '/crr/review/rev-veyland-2026-08'
 // Keep in sync with STATE_VERSION in src/api/mock/mockApi.ts.
-const CURRENT_VERSION = 8
+const CURRENT_VERSION = 9
 
 /** A minimal pre-v1.0-shaped Veyland override: no `areas`, no `referenceData`. */
 const LEGACY_REVIEW = {

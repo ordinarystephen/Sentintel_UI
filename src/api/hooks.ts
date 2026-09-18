@@ -13,6 +13,8 @@ import type {
   ErmRun,
   PopulationCriteria,
   ReviewFilters,
+  VantageDocument,
+  VantageRun,
 } from './types'
 
 export const queryKeys = {
@@ -58,6 +60,38 @@ export const useRun = (runId: string) =>
   })
 
 export const useRuns = () => useQuery({ queryKey: queryKeys.runs, queryFn: () => api.listRuns() })
+
+// ---- Vantage (v1.7) ----
+
+/** Polls while the run is queued/running so processing advances live. */
+export const useVantageRun = (runId: string) =>
+  useQuery({
+    queryKey: ['vantage', 'run', runId],
+    queryFn: () => api.getVantageRun(runId),
+    refetchInterval: (q) => {
+      const state = (q.state.data as VantageRun | undefined)?.state
+      return state === 'queued' || state === 'running' ? 350 : false
+    },
+  })
+
+export const useVantageRuns = () =>
+  useQuery({ queryKey: ['vantage', 'runs'], queryFn: () => api.listVantageRuns() })
+
+export function useVantageMutations() {
+  const qc = useQueryClient()
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['vantage'] })
+  return {
+    ask: useMutation({
+      mutationFn: (v: { question: string; documents: VantageDocument[] }) =>
+        api.askDocuments(v.question, v.documents),
+      onSuccess: invalidate,
+    }),
+    cancel: useMutation({
+      mutationFn: (runId: string) => api.cancelVantageRun(runId),
+      onSuccess: invalidate,
+    }),
+  }
+}
 
 export const usePolicyDocs = () =>
   useQuery({ queryKey: ['policyDocs'], queryFn: () => api.listPolicyDocs() })

@@ -14,6 +14,8 @@ Every word the app shows lives in one of three files — never in a component. C
 | CPEA (routes `/erm`) — start/processing/results/runs/documents wording, question-mode control, grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
 | Policy search — searchbar copy, the Ask answer card, browse rows | `src/strings.ts` › **policy** |
 | Command palette — placeholder, group names, kbd footer, actions | `src/strings.ts` › **palette** |
+| Vantage — ask/processing/answer/runs wording, the absence heading, the unknown-block fallback, the rows-used viewer | `src/strings.ts` › **vantage** |
+| Vantage demo answer — the question, blocks, citations, historical runs | `src/api/mock/vantageFixtures.ts` |
 | Upload rows — the over-limit and wrong-type rejections, Remove | `src/strings.ts` › **upload** (limit: `src/components/upload/config.ts`) |
 | Workpaper-configuration labels (placeholder vocabulary: `src/screens/landing/config.ts`) | `src/strings.ts` › **landing** |
 | ERM demo data — question sets, borrowers, answers, runs, population reasons | `src/api/mock/ermFixtures.ts` |

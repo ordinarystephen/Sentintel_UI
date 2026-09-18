@@ -33,6 +33,8 @@ import type {
   ReviewRecord,
   ReviewSummary,
   User,
+  VantageDocument,
+  VantageRun,
   WorkItem,
 } from './types'
 
@@ -242,6 +244,26 @@ export interface SentinelApi {
 
   /** Cancel a running run: it becomes `cancelled` and stays in Runs. */
   cancelRun(runId: string): Promise<ErmRun>
+
+  // ---- Vantage (v1.7) ----
+
+  /**
+   * Ask a question of uploaded documents (upload only — no repository).
+   * Returns the runId immediately; the run advances server-side (mock:
+   * derived from elapsed time). One question in, one answer out — a run,
+   * never a chat; a follow-up is a NEW run against the same docset with
+   * no context carried.
+   */
+  askDocuments(question: string, documents: VantageDocument[]): Promise<{ runId: string }>
+
+  /** One Vantage run, any state (poll while queued/running). */
+  getVantageRun(runId: string): Promise<VantageRun>
+
+  /** Newest first; every run kept, cancelled runs honestly labeled. */
+  listVantageRuns(): Promise<VantageRun[]>
+
+  /** Cancel a running Vantage run: kept as `cancelled`. */
+  cancelVantageRun(runId: string): Promise<VantageRun>
 
   /**
    * The extracted text of one document, organized by the DOCUMENT's own

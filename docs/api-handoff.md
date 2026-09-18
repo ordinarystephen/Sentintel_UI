@@ -75,6 +75,29 @@ Signatures are in `client.ts`; this table is the behaviour the UI expects.
 
 `Review.readOnly` and `WorkItem.reRunning` are derived fields; compute them per request.
 
+## The Vantage block contract (v1.7)
+
+**This section IS the contract for the future answering backend.** An answer is an **ordered list of typed blocks** — the UI never receives free markup, and the vocabulary is additive: a new shape is a new block type, and an old client renders unknown types as an honest labeled fallback ("this version can't display this content"), never a broken state, never a silent skip.
+
+Seam: `askDocuments(question, documents) → { runId }` (returns immediately; the run advances server-side), `getVantageRun(runId)` (poll while queued/running; carries `progress: { docsRead, answering, statusLine }`), `listVantageRuns()` (newest first — every run kept), `cancelVantageRun(runId)` (kept as `cancelled`). A run: `{ runId, question, documents: [{ name, kind: pdf|docx|xlsx|csv, meta, sizeBytes? }], state: queued|running|completed|cancelled|failed, blocks, startedAt, cancelledAt? }`. A follow-up is a **new run** against the same docset — no context is carried and no API may imply it is.
+
+Block types:
+
+| Type | Payload | Rules the UI enforces |
+| --- | --- | --- |
+| `prose` | `{ paragraphs: string[] }` | Plain text only — no markup. ~62ch measure. |
+| `figures` | `{ items: [{ label, value, derivation }] }` | **`derivation` is REQUIRED** — a figure without one is not rendered. Serif value, derivation line beneath. |
+| `table` | `{ columns: [{ key, label, align?, kind?: text\|mono\|num }], rows: Record<key, cell>[] }` | A cell is a string or `{ value, warn?: true }`; **amber only for needs-you values** (e.g. "No approval found"). Full-width card; citation footer flush. |
+| `quote` | `{ text }` | Serif italic, left rule. |
+| `absence` | `{ text }` | The amber "Not in these documents" block — absence-in-these-papers, stated precisely; a first-class part of the answer. |
+| *(unknown)* | anything | The labeled fallback. Additive vocabulary depends on this. |
+
+Citations attach at **block level**, `citations?: []`, two kinds:
+- `{ kind: 'document', file, section?, page?, quote?, imageKind?, imageRef? }` → opens the suite's shared source-image viewer (three-tier honest fallback, unchanged).
+- `{ kind: 'tabular', file, rows: number[], of, columns: string[], rowData: [{ n, cells }], note? }` → opens the **rows-used viewer**: the verbatim rows as they appear in the file, untransformed ("rows are pages"). The backend supplies the verbatim rows WITH the citation — the UI never re-reads the file.
+
+Vantage has **no grading chips** (that regime is CPEA's), no RAG, no composite scores, no percentages, and **no repository access** — documents enter by upload only.
+
 **CPEA rename (v1.6):** the application formerly labeled ERM is now **Credit Portfolio Event Assessment (CPEA)** everywhere the user reads. ROUTES STAY `/erm/*` — the rename is presentation only; the http impl and any deep links keep the `/erm` paths and the `erm` registry id.
 
 ## Relative-URL discipline (hard rules for `http/`)

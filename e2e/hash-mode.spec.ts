@@ -48,6 +48,13 @@ test('ERM deep entry works in the fragment (a run URL renders its results)', asy
   await expect(page.getByRole('heading', { name: 'Portfolio monitor' })).toBeVisible()
 })
 
+test('Vantage deep entry works in the fragment', async ({ page }) => {
+  await page.goto('/#/vantage/runs/vantage-run-2026-09-18-1432')
+  await expect(page.getByText('Not in these documents')).toBeVisible()
+  await page.reload()
+  await expect(page.getByText('Not in these documents')).toBeVisible()
+})
+
 test('in-app navigation stays in the fragment and refresh is safe', async ({ page }) => {
   await page.goto('/#/crr/reviews/all')
   await expect(page.getByRole('tab', { name: 'All' })).toHaveAttribute('aria-selected', 'true')

@@ -72,6 +72,11 @@ test('stone-light: every screen', async ({ page }) => {
   await page.screenshot({ path: `${OUT}/23-command-palette.png` })
   await page.keyboard.press('Escape')
 
+  await page.goto('/vantage/runs/vantage-run-2026-09-18-1432')
+  await expect(page.getByText('Not in these documents')).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/24-vantage-answer.png`, fullPage: true })
+
   await page.goto('/crr')
   await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()
   await settle(page)

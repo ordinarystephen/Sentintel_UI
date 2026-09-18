@@ -13,7 +13,8 @@
  *   /erm             ERM start (portfolio analysis)   /erm/runs   runs kept
  *   /erm/runs/:runId  results (a running run renders processing at its URL)
  *   /erm/documents    the shared repository through ERM's lens
- * Vantage has no routes — its landing card is not a link.
+ *   /vantage         Vantage ask      /vantage/runs   runs kept
+ *   /vantage/runs/:runId  the answer (running renders processing at its URL)
  */
 import { createBrowserRouter, createHashRouter, Navigate, type RouteObject } from 'react-router-dom'
 import { EntryScreen } from '@/screens/suite/EntryScreen'
@@ -23,6 +24,10 @@ import { ErmRunScreen } from '@/screens/erm/ErmRunScreen'
 import { ErmRunsScreen } from '@/screens/erm/ErmRunsScreen'
 import { ErmShell } from '@/screens/erm/ErmShell'
 import { ErmStartScreen } from '@/screens/erm/ErmStartScreen'
+import { VantageAskScreen } from '@/screens/vantage/VantageAskScreen'
+import { VantageRunScreen } from '@/screens/vantage/VantageRunScreen'
+import { VantageRunsScreen } from '@/screens/vantage/VantageRunsScreen'
+import { VantageShell } from '@/screens/vantage/VantageShell'
 import { DocumentsScreen } from '@/screens/documents/DocumentsScreen'
 import { LandingScreen } from '@/screens/landing/LandingScreen'
 import { NotFoundScreen } from '@/screens/NotFoundScreen'
@@ -80,8 +85,24 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Unknown top-level paths (a typed /vantage, a stale link) go back
-      // through the entry decision rather than a bare 404.
+      {
+        path: 'vantage',
+        element: <VantageShell />,
+        errorElement: <RouteErrorScreen />,
+        children: [
+          {
+            errorElement: <RouteErrorScreen />,
+            children: [
+              { index: true, element: <VantageAskScreen /> },
+              { path: 'runs', element: <VantageRunsScreen /> },
+              { path: 'runs/:runId', element: <VantageRunScreen /> },
+              { path: '*', element: <Navigate to="/vantage" replace /> },
+            ],
+          },
+        ],
+      },
+      // Unknown top-level paths (a stale link) go back through the entry
+      // decision rather than a bare 404.
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

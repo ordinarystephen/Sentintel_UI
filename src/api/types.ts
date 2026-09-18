@@ -203,6 +203,99 @@ export interface PolicyAnswer {
   revisedOn: string
 }
 
+// ---------------------------------------------------------------------------
+// Vantage (v1.7): the typed block contract — an answer is an ordered list
+// of typed blocks; the UI never receives free markup. A new shape is an
+// additive block type, not a redesign; an unknown type renders an honest
+// labeled fallback, never a broken state.
+// ---------------------------------------------------------------------------
+
+/** Block-level citations, two kinds. */
+export type VantageCitation =
+  | {
+      kind: 'document'
+      file: string
+      section?: string
+      page?: number
+      /** The entailing quote, shown in the shared source-image viewer. */
+      quote?: string
+      imageKind?: 'section' | 'page' | 'none'
+      imageRef?: string
+    }
+  | {
+      kind: 'tabular'
+      file: string
+      /** 1-based row numbers in the source file. */
+      rows: number[]
+      of: number
+      /**
+       * The verbatim rows as they appear in the file, supplied by the
+       * backend WITH the citation — the UI never re-reads the file.
+       */
+      columns: string[]
+      rowData: Array<{ n: number; cells: string[] }>
+      note?: string
+    }
+
+export interface VantageFigure {
+  label: string
+  value: string
+  /** REQUIRED — a figure without a derivation must not render. */
+  derivation: string
+}
+
+export interface VantageTableColumn {
+  key: string
+  label: string
+  align?: 'left' | 'right'
+  kind?: 'text' | 'mono' | 'num'
+}
+
+/** A cell is a plain string, or flagged amber for needs-you values only. */
+export type VantageTableCell = string | { value: string; warn?: boolean }
+
+export type VantageBlock =
+  | { type: 'prose'; paragraphs: string[]; citations?: VantageCitation[] }
+  | { type: 'figures'; items: VantageFigure[]; citations?: VantageCitation[] }
+  | {
+      type: 'table'
+      columns: VantageTableColumn[]
+      rows: Array<Record<string, VantageTableCell>>
+      citations?: VantageCitation[]
+    }
+  | { type: 'quote'; text: string; citations?: VantageCitation[] }
+  | { type: 'absence'; text: string }
+
+export interface VantageDocument {
+  name: string
+  kind: 'pdf' | 'docx' | 'xlsx' | 'csv'
+  /** e.g. "9 pages", "42 rows" — derived at upload in the mock. */
+  meta: string
+  sizeBytes?: number
+}
+
+export type VantageRunState = 'queued' | 'running' | 'completed' | 'cancelled' | 'failed'
+
+export interface VantageRunProgress {
+  /** How many documents have been read so far. */
+  docsRead: number
+  answering: boolean
+  statusLine: string
+}
+
+/** A run is a frozen revisitable record; every state kept. */
+export interface VantageRun {
+  runId: string
+  question: string
+  documents: VantageDocument[]
+  state: VantageRunState
+  blocks: VantageBlock[]
+  startedAt: string
+  cancelledAt?: string
+  progress?: VantageRunProgress
+  error?: string
+}
+
 export type ErmRunState = 'queued' | 'running' | 'completed' | 'cancelled' | 'failed'
 
 /** The staged processing readout while a run is `running`. */

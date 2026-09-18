@@ -16,12 +16,16 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/crr',
     )
-    // CPEA (formerly ERM) is live: two active cards, Vantage still in design
+    // All three applications are live (v1.7): three cards, none in design
     expect(
       screen.getByRole('link', { name: /Credit Portfolio Event Assessment.*CPEA.*Open/s }),
     ).toHaveAttribute('href', '/erm')
-    expect(screen.getAllByText('In design')).toHaveLength(1)
-    expect(screen.getAllByRole('link')).toHaveLength(2)
+    expect(screen.getByRole('link', { name: /Vantage.*P&C.*Open/s })).toHaveAttribute(
+      'href',
+      '/vantage',
+    )
+    expect(screen.queryByText('In design')).toBeNull()
+    expect(screen.getAllByRole('link')).toHaveLength(3)
   })
 
   it('/ redirects to the last-used entitled app', async () => {

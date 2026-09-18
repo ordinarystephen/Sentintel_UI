@@ -8,7 +8,7 @@ _All company, person, and transaction data in this application is fictional; any
 
 ## Start here
 
-**The development team inherits the `v1.6.0` tag** — clone `main` at that tag (refinement round over `v1.5.0`: CPEA rename, extraction settings removed for workpaper configuration, repository-backed review starts, borrower-grouped documents everywhere, Policy search, the command palette and shared upload states).
+**The development team inherits the `v1.7.0` tag** — clone `main` at that tag (Vantage round over `v1.6.0`: the suite's third live application — ask → typed-block answers → runs, with the block contract and the rows-used viewer).
 
 **Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
 
