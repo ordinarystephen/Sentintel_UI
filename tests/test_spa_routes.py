@@ -48,3 +48,36 @@ def test_placeholder_when_frontend_not_built(client, tmp_path, monkeypatch):
     assert resp.status_code == 200
     assert b"has not been built" in resp.data
     assert b"npm run build" in resp.data
+
+
+def test_forwarded_proxy_prefix_still_serves_assets(client, tmp_path, monkeypatch):
+    """A workspace proxy that forwards its own prefix must not break asset serving.
+
+    Domino exposes a port at `<workspace>/proxy/<port>/`. Some proxies strip
+    that prefix before forwarding, some pass the whole path through. In the
+    second case the catch-all previously saw
+    `u/me/proj/r/notebookSession/abc/proxy/8082/assets/x.js`, found no such
+    file, and returned index.html — so the browser got HTML where it asked for
+    JavaScript and the page died on a MIME error rather than a 404.
+    """
+    (tmp_path / "index.html").write_text("<!doctype html><title>app</title>")
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets" / "x.js").write_text("// asset")
+    monkeypatch.setattr(spa, "_build_dir", lambda: tmp_path)
+
+    prefix = "/u/me/proj/r/notebookSession/abc123/proxy/8082"
+    asset = client.get(f"{prefix}/assets/x.js")
+    assert asset.status_code == 200
+    assert b"// asset" in asset.data
+
+    # the prefix root, and a deep client route under it, both reach the SPA
+    assert b"<title>app</title>" in client.get(f"{prefix}/").data
+    assert b"<title>app</title>" in client.get(f"{prefix}/crr/review/rev-1").data
+
+
+def test_forwarded_proxy_prefix_keeps_api_guard(client, tmp_path, monkeypatch):
+    """Stripping the prefix must not smuggle /api/... past the JSON-territory guard."""
+    monkeypatch.setattr(spa, "_build_dir", lambda: tmp_path)
+    resp = client.get("/u/me/proj/r/notebookSession/abc123/proxy/8082/api/nope")
+    assert resp.status_code == 404
+    assert b"<html" not in resp.data.lower()

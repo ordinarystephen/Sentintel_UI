@@ -29,6 +29,8 @@ To play around with hot reload instead, use the dev server:
 make dev                                  # → http://localhost:5173 — mock API, no backend needed
 ```
 
+In a **Domino workspace** these verbs detect it and adjust themselves — there is nothing extra to type. `make dev` picks a free port, binds where the proxy can reach it, and prints the URL to open; `make build` emits the relative-asset + hash-router combination proven to work there. Nothing auto-opens in a workspace, so visit the URL it prints — and if a page is blank, run `make doctor`. See [docs/environment.md](docs/environment.md) → "Domino workspaces".
+
 [docs/environment.md](docs/environment.md) covers the dependency audit, offline behaviour, static hosting, and running behind a reverse proxy.
 
 Then read, in this order:

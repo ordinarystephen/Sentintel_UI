@@ -11,3 +11,6 @@ __pycache__/
 
 # local scratch drops (not project files)
 Claude outputs/
+
+# Pinned workspace proxy path, set per-workspace when DOMINO_RUN_HOST_PATH is absent
+.domino-workspace-path

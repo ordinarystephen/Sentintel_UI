@@ -6,6 +6,7 @@ SPA fallback (deep-link refresh works) and a helpful page instead of a 500
 when the frontend has not been built in this workspace yet.
 """
 
+import re
 from pathlib import Path
 
 from flask import Blueprint, current_app, send_from_directory
@@ -63,10 +64,30 @@ def _build_dir() -> Path:
     return Path(current_app.root_path).parent / "dist"
 
 
+# A workspace proxy exposes a port at `<workspace-path>/proxy/<port>/`. Some
+# strip that prefix before forwarding, some pass the whole path through. We
+# cannot tell from inside, so tolerate both: an asset request arriving as
+# `u/me/proj/r/notebookSession/abc/proxy/8082/assets/x.js` must still resolve
+# to `dist/assets/x.js`. Without this it missed, fell through to index.html,
+# and the browser got HTML where it asked for JavaScript — a blank page whose
+# only symptom is a MIME error in the console.
+# Tradeoff: a genuine client route of the form `.../proxy/<digits>/...` would
+# also be stripped. No such route exists (see src/app/router.tsx).
+_PROXY_PREFIX = re.compile(r"^(?:.*/)?proxy/\d+(?:/|$)")
+
+
+def _strip_proxy_prefix(path: str) -> str:
+    """Drop a forwarded `<workspace>/proxy/<port>/` prefix, if the proxy kept it."""
+    return _PROXY_PREFIX.sub("", path, count=1)
+
+
 @bp.route("/", defaults={"path": ""})
 @bp.route("/<path:path>")
 def serve_spa(path: str):
     """Serve the SPA build, falling back to ``index.html`` for client routes."""
+    # why: before the api/ guard — a forwarded prefix must not smuggle
+    # `/api/...` past it as `.../proxy/8082/api/...`.
+    path = _strip_proxy_prefix(path)
     # Defensive only: API blueprints register first and win the route match.
     # Kept even though today's mock API is client-side — it future-proofs the
     # seam: an unknown /api/... path stays JSON-territory 404, never HTML.

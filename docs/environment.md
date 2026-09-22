@@ -121,6 +121,49 @@ VITE_ALLOWED_HOSTS=sentinel.example.internal npm run dev -- --host 0.0.0.0
 
 The mock API runs entirely in the browser, so no API traffic needs proxying in demo mode. When `VITE_API=http` arrives, the base URL for the real API is a separate build-time variable (see `docs/api-handoff.md`).
 
+## Domino workspaces (verified 2026-09-22)
+
+**There is no separate Domino verb.** A workspace exports `DOMINO_*` into every shell, so `make dev`, `make build` and `make run` detect it and adjust themselves. On a laptop nothing changes.
+
+### Why it needed handling at all
+
+Two independent things were wrong, one per path to seeing the app.
+
+**`make dev`** — bare `vite` is a laptop-only launcher and fails four ways at once, none of which show up in the terminal:
+
+| | What bare `vite` does | Consequence behind the workspace proxy |
+| - | --------------------- | -------------------------------------- |
+| 1 | Binds `127.0.0.1` only | The proxy cannot reach it. Vite says so itself: `Network: use --host to expose`. |
+| 2 | No fixed port | On a collision it **silently** moves to 5174; the URL you were given points at nothing. |
+| 3 | Serves at `/` with root-absolute asset URLs | Under a path prefix every `/assets/…` 404s → blank page. |
+| 4 | `server.allowedHosts` empty | `Blocked request. This host is not allowed.` |
+
+`scripts/dev.mjs` now picks a free port itself, binds `0.0.0.0`, accepts the proxied Host, sets the base when the workspace path is known, and prints the URL to open.
+
+**`make build` + `make run`** — the build defaulted to root-absolute assets, which 404 behind a prefix. In a workspace `make build` now defaults to the combination already proven there (`base: './'` + hash router), so it needs no env vars. And [`server/spa.py`](../server/spa.py) now tolerates a **forwarded** proxy prefix: a workspace proxy may strip `<workspace>/proxy/<port>/` before forwarding or pass the whole path through, and in the second case an asset request used to fall through to `index.html` — the browser got HTML where it asked for JavaScript, which is a blank page whose only symptom is a console MIME error.
+
+### The relative-base rule, and where it stops
+
+`base: './'` is the one setting that survives **both** proxy behaviours, which is why it is the proven build. It does **not** work for the dev server: Vite 6 silently rewrites a relative base to `/` in `serve` mode (verified: `resolveConfig({base:'./'}, 'serve').base === '/'`). Relative base is a build trick; the dev server needs the real absolute prefix, which is why `dev.mjs` derives one.
+
+### If a page comes up blank
+
+Nothing auto-opens in a workspace — you visit the URL yourself:
+
+```sh
+make doctor     # runtime, workspace path, how dist/ was built, ports, the URL to open
+```
+
+If `DOMINO_RUN_HOST_PATH` is not exported in your image, pin the workspace path once (gitignored):
+
+```sh
+echo /u/<you>/<project>/r/notebookSession/<id> > .domino-workspace-path
+```
+
+### Verified
+
+End-to-end in a browser against **both** proxy models — one that strips its prefix and one that forwards it — using the real Flask wrapper and the real build: the suite landing renders, click-through to `#/crr` keeps the prefix, hard reload at the deep URL still renders, **zero failed requests** in either. The laptop path is unchanged: root-absolute assets, history router, `/crr` without a fragment, and `make run` prints no workspace hint.
+
 ## Does not meet the bar / proposed swaps
 
 Nothing requires a swap. The two items short of the strictest reading, with their standing:
