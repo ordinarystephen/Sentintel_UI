@@ -6,9 +6,34 @@ the platform share the same ``create_app()`` factory (docs/poc-serving-patterns.
 
 import os
 import re
+import subprocess
 from pathlib import Path
 
 from server import create_app
+
+
+def _discover_via_node() -> str:
+    """Ask scripts/workspace.mjs to probe for the prefix.
+
+    why shell out: the probes (process table, jupyter config, run metadata)
+    live in one place so JS and Python cannot drift. Failure is silent and
+    non-fatal — serving must never depend on discovery succeeding.
+    """
+    try:
+        out = subprocess.run(
+            [
+                "node",
+                "-e",
+                "import('./scripts/workspace.mjs').then(m=>console.log(m.discoverWorkspacePath()))",
+            ],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return out.stdout.strip()
+    except Exception:
+        return ""
 
 
 def _workspace_path() -> str:
@@ -26,6 +51,8 @@ def _workspace_path() -> str:
             raw = pin.read_text().strip()
     if not raw:
         raw = os.getenv("DOMINO_RUN_HOST_PATH", "")
+    if not raw:
+        raw = _discover_via_node()
     raw = raw.strip()
     if not raw:
         return ""

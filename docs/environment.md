@@ -123,18 +123,35 @@ The mock API runs entirely in the browser, so no API traffic needs proxying in d
 
 ## Domino workspaces (verified 2026-09-22)
 
-**Pin the workspace once, then use the normal verbs.** `make dev`, `make build` and `make run` all read the same setting and adjust themselves; there is no Domino-specific verb.
+**Use the normal verbs.** `make dev`, `make build` and `make run` share one notion of where the app will be served and adjust themselves; there is no Domino-specific verb.
+
+### How the prefix is found
+
+A workspace has to know its own base path — the JupyterLab / VS Code server in the same container is itself served under it — so `scripts/workspace.mjs` works it out rather than asking. Probes, in order, all read-only and individually guarded:
+
+| Source | What it reads |
+| ------ | ------------- |
+| `DOMINO_RUN_HOST_PATH` | the variable, where an image exports it |
+| environment | any workspace-shaped variable value |
+| process table | `--ServerApp.base_url` / `--NotebookApp.base_url` / `--base-path` on the running IDE server (`/proc/*/cmdline`) |
+| jupyter config | `c.ServerApp.base_url` in `~/.jupyter/` or `/etc/jupyter/` |
+| domino metadata | `/domino/run.json` and friends |
+
+`make doctor` prints what every probe saw, so a miss is diagnosable rather than mysterious.
+
+If no probe finds it, pin it once — the file is gitignored and takes the URL verbatim, full URL or bare path, with or without a trailing `/proxy/<port>/`:
 
 ```sh
 echo '<paste your workspace URL from the browser address bar>' > .domino-workspace-path
-make build && make run     # or: make dev
 ```
 
-The file is gitignored and takes the URL verbatim — full URL, bare path, with or without a trailing `/proxy/<port>/`. `SENTINEL_WORKSPACE_PATH` does the same for one-off runs, and `SENTINEL_TARGET=workspace|local` forces the mode either way.
+Precedence is `SENTINEL_WORKSPACE_PATH` → pinned file → discovery, so a value someone deliberately wrote down is never silently overridden. `SENTINEL_TARGET=workspace|local` forces the mode either way.
 
-### Why it is pinned and not detected
+**A pin can go stale**: the session id changes when the workspace restarts. `make doctor` warns when the pinned and discovered paths disagree — delete the pin and let discovery run.
 
-The first version keyed off `DOMINO_*` environment variables. **A real UBS Domino workspace exports none of them** — confirmed by running `make doctor` in the container (node v22.17.1, npm 10.9.2, flask importable, zero `DOMINO_*` vars). Detection that guesses wrong is worse than no detection here, because all three verbs then quietly take the laptop path and the terminal still reports success. `DOMINO_*` is still honoured if present, but nothing depends on it.
+### Why discovery is not keyed off `DOMINO_*`
+
+The first version was. **A real UBS Domino workspace exports none of those variables** — confirmed by running `make doctor` in the container (node v22.17.1, npm 10.9.2, flask importable, zero `DOMINO_*` vars). Detection that guesses wrong is worse than none here, because all three verbs then quietly take the laptop path while the terminal still reports success.
 
 ### What was actually broken
 

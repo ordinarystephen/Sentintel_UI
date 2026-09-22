@@ -45,11 +45,20 @@ export function normaliseWorkspacePath(raw) {
   return v
 }
 
-/** The workspace path prefix, e.g. /u/me/proj/r/notebookSession/abc123. */
+/**
+ * The workspace path prefix, e.g. /u/me/proj/r/notebookSession/abc123.
+ *
+ * Order is deliberate: an explicit env var beats a pinned file beats
+ * discovery. Discovery is last so that a value someone deliberately wrote
+ * down is never silently overridden by a probe — but it runs unprompted, so
+ * a fresh workspace needs no pinning at all.
+ */
 export function workspacePath() {
-  return normaliseWorkspacePath(
-    process.env.SENTINEL_WORKSPACE_PATH || readPin() || process.env.DOMINO_RUN_HOST_PATH || '',
-  )
+  const explicit = normaliseWorkspacePath(process.env.SENTINEL_WORKSPACE_PATH || '')
+  if (explicit) return explicit
+  const pinned = normaliseWorkspacePath(readPin())
+  if (pinned) return pinned
+  return discoverWorkspacePath()
 }
 
 /**
@@ -64,5 +73,127 @@ export function isWorkspace() {
   if (process.env.SENTINEL_TARGET === 'local') return false
   if (process.env.SENTINEL_WORKSPACE_PATH) return true
   if (readPin()) return true
+  // why: a discovered prefix is itself proof we are behind a workspace proxy,
+  // so a fresh container needs nothing pinned to get the right build.
+  if (discoverWorkspacePath()) return true
   return Object.keys(process.env).some((k) => k.startsWith('DOMINO_'))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Discovery — work the prefix out instead of asking for it.
+//
+// A workspace has to know its own base path: the JupyterLab / VS Code server
+// in the same container is itself served under it, so the value exists in the
+// process table and in config on disk even when no DOMINO_* variable does.
+// Every probe is read-only, individually guarded, and returns '' rather than
+// throwing, because a probe that crashes `make dev` is worse than no probe.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** base_url as the notebook/IDE server was actually launched with. */
+function fromProcessTable() {
+  let pids
+  try {
+    pids = fs.readdirSync('/proc').filter((d) => /^\d+$/.test(d))
+  } catch {
+    return '' // not Linux, or no procfs
+  }
+  const flags = [
+    /--ServerApp\.base_url[= ]([^\s\0]+)/,
+    /--NotebookApp\.base_url[= ]([^\s\0]+)/,
+    /--base[-_]url[= ]([^\s\0]+)/,
+    /--server-base-path[= ]([^\s\0]+)/,
+    /--base-path[= ]([^\s\0]+)/,
+  ]
+  for (const pid of pids) {
+    let cmd
+    try {
+      cmd = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\0/g, ' ')
+    } catch {
+      continue // process exited, or not ours to read
+    }
+    for (const re of flags) {
+      const m = cmd.match(re)
+      if (m && m[1] && m[1] !== '/') return m[1]
+    }
+  }
+  return ''
+}
+
+/** base_url as written into Jupyter config by the platform. */
+function fromJupyterConfig() {
+  const home = process.env.HOME || ''
+  const candidates = [
+    home && path.join(home, '.jupyter', 'jupyter_server_config.py'),
+    home && path.join(home, '.jupyter', 'jupyter_notebook_config.py'),
+    '/etc/jupyter/jupyter_server_config.py',
+    '/etc/jupyter/jupyter_notebook_config.py',
+    '/opt/conda/etc/jupyter/jupyter_server_config.py',
+  ].filter(Boolean)
+  for (const file of candidates) {
+    let text
+    try {
+      text = fs.readFileSync(file, 'utf8')
+    } catch {
+      continue
+    }
+    const m = text.match(/^\s*c\.(?:ServerApp|NotebookApp)\.base_url\s*=\s*['"]([^'"]+)['"]/m)
+    if (m && m[1] && m[1] !== '/') return m[1]
+  }
+  return ''
+}
+
+/** Domino drops run metadata into the container; shapes vary by version. */
+function fromDominoFiles() {
+  const files = ['/domino/run.json', '/domino/metadata.json', '/var/opt/domino/run.json']
+  const keys = ['runHostPath', 'run_host_path', 'baseUrl', 'base_url', 'hostPath', 'proxyPath']
+  for (const file of files) {
+    let data
+    try {
+      data = JSON.parse(fs.readFileSync(file, 'utf8'))
+    } catch {
+      continue
+    }
+    for (const k of keys) {
+      if (typeof data?.[k] === 'string' && data[k] && data[k] !== '/') return data[k]
+    }
+  }
+  return ''
+}
+
+/** Any environment variable whose value already looks like a workspace path. */
+function fromEnvShapes() {
+  const shape = /^\/[\w.-]+(?:\/[\w.-]+)*\/(?:r|notebookSession|proxy)(?:\/|$)/
+  for (const [k, v] of Object.entries(process.env)) {
+    if (!v || v.length > 300) continue
+    if (!/^(DOMINO|JUPYTER|NB_|JPY|WORKSPACE|BASE_URL|NOTEBOOK)/i.test(k)) continue
+    if (shape.test(v)) return v
+  }
+  return ''
+}
+
+/**
+ * Every probe, in cost order, with the source name for `make doctor`.
+ * Exported so the doctor can show what each one saw rather than just a verdict.
+ */
+export function discoverAll() {
+  const probes = [
+    ['DOMINO_RUN_HOST_PATH', () => process.env.DOMINO_RUN_HOST_PATH || ''],
+    ['environment (path-shaped var)', fromEnvShapes],
+    ['process table (base_url flag)', fromProcessTable],
+    ['jupyter config file', fromJupyterConfig],
+    ['domino run metadata', fromDominoFiles],
+  ]
+  return probes.map(([source, fn]) => {
+    try {
+      return { source, value: normaliseWorkspacePath(fn()) }
+    } catch {
+      return { source, value: '' }
+    }
+  })
+}
+
+/** First probe that found something, or ''. */
+export function discoverWorkspacePath() {
+  const hit = discoverAll().find((r) => r.value)
+  return hit ? hit.value : ''
 }

@@ -86,11 +86,41 @@ for P in 5173 8082; do
   [ -n "$L" ] && ok "something is listening on ${P}" || note "nothing on ${P}"
 done
 
-# ---------------------------------------------------------------- env hints
-hdr "Environment hints (for identifying the workspace)"
+# ---------------------------------------------------------------- discovery
+hdr "Discovery (working the prefix out instead of asking for it)"
+node -e "
+import('./scripts/workspace.mjs').then((m) => {
+  for (const r of m.discoverAll()) {
+    console.log('  ' + (r.value ? 'HIT ' : '--  ') + r.source.padEnd(32) + (r.value || ''))
+  }
+  const found = m.discoverWorkspacePath()
+  const pin = m.PIN_FILE
+  const fs = require('node:fs')
+  let pinned = ''
+  try { pinned = m.normaliseWorkspacePath(fs.readFileSync(pin, 'utf8')) } catch {}
+  if (pinned && found && pinned !== found) {
+    console.log('')
+    console.log('  WARNING  pinned path and discovered path disagree:')
+    console.log('             pinned:     ' + pinned)
+    console.log('             discovered: ' + found)
+    console.log('           A workspace session id changes when the workspace restarts,')
+    console.log('           so a pin can go stale. The pin wins. If pages are blank,')
+    console.log('           delete .domino-workspace-path and let discovery run.')
+  } else if (!pinned && found) {
+    console.log('')
+    console.log('  Discovery succeeded — nothing needs pinning.')
+  } else if (!pinned && !found) {
+    console.log('')
+    console.log('  No probe found a prefix. Pin it once:')
+    console.log('    echo \'<paste your workspace URL>\' > .domino-workspace-path')
+  }
+}).catch((e) => console.log('  discovery unavailable: ' + e.message))
+" 2>/dev/null || note "node could not run the discovery probes"
+
+hdr "Environment hints"
 HINTS="$(env | grep -iE '^(DOMINO|JUPYTER|NB_|WORKSPACE|PROXY|BASE_URL|JPY)' | sort || true)"
 if [ -n "$HINTS" ]; then printf '%s\n' "$HINTS" | sed 's/^/          /'
-else note "none found — pinning the URL is the reliable route"; fi
+else note "no workspace-shaped variables in the environment"; fi
 
 # ---------------------------------------------------------------- verdict
 hdr "What to open"

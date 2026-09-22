@@ -29,7 +29,7 @@ To play around with hot reload instead, use the dev server:
 make dev                                  # → http://localhost:5173 — mock API, no backend needed
 ```
 
-In a **Domino workspace**, pin it once — `echo '<paste your workspace URL>' > .domino-workspace-path` — and the same verbs adjust themselves: `make dev` picks a free port, binds where the proxy can reach it, and prints the URL; `make build` emits the relative-asset + hash-router combination proven to work there. Domino exports no `DOMINO_*` variables, so this cannot be auto-detected. Nothing opens by itself, so visit the URL — and if a page is blank, run `make doctor`. See [docs/environment.md](docs/environment.md) → "Domino workspaces".
+In a **Domino workspace** the same verbs adjust themselves: the workspace prefix is discovered from the IDE server already running in the container, `make dev` picks a free port and binds where the proxy can reach it, and `make build` emits the relative-asset + hash-router combination proven to work there. Nothing opens by itself, so visit the URL it prints — and if a page is blank, run `make doctor`, which shows what every discovery probe saw and how to pin the path if they all miss. See [docs/environment.md](docs/environment.md) → "Domino workspaces".
 
 [docs/environment.md](docs/environment.md) covers the dependency audit, offline behaviour, static hosting, and running behind a reverse proxy.
 
