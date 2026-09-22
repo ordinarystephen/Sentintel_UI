@@ -6,6 +6,9 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "types": ["node"],
+    // why: vite.config.ts imports scripts/workspace.mjs, the one place that
+    // decides laptop-vs-workspace for every entry point.
+    "allowJs": true,
 
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

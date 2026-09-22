@@ -2,26 +2,24 @@
 /**
  * `make dev`, everywhere.
  *
- * On a laptop this is a bare Vite dev server — same behaviour as before.
- * Inside a Domino workspace, Vite's defaults are all wrong and none of them
+ * On a laptop this is a bare Vite dev server — same behaviour as always.
+ * For a proxied workspace, Vite's defaults are all wrong and none of them
  * announce themselves: it binds 127.0.0.1 (the proxy cannot reach it), it
  * rejects the proxy's Host header, and it serves at '/'. This picks a free
  * port itself, binds it where the proxy can see it, and prints the exact URL
  * to open, so the verb stays `make dev`.
  *
- * See docs/environment.md → "Domino workspaces".
+ * Which mode applies is decided by scripts/workspace.mjs — pinned, not
+ * guessed. See docs/environment.md → "Domino workspaces".
  */
 import { spawn } from 'node:child_process'
 import net from 'node:net'
-import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isWorkspace, workspacePath, PIN_FILE } from './workspace.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const viteBin = path.join(root, 'node_modules', 'vite', 'bin', 'vite.js')
-
-// A workspace exports DOMINO_* into every shell; that is the whole detection.
-const inDomino = Object.keys(process.env).some((k) => k.startsWith('DOMINO_'))
 
 /**
  * Is `port` free? Probed on the IPv4 wildcard, IPv4 loopback AND IPv6 loopback.
@@ -47,25 +45,7 @@ const isFree = async (port) => {
   return true
 }
 
-/**
- * The workspace path prefix, e.g. /u/me/sentinel/r/notebookSession/abc123.
- * DOMINO_RUN_HOST_PATH is the usual source; SENTINEL_WORKSPACE_PATH and the
- * gitignored .domino-workspace-path let an operator pin it once when the
- * image does not export it.
- */
-function workspacePath() {
-  const saved = (() => {
-    try {
-      return fs.readFileSync(path.join(root, '.domino-workspace-path'), 'utf8').trim()
-    } catch {
-      return ''
-    }
-  })()
-  const raw = process.env.SENTINEL_WORKSPACE_PATH || saved || process.env.DOMINO_RUN_HOST_PATH || ''
-  return raw.replace(/\/+$/, '')
-}
-
-async function start() {
+async function startWorkspace() {
   let port = 0
   for (let p = 5173; p < 5223; p++) {
     if (await isFree(p)) {
@@ -81,23 +61,19 @@ async function start() {
   const ws = workspacePath()
   const env = { ...process.env, VITE_ALLOWED_HOSTS: 'all', VITE_HMR_OVERLAY: 'off' }
 
-  // why: only set a base when we actually know the prefix. A WRONG absolute
-  // base is worse than none — every asset 404s. With no base, the dev server
-  // still works through any proxy that strips its own prefix before
-  // forwarding; if yours does not, the page is blank and the note below says
-  // exactly what to do about it.
-  if (ws) env.VITE_BASE_PATH = `${ws}/proxy/${port}/`
-
-  console.log(`\n  Domino workspace detected — binding 0.0.0.0:${port}\n`)
   if (ws) {
-    console.log(`  Open:  <your-domino-host>${ws}/proxy/${port}/\n`)
+    // The prefix goes in the HTML; vite.config's proxyPrefixTolerance plugin
+    // additionally answers un-prefixed requests, so this one setting works
+    // whether the proxy strips its prefix or forwards it.
+    env.VITE_BASE_PATH = `${ws}/proxy/${port}/`
+    console.log(`\n  Workspace mode — binding 0.0.0.0:${port}`)
+    console.log(`\n  Open:  <your-domino-host>${ws}/proxy/${port}/\n`)
   } else {
-    console.log('  The workspace path is not exported here, so no base path is set.')
-    console.log('  If the page loads, you are done. If it is BLANK, the proxy forwards')
-    console.log('  its prefix and Vite needs to know it — copy everything after the')
-    console.log('  hostname from your workspace URL and pin it once:\n')
-    console.log('    echo /u/<you>/<project>/r/notebookSession/<id> > .domino-workspace-path\n')
-    console.log(`  Then open:  <your-domino-host>/.../proxy/${port}/\n`)
+    console.log(`\n  Workspace mode — binding 0.0.0.0:${port}`)
+    console.log('\n  No workspace path pinned, so no base path is set. If the page is')
+    console.log('  blank, paste your workspace URL (address bar, verbatim) into:')
+    console.log(`\n    echo '<paste URL>' > ${path.relative(root, PIN_FILE)}\n`)
+    console.log(`  Then re-run. Open:  <your workspace URL>/proxy/${port}/\n`)
   }
 
   spawn(process.execPath, [viteBin, '--host', '0.0.0.0', '--port', String(port)], {
@@ -106,9 +82,11 @@ async function start() {
   }).on('exit', (c) => process.exit(c ?? 0))
 }
 
-if (!inDomino) {
+// why: dispatch last — startWorkspace() reads consts declared above it, and a
+// call placed earlier would hit them in the temporal dead zone.
+if (!isWorkspace()) {
   // Laptop: exactly what `npm run dev` has always done. No flags, no wrapper.
   spawn(process.execPath, [viteBin], { stdio: 'inherit' }).on('exit', (c) => process.exit(c ?? 0))
 } else {
-  await start()
+  await startWorkspace()
 }
