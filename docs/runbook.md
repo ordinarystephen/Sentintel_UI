@@ -145,7 +145,7 @@ Copy `.env.example` to `.env` to set any of these (all optional):
 - **Pairings** — one click applies a curated body/display/mono set. Start with **All-native**: it uses no webfonts at all, which on a non-retina monitor is the sharpest the app can possibly look. If that already looks better to you, the problem is webfont rendering at 1x, not the typeface choice.
 - **Per-role dropdowns** — override body, display or mono independently.
 - **Smoothing** — `OS default` vs `antialiased`. On a 1x display the OS default (ClearType on Windows) renders sturdier stems; `antialiased` is a retina-era habit that thins type and is a common reason text looks weak on ordinary monitors. The app currently sets neither, so `OS default` is what ships.
-- The panel shows your **device pixel ratio**, so you know which regime you are judging in.
+- **Device pixel ratio**, live — it updates as you zoom. This one is worth reading before blaming a typeface. Below `1x` the browser is drawing the page *smaller* than 1:1, so glyphs are downscaled and hinting is discarded; everything looks soft whatever font is loaded. `Ctrl+0` / `Cmd+0` resets zoom to 100%. Fractional values (`1.25x`, `0.9x`) mean zoom or fractional OS scaling, which resamples glyphs for the same reason. The panel warns on both.
 - Choices persist across reloads; **reset to shipped tokens** returns to the default.
 
 Candidates are chosen for legibility at small sizes, not charm: system stacks (no download, OS-hinted, work offline), plus IBM Plex Sans, Public Sans, Source Sans 3, Lora, Newsreader and JetBrains Mono, each loaded only when picked.

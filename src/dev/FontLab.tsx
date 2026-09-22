@@ -8,10 +8,11 @@
  * panel cannot be mistaken for part of the product and does not change
  * appearance when the thing it is testing changes.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { byId, FONT_OPTIONS, optionsFor, PRESETS } from './fontCatalog'
 import {
   applyFontChoice,
+  describeDensity,
   loadFontChoice,
   resetFontChoice,
   saveFontChoice,
@@ -41,7 +42,19 @@ export function FontLab() {
     saveFontChoice(choice)
   }, [choice])
 
-  const dpr = useMemo(() => (typeof window === 'undefined' ? 1 : window.devicePixelRatio), [])
+  // Live, not read once: devicePixelRatio changes as you zoom, and watching
+  // it move while pressing Ctrl+0 is the fastest way to see that zoom — not
+  // the typeface — is what is softening the text.
+  const [dpr, setDpr] = useState(() =>
+    typeof window === 'undefined' ? 1 : window.devicePixelRatio,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia(`(resolution: ${dpr}dppx)`)
+    const onChange = () => setDpr(window.devicePixelRatio)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [dpr])
+  const density = describeDensity(dpr)
 
   async function pick(role: FontRole, id: string) {
     if (!id) {
@@ -171,8 +184,17 @@ export function FontLab() {
         </select>
       </label>
 
-      <div style={{ opacity: 0.65, marginBottom: 8 }}>
-        display: {dpr}x {dpr < 2 ? '— low DPI, judge weight carefully' : '— retina'}
+      <div
+        style={{
+          marginBottom: 8,
+          padding: '6px 7px',
+          borderRadius: 4,
+          background: density.warn ? '#fdf1d6' : '#f2f2f0',
+          border: density.warn ? '1px solid #e0b870' : '1px solid #e2e2de',
+        }}
+      >
+        <strong>display {density.label}</strong>
+        <div style={{ opacity: 0.8, marginTop: 2 }}>{density.hint}</div>
       </div>
 
       {loading && <div style={{ color: '#a60' }}>loading {loading}…</div>}

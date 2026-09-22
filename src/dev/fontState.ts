@@ -79,3 +79,39 @@ export function saveFontChoice(choice: FontChoice): void {
     /* not worth surfacing in a dev tool */
   }
 }
+
+/**
+ * How to read a devicePixelRatio, in words that suggest an action.
+ *
+ * DPR is device pixels per CSS pixel. Below 1 the browser is drawing the page
+ * *smaller* than 1:1 — glyphs get downscaled, hinting is discarded, and
+ * everything looks soft no matter which typeface is loaded. That is worth
+ * saying out loud, because it is easy to blame the font for it. A fractional
+ * value (1.25, 1.5, 0.9) means browser zoom or fractional OS scaling, which
+ * softens type for the same reason.
+ */
+export function describeDensity(dpr: number): { label: string; hint: string; warn: boolean } {
+  // 0.8999999761581421 -> "0.9". Raw floats are what the browser reports.
+  const label = `${Number(dpr.toFixed(2))}x`
+  if (dpr < 1) {
+    return {
+      label,
+      hint: 'below 1:1 — the page is being scaled DOWN and all type is softened. Reset browser zoom (Ctrl+0 / Cmd+0).',
+      warn: true,
+    }
+  }
+  if (dpr >= 2)
+    return { label, hint: 'retina — type will look better here than on a 1x monitor.', warn: false }
+  if (!Number.isInteger(dpr)) {
+    return {
+      label,
+      hint: 'fractional scaling — zoom or OS scaling is resampling glyphs. 100% zoom is sharper.',
+      warn: true,
+    }
+  }
+  return {
+    label,
+    hint: 'standard density — judge weight carefully, this is the honest case.',
+    warn: false,
+  }
+}

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   applyFontChoice,
+  describeDensity,
   loadFontChoice,
   resetFontChoice,
   ROLE_VARS,
@@ -50,5 +51,28 @@ describe('font lab overrides', () => {
   it('survives unreadable or corrupt storage', () => {
     localStorage.setItem(STORAGE_KEY, 'not json')
     expect(loadFontChoice()).toEqual({})
+  })
+})
+
+describe('density readout', () => {
+  it('rounds the raw float the browser reports', () => {
+    expect(describeDensity(0.8999999761581421).label).toBe('0.9x')
+    expect(describeDensity(2).label).toBe('2x')
+  })
+
+  it('flags sub-1:1 as downscaling, not as low DPI', () => {
+    const d = describeDensity(0.9)
+    expect(d.warn).toBe(true)
+    expect(d.hint).toMatch(/scaled DOWN/)
+    expect(d.hint).toMatch(/Ctrl\+0/)
+  })
+
+  it('flags fractional scaling above 1', () => {
+    expect(describeDensity(1.25).warn).toBe(true)
+  })
+
+  it('treats 1x and retina as fine', () => {
+    expect(describeDensity(1).warn).toBe(false)
+    expect(describeDensity(2).warn).toBe(false)
   })
 })
