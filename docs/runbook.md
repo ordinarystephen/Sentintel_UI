@@ -138,6 +138,22 @@ Copy `.env.example` to `.env` to set any of these (all optional):
 | `VITE_ROUTER`        | `browser` | `hash` = target-environment fallback routing in the URL fragment; pair with `VITE_BASE_PATH=./` (docs/environment.md). |
 | `PORT`               | `8082`  | Flask wrapper only (`run.py`); platform-injected on a published app.                                   |
 
+## 6b. Trying different fonts (dev only)
+
+`make dev` mounts a small **Font Lab** panel in the bottom-right corner. It exists to answer "does this look better?" against real screens rather than a specimen sheet.
+
+- **Pairings** — one click applies a curated body/display/mono set. Start with **All-native**: it uses no webfonts at all, which on a non-retina monitor is the sharpest the app can possibly look. If that already looks better to you, the problem is webfont rendering at 1x, not the typeface choice.
+- **Per-role dropdowns** — override body, display or mono independently.
+- **Smoothing** — `OS default` vs `antialiased`. On a 1x display the OS default (ClearType on Windows) renders sturdier stems; `antialiased` is a retina-era habit that thins type and is a common reason text looks weak on ordinary monitors. The app currently sets neither, so `OS default` is what ships.
+- The panel shows your **device pixel ratio**, so you know which regime you are judging in.
+- Choices persist across reloads; **reset to shipped tokens** returns to the default.
+
+Candidates are chosen for legibility at small sizes, not charm: system stacks (no download, OS-hinted, work offline), plus IBM Plex Sans, Public Sans, Source Sans 3, Lora, Newsreader and JetBrains Mono, each loaded only when picked.
+
+**None of this ships.** The lab is behind `import.meta.env.DEV` and reached through a dynamic import, so the build drops it and every candidate font; `npm run check:no-devtools` fails the build if that ever regresses.
+
+**Adopting a font you like** is a separate, deliberate change: move its package from `devDependencies` to `dependencies`, import it in `src/main.tsx`, and edit the three tokens in `src/styles/tokens.css`. Note the target environment has no CDN, so the face must come from npm (`@fontsource*`) and be bundled — never a Google Fonts link.
+
 ## 7. Troubleshooting
 
 | Symptom                                                                       | Cause and fix                                                                                                                                                              |
