@@ -94,7 +94,7 @@ main.canvas{flex:1;min-width:0;overflow-y:auto;padding:26px 36px 90px;background
 .screen{display:none}
 .screen.active{display:block}
 @keyframes settle{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.screen.active > *{animation:settle .3s ease both}
+.screen.active > *{animation:settle .3s ease backwards}
 .screen.active > *:nth-child(2){animation-delay:.08s}
 .screen.active > *:nth-child(3){animation-delay:.16s}
 .screen.active > *:nth-child(4){animation-delay:.24s}
@@ -662,7 +662,7 @@ tr.x-row td{padding:0 12px 14px;background:var(--bg-subtle);border-bottom:1px so
     {b:"Ambervale Foods Group",rxm:"RXM-5120",
      f:{answer:["Yes — the RCF matures Aug 2027 and the springing covenant is tested; refinancing at tighter terms is likely with headroom at 0.4x.","h"]}},
     {b:"Veyland US Holdco LLC",rxm:"RXM-6430",
-     f:{answer:["Elevated — revolver renewal due Q2 2027; derived from the maturity schedule and the revised expected case, not stated as a plan.","m","inf"]}},
+     f:{answer:["Not near-term — the Q3 update states no near-term maturities; derived: the revised expected case and 0.6x headroom point to tighter terms at the next refinancing.","m","inf"]}},
     {b:"Torvane Aggregates",rxm:"RXM-4100",
      f:{answer:["No — the term loan matures 2030; the temporary limit exception steps back Q2 2027 but carries no refinancing event.","h"]}},
     {b:"Northgale Health Partners",rxm:"RXM-4488",
