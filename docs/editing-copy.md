@@ -11,11 +11,14 @@ Every word the app shows lives in one of three files — never in a component. C
 | Brand name, "ready" badge, skip link | `src/strings.ts` › **app** |
 | Theme names, dark-mode toggle, the text-size control (S/M/L labels + their spoken names) | `src/strings.ts` › **theme** |
 | Suite landing + app switcher — application names/descriptions, "Open", "In design", "All applications", the fictional-data footer | `src/strings.ts` › **suite** |
-| CPEA (routes `/erm`) — start/processing/results/runs/documents wording, question-mode control, grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
+| CPEA (routes `/erm`) — start/processing/results/runs/documents wording, the mode labels (Prompt only / Question set), the borrower scope ("Borrower — optional", its placeholder, the no-match line, "Clear borrower"), the resolve line, the single-question results wording ("One-off question", "one row per borrower, one graded answer each"), "Ask about this borrower →", grade chips, the population disclosure, modal labels | `src/strings.ts` › **erm** |
+| Inquiry (routes `/inquiry`) — ONLY the words that differ from CPEA: the start title and sub, the "Your question" zone and its aside, the prompt placeholder, "Results", the Runs and Documents subs, the rail's accessible name. Every other word on Inquiry's screens is CPEA's, on purpose — edit it in **erm** and both applications change | `src/strings.ts` › **inquiry** |
+| The shared question-set control (CPEA + Vantage) — "Add new · upload a question set", the "Add a question set" modal, the "Saved … to this application's question sets" toast | `src/strings.ts` › **questionSets** (each application's mode labels live in its own block) |
 | Policy search — searchbar copy, the Ask answer card, browse rows | `src/strings.ts` › **policy** |
 | Command palette — placeholder, group names, kbd footer, actions | `src/strings.ts` › **palette** |
-| Vantage — ask/processing/answer/runs wording, the absence heading, the unknown-block fallback, the rows-used viewer | `src/strings.ts` › **vantage** |
-| Vantage demo answer — the question, blocks, citations, historical runs | `src/api/mock/vantageFixtures.ts` |
+| Vantage — ask/processing/answer/runs wording, the mode labels (One-off questions / Question set), the question-file row, the review card ("N questions read", "Save as a question set", "+ N more — review all before running"), the count beside Ask, the many-question headings ("Answers", "Q n of N"), the absence heading, the unknown-block fallback, the rows-used viewer | `src/strings.ts` › **vantage** |
+| Vantage demo data — the demo answer (question, blocks, citations), historical runs, Vantage's two question sets and their questions, the Watchlist_Qs.xlsx questions, the compact answers many-question runs rotate through | `src/api/mock/vantageFixtures.ts` |
+| Inquiry demo data — the refinancing demo run and its answers/evidence, the history runs, the cancelled run | `src/api/mock/inquiryFixtures.ts` |
 | Upload rows — the over-limit and wrong-type rejections, Remove | `src/strings.ts` › **upload** (limit: `src/components/upload/config.ts`) |
 | Workpaper-configuration labels (placeholder vocabulary: `src/screens/landing/config.ts`) | `src/strings.ts` › **landing** |
 | ERM demo data — question sets, borrowers, answers, runs, population reasons | `src/api/mock/ermFixtures.ts` |
@@ -34,7 +37,7 @@ Every word the app shows lives in one of three files — never in a component. C
 | Documents — title and sub, filter labels, "Advanced search" help, count lines (browse and search), the action bar (Preview extracted text / Download original / Used in … review →), the preview modal | `src/strings.ts` › **documents** |
 | The extracted text shown in the preview modal (document sections, page ranges) | `src/api/mock/fixtures.ts` › **DOCUMENTS** |
 | Policy-library stub, "Nothing here" (404) | `src/strings.ts` › **policy**, **notFound** |
-| Error banners and toasts from the "backend" (export failure, "belongs to …", parse failure, upload/rationale messages) | `src/api/mock/mockApi.ts` › **MESSAGES** |
+| Error banners and toasts from the "backend" (export failure, "belongs to …", parse failure, upload/rationale messages, "Type a question first — or choose a question set.", the question-file read errors and placeholder questions) | `src/api/mock/mockApi.ts` › **MESSAGES** |
 | Demo content — borrower names, CL numbers, sectors, the narrative and timeline, work-paper values, attention rows, debate positions, document passages | `src/api/mock/fixtures.ts` (the whole file is the demo-data file; header explains) |
 | The "frontend not built" placeholder page served by Flask | `server/spa.py` › the **EDIT ME** block at the top |
 

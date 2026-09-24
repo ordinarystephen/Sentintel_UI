@@ -8,7 +8,7 @@ _All company, person, and transaction data in this application is fictional; any
 
 ## Start here
 
-**The development team inherits the `v1.7.0` tag** — clone `main` at that tag (Vantage round over `v1.6.0`: the suite's third live application — ask → typed-block answers → runs, with the block contract and the rows-used viewer).
+**The development team inherits the `v1.8.0` tag** — clone `main` at that tag (demo feedback round over `v1.7.x`: **Inquiry**, the suite's fourth live application, built as CPEA with one configuration flag off; saved question sets shared between CPEA and Vantage with per-application shelves; Vantage one-off questions by spreadsheet and many-question runs; CPEA's single-borrower scope and single-question results shape).
 
 **Changing the wording?** Every user-facing string lives in [src/strings.ts](src/strings.ts) (demo data in [src/api/mock/fixtures.ts](src/api/mock/fixtures.ts)) — see [docs/editing-copy.md](docs/editing-copy.md) for the map. A copy change never requires touching a component.
 

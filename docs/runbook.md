@@ -43,14 +43,14 @@ make dev
   ```
 
 - **Open** http://localhost:5173/ in Chrome or Edge.
-- **What you should see first**: the **Sentinel suite landing** — three application cards (CRR with an **Open** button; ERM and Vantage marked "In design"). Click **Open** on CRR. On later visits `/` skips the landing and goes straight back into the app you used last (the masthead brand "Sentinel · CRR ▾" is the switcher, and "All applications" brings the landing back at `/apps`).
+- **What you should see first**: the **Sentinel suite landing** — four live application cards: **CRR**, **Credit Portfolio Event Assessment (CPEA)**, **Vantage** and **Inquiry**, each with an **Open** button. Click **Open** on CRR. On later visits `/` skips the landing and goes straight back into the app you used last (the masthead brand "Sentinel · CRR ▾" is the switcher, and "All applications" brings the landing back at `/apps`). A user entitled to one application only skips the landing entirely — see step 36.
 - **What you should see next**: the **Start a review** page — a serif heading, a dashed drop zone ("Drag documents here"), an optional "Anything Sentinel should know?" box, and a **Recent** list beginning with *Veyland US Holdco LLC* (amber "4 open" badge). A left rail shows Home, My reviews, All reviews, Documents, Policy library.
 
 Leave this terminal running; press `Ctrl+C` to stop the server.
 
 ## 4. Guided tour
 
-The data is fictional. Every action below persists in your browser (survives refresh); step 30 resets everything.
+The data is fictional. Every action below persists in your browser (survives refresh); step 37 resets everything.
 
 **Start a review and watch it process**
 
@@ -107,9 +107,19 @@ The data is fictional. Every action below persists in your browser (survives ref
 28. Now search `revolver availability` — the browse rows give way to match evidence: passages with the matched words highlighted, provenance (`Liquidity Summary · p. 14`), and "Used in Veyland review →" which deep-links straight into Section 2.
 29. Still in Documents, try the advanced syntax ("Advanced search" explains it): `"letters of credit"` (exact phrase — two hits) and `revolver -letters` (excludes passages containing "letters").
 
+**The other applications** (open them from the switcher, "Sentinel · CRR ▾")
+
+30. **CPEA → Start** — under *The population*, type `amber` in **Borrower — optional**, pick *Ambervale Foods Group*: a chip (name + `RXM-5120` + ✕) replaces the field, the four dropdowns grey out, and the line reads "Will run against: Ambervale Foods Group (RXM-5120) — resolves to 1 borrower · 5 documents". Typing `6430` finds Veyland by RXM; arrow keys and Enter work too. Click ✕ to go back to the whole portfolio.
+31. Still on CPEA Start, with **Prompt only** selected, type `Which borrowers face refinancing risk in the next 12 months?` and click **Run analysis**. Processing says "One-off question"; the results are one row per borrower — Borrower · RXM · Flags · Answer, no By borrower / By question toggle. Click the Veyland row: the full answer, `derived` + `conf medium`, and **Detail & evidence →** with both quotes. (Choose **Question set** instead and you get the 17-column monitor, as before.)
+32. **CPEA → Documents** — every borrower group ends with **Ask about this borrower →**. Click Torvane's: you land on Start with Torvane already chosen ("resolves to 1 borrower · 1 document").
+33. **Vantage → Ask** — *What to ask* now has two modes. In **One-off questions**, drop `docs/demo-files/Watchlist_Qs.xlsx` (in this repository) on the slim row under the question box: it uploads, then a review card lists the file's questions — "14 questions read", three shown, **+ 11 more — review all before running**. Remove one with its ✕; type a question of your own too — the line beside **Ask** counts both ("14 questions · …"). Attach a document and **Ask**: the answer has one heading per question ("Q1 of 14" …), each with its own blocks. (The demo reads any file named `Watchlist_Qs.xlsx`; other .xlsx files get a labeled placeholder list — real parsing is backend work.)
+34. Back on Ask, drop the file again and click **Save as a question set**: the modal opens with the file and the title "Watchlist Qs" filled in; **Save**. Switch to **Question set** — it sits beside Vantage's own two sets (Exposure limits sweep, Key-customer scan). CPEA's shelf does not show it: every application keeps its own sets.
+35. **Inquiry** — the fourth application, for senior leadership: CPEA with the question-set shelf removed. Start is one box ("Your question — type it and go — nothing here is saved for reuse") plus the same borrower scope. **Runs** keeps every question asked — open the refinancing run (4 stated · 1 derived · 1 unsupported) and the cancelled one ("cancelled before completion").
+36. **One-application user** — in the console run `localStorage.setItem('sentinel.mock.user', 'u-leadership')` and go to `/`: you land straight in Inquiry, and the brand is plain "Sentinel · Inquiry" with no switcher. `localStorage.removeItem('sentinel.mock.user')` switches back (demo-mode only; a real deployment takes identity from the sign-in).
+
 **Reset**
 
-30. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
+37. To reset the demo to its shipped state: open the browser devtools console (`F12`) and run `localStorage.removeItem('sentinel.mock.state')`, then refresh. (Theme and layout preferences are stored separately and survive.)
 
 ## 5. Serving the built app (target-environment style)
 
