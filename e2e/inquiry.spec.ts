@@ -239,14 +239,20 @@ test('the evidence is reachable from the keyboard: row toggle → Detail & evide
   await page.keyboard.press('Enter')
   await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('button', { name: 'Detail & evidence →' })).toBeFocused()
+  const detail = page.getByRole('button', { name: 'Detail & evidence →' })
+  await expect(detail).toBeFocused()
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('dialog', { name: 'Veyland US Holdco LLC — answer' })).toBeVisible()
-  // sort headers are buttons too
-  await page
-    .getByRole('columnheader', { name: /Borrower/ })
-    .getByRole('button')
-    .focus()
-  await page.keyboard.press('Enter')
+  const modal = page.getByRole('dialog', { name: 'Veyland US Holdco LLC — answer' })
+  await expect(modal).toBeVisible()
+  // Escape closes it and hands focus back to the control that opened it
   await page.keyboard.press('Escape')
+  await expect(modal).toHaveCount(0)
+  await expect(detail).toBeFocused()
+  // sort headers are buttons too (the shared SortHeader): Enter sorts, aria-sort follows
+  const borrowerTh = page.getByRole('columnheader', { name: /^Borrower/ })
+  await borrowerTh.getByRole('button').focus()
+  await page.keyboard.press('Enter') // a new column starts descending
+  await expect(borrowerTh).toHaveAttribute('aria-sort', 'descending')
+  await expect(page.locator('tr[data-rxm]').first()).toHaveAttribute('data-rxm', 'RXM-6430')
+  await expect(borrowerTh.getByRole('button')).toBeFocused()
 })

@@ -7,14 +7,21 @@
  * (the expansion row travels with its data row). The inline expansion
  * shows every answer with grade + conf chips; its footer states the
  * decision table and links Detail & evidence → the verification modal.
+ * Keyboard: each data row is a Tab stop named by its borrower
+ * (aria-labelledby; aria-expanded on the row, aria-controls → its expansion
+ * while open) and Enter/Space toggle it;
+ * Detail & evidence is the next Tab stop after an open row, and the
+ * modal hands focus back to it on close. Headers are the shared SortHeader
+ * buttons — nothing on this table is mouse-only.
  */
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useId, useMemo, useState } from 'react'
 import type { ErmAnswer, ErmRun, QuestionSet } from '@/api/types'
 import { AnswerDetailModal, GradeChip } from '@/components/viewers/AnswerDetailModal'
 import { flagCount } from '@/lib/ermModel'
 import { fmt } from '@/lib/fmt'
 import { ERM_RATIONALE_LABELS } from './config'
 import { usePortfolioApp } from './portfolioApp'
+import { SortHeader } from './SortHeader'
 
 interface Row {
   rxm: string
@@ -32,6 +39,7 @@ export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet })
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'flags', desc: true })
   const [openRxm, setOpenRxm] = useState<string | null>(null)
   const [detail, setDetail] = useState<{ answer: ErmAnswer; borrower: string } | null>(null)
+  const expansionId = useId()
 
   const rows = useMemo<Row[]>(() => {
     const out = run.population.included.map((b) => ({
@@ -65,19 +73,18 @@ export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet })
   }, [run.answers, run.population.included, sort])
 
   function header(key: SortKey, label: string) {
-    const active = sort.key === key
     return (
-      <th
+      <SortHeader
         key={key}
-        onClick={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
-        aria-sort={active ? (sort.desc ? 'descending' : 'ascending') : undefined}
-        className="cursor-pointer border-b border-rule-strong bg-bg-subtle px-3 py-[9px] text-left text-micro font-semibold whitespace-nowrap text-muted hover:text-ink"
-      >
-        {label}
-        {active && <span className="text-ink">{sort.desc ? ' ↓' : ' ↑'}</span>}
-      </th>
+        label={label}
+        active={sort.key === key}
+        desc={sort.desc}
+        onSort={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
+      />
     )
   }
+
+  const toggle = (rxm: string) => setOpenRxm((o) => (o === rxm ? null : rxm))
 
   function cell(a: ErmAnswer | undefined) {
     if (!a) return <td className="border-b border-rule px-3 py-2.5">—</td>
@@ -114,11 +121,29 @@ export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet })
             {rows.map((r) => (
               <Fragment key={r.rxm}>
                 <tr
-                  className="cursor-pointer whitespace-nowrap transition-colors hover:bg-bg-hover"
+                  tabIndex={0}
+                  aria-expanded={openRxm === r.rxm}
+                  aria-controls={openRxm === r.rxm ? `${expansionId}-${r.rxm}` : undefined}
+                  // a table row takes no name from its cells: name it by its borrower
+                  aria-labelledby={`${expansionId}-${r.rxm}-name`}
+                  className="cursor-pointer whitespace-nowrap transition-colors hover:bg-bg-hover focus-visible:-outline-offset-2"
                   data-rxm={r.rxm}
-                  onClick={() => setOpenRxm((o) => (o === r.rxm ? null : r.rxm))}
+                  onClick={() => toggle(r.rxm)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      // the row itself only: keys pressed on anything inside keep their own behaviour
+                      if (e.target !== e.currentTarget) return
+                      e.preventDefault() // Space would scroll the canvas
+                      toggle(r.rxm)
+                    }
+                  }}
                 >
-                  <td className="border-b border-rule px-3 py-2.5 font-semibold">{r.name}</td>
+                  <td
+                    id={`${expansionId}-${r.rxm}-name`}
+                    className="border-b border-rule px-3 py-2.5 font-semibold"
+                  >
+                    {r.name}
+                  </td>
                   <td className="border-b border-rule px-3 py-2.5 font-mono text-[0.75rem]">
                     {r.rxm}
                   </td>
@@ -145,7 +170,7 @@ export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet })
                   )}
                 </tr>
                 {openRxm === r.rxm && (
-                  <tr data-expansion={r.rxm}>
+                  <tr id={`${expansionId}-${r.rxm}`} data-expansion={r.rxm}>
                     <td
                       colSpan={3 + visible.length}
                       className="border-b border-rule bg-bg-subtle px-3 pb-3.5"

@@ -14,7 +14,8 @@
  * verification modal. Default sort most-flags-first (stable); header
  * sorting is pair-aware — the expansion row travels with its data row.
  * Keyboard: each borrower name is a real toggle button (aria-expanded) and
- * each header a sort button — this table is Inquiry's only path to the
+ * each header is the shared SortHeader (a sort button filling the cell,
+ * one markup with the monitor) — this table is Inquiry's only path to the
  * evidence, so nothing here may be mouse-only.
  */
 import { Fragment, useMemo, useState } from 'react'
@@ -25,6 +26,7 @@ import { cx } from '@/lib/cx'
 import { fmt } from '@/lib/fmt'
 import { ERM_RATIONALE_LABELS } from './config'
 import { usePortfolioApp } from './portfolioApp'
+import { SortHeader } from './SortHeader'
 
 interface Row {
   rxm: string
@@ -60,22 +62,14 @@ export function SingleQuestionTable({ run, field }: { run: ErmRun; field: Questi
   }, [run.answers, run.population.included, field.id, sort])
 
   function header(key: SortKey, label: string) {
-    const active = sort.key === key
     return (
-      <th
+      <SortHeader
         key={key}
-        aria-sort={active ? (sort.desc ? 'descending' : 'ascending') : undefined}
-        className="border-b border-rule-strong bg-bg-subtle px-3 py-[9px] text-left text-micro font-semibold whitespace-nowrap text-muted"
-      >
-        <button
-          type="button"
-          onClick={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
-          className="text-micro font-semibold whitespace-nowrap text-muted hover:text-ink"
-        >
-          {label}
-          {active && <span className="text-ink">{sort.desc ? ' ↓' : ' ↑'}</span>}
-        </button>
-      </th>
+        label={label}
+        active={sort.key === key}
+        desc={sort.desc}
+        onSort={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
+      />
     )
   }
 

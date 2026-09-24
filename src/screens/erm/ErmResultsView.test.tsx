@@ -5,9 +5,13 @@
  * v1.8 — THE SHAPE SWITCH: a run with exactly one question renders the
  * single-question shape (Borrower · RXM · Flags · Answer, no group-by
  * toggle) in CPEA and Inquiry alike; more than one renders the monitor.
+ *
+ * Keyboard (hygiene sweep): the monitor's rows are Tab stops that Enter /
+ * Space expand, Detail & evidence follows its row and gets focus back from
+ * the modal, and every header is a sort button (the shared SortHeader).
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -126,5 +130,94 @@ describe('the shape switch: single-question vs multi-question results', () => {
     expect(screen.queryByTestId('single-question-table')).toBeNull()
     expect(screen.getByText('Quarterly credit pulse · 17 questions')).toBeInTheDocument()
     expect(screen.getByText(/102 answers/)).toBeInTheDocument()
+  })
+})
+
+const dataRows = () =>
+  within(screen.getByTestId('erm-monitor'))
+    .getAllByRole('row')
+    .filter((r) => r.hasAttribute('data-rxm'))
+
+describe('keyboard: the multi-question monitor', () => {
+  it('rows are Tab stops; Enter expands (aria-expanded + aria-controls), Space collapses', async () => {
+    const user = userEvent.setup()
+    mount(structuredClone(ERM_RUNS[0]))
+    await screen.findByTestId('erm-monitor')
+    for (const r of dataRows()) {
+      expect(r).toHaveAttribute('tabindex', '0')
+      expect(r).toHaveAttribute('aria-expanded', 'false')
+      expect(r).not.toHaveAttribute('aria-controls')
+    }
+    const row = dataRows()[0]
+    expect(row).toHaveAttribute('data-rxm', 'RXM-6292') // most flags first
+    // a focused row announces its borrower, not an empty "row"
+    expect(row).toHaveAccessibleName('Redfenn Timber Holdings')
+    row.focus()
+    await user.keyboard('{Enter}')
+    expect(row).toHaveAttribute('aria-expanded', 'true')
+    const x = document.querySelector('[data-expansion="RXM-6292"]')!
+    expect(x.id).not.toBe('')
+    expect(row).toHaveAttribute('aria-controls', x.id)
+    // Space is handled (default prevented — no canvas scroll) and toggles back
+    expect(fireEvent.keyDown(row, { key: ' ' })).toBe(false)
+    expect(row).toHaveAttribute('aria-expanded', 'false')
+    expect(row).not.toHaveAttribute('aria-controls')
+    expect(document.querySelector('[data-expansion="RXM-6292"]')).toBeNull()
+  })
+
+  it('keys pressed inside the row (not on it) keep their own behaviour', async () => {
+    mount(structuredClone(ERM_RUNS[0]))
+    await screen.findByTestId('erm-monitor')
+    const row = dataRows()[0]
+    expect(fireEvent.keyDown(within(row).getAllByRole('cell')[0], { key: 'Enter' })).toBe(true)
+    expect(row).toHaveAttribute('aria-expanded', 'false')
+    expect(document.querySelector('[data-expansion]')).toBeNull()
+  })
+
+  it('Detail & evidence is the next Tab stop; the modal hands focus back to it on Escape', async () => {
+    const user = userEvent.setup()
+    mount(structuredClone(ERM_RUNS[0]))
+    await screen.findByTestId('erm-monitor')
+    const [row, next] = dataRows()
+    row.focus()
+    await user.keyboard('{Enter}')
+    await user.tab()
+    const detail = screen.getByRole('button', { name: 'Detail & evidence →' })
+    expect(detail).toHaveFocus()
+    await user.keyboard('{Enter}')
+    const dialog = screen.getByRole('dialog', {
+      name: /^Redfenn Timber Holdings — covenant headroom/,
+    })
+    expect(within(dialog).getByRole('button', { name: 'Close' })).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(detail).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(row).toHaveFocus()
+    await user.tab()
+    await user.tab()
+    expect(next).toHaveFocus()
+  })
+
+  it('every header is a sort button: Enter / Space sort, aria-sort follows, focus stays', async () => {
+    const user = userEvent.setup()
+    mount(structuredClone(ERM_RUNS[0]))
+    const table = await screen.findByTestId('erm-monitor')
+    const ths = within(table).getAllByRole('columnheader')
+    for (const th of ths) expect(within(th).getByRole('button')).toBeInTheDocument()
+    const borrower = within(table).getByRole('columnheader', { name: /^Borrower/ })
+    const flags = within(table).getByRole('columnheader', { name: /^Flags/ })
+    expect(flags).toHaveAttribute('aria-sort', 'descending')
+    expect(borrower).not.toHaveAttribute('aria-sort')
+    const button = within(borrower).getByRole('button')
+    button.focus()
+    await user.keyboard('{Enter}') // a new column starts descending
+    expect(borrower).toHaveAttribute('aria-sort', 'descending')
+    expect(flags).not.toHaveAttribute('aria-sort')
+    expect(dataRows()[0]).toHaveAttribute('data-rxm', 'RXM-6430') // Veyland
+    await user.keyboard(' ')
+    expect(borrower).toHaveAttribute('aria-sort', 'ascending')
+    expect(dataRows()[0]).toHaveAttribute('data-rxm', 'RXM-5120') // Ambervale
+    expect(button).toHaveFocus()
   })
 })

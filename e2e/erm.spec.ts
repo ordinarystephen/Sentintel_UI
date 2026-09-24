@@ -6,6 +6,8 @@
  * v1.8: Prompt only asks exactly ONE question, so the multi-question arc
  * chooses its set explicitly (see cpea-borrower.spec for the one-question
  * shape and the borrower scope).
+ * Hygiene sweep: the monitor walked keyboard-only — rows, Detail & evidence,
+ * focus return from the modal, and the sort headers.
  */
 import { expect, test, type Page } from '@playwright/test'
 
@@ -173,6 +175,79 @@ test('expansion: all 17 answers with grade + conf chips; detail modal chains to 
   await expect(modal).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(modal).toHaveCount(0)
+})
+
+test('keyboard: rows are tab stops — Enter/Space expand, Detail & evidence follows, Escape returns focus; headers sort', async ({
+  page,
+}) => {
+  await fresh(page, RUN)
+  const table = page.getByTestId('erm-monitor')
+  const headers = table.getByRole('columnheader')
+  const rows = table.locator('tr[data-rxm]')
+  const borrowerTh = table.getByRole('columnheader', { name: /^Borrower/ })
+  const flagsTh = table.getByRole('columnheader', { name: /^Flags/ })
+  // entry point: the group-by toggle, then Tab only
+  await page.getByRole('tab', { name: 'By question' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(borrowerTh.getByRole('button')).toBeFocused()
+  // the header ring is drawn inside the cell (the rounded wrapper would clip an outset one)
+  await expect(borrowerTh.getByRole('button')).toHaveCSS('outline-style', 'solid')
+  await expect(borrowerTh.getByRole('button')).toHaveCSS('outline-offset', '-2px')
+  const n = await headers.count()
+  for (let i = 0; i < n; i++) await page.keyboard.press('Tab')
+  const redfenn = table.locator('tr[data-rxm="RXM-6292"]')
+  await expect(redfenn).toBeFocused()
+  await expect(rows.first()).toHaveAttribute('data-rxm', 'RXM-6292') // most flags first
+  await expect(redfenn).toHaveAttribute('aria-expanded', 'false')
+  await expect(redfenn).toHaveCSS('outline-style', 'solid')
+  await expect(redfenn).toHaveCSS('outline-offset', '-2px')
+  await page.keyboard.press('Tab')
+  await expect(rows.nth(1)).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(redfenn).toBeFocused()
+  // Enter expands, Space collapses, Space expands again
+  await page.keyboard.press('Enter')
+  const x = table.locator('tr[data-expansion="RXM-6292"]')
+  await expect(x).toBeVisible()
+  await expect(redfenn).toHaveAttribute('aria-expanded', 'true')
+  await expect(redfenn).toHaveAttribute('aria-controls', (await x.getAttribute('id'))!)
+  await page.keyboard.press('Space')
+  await expect(x).toHaveCount(0)
+  await expect(redfenn).toHaveAttribute('aria-expanded', 'false')
+  await expect(redfenn).not.toHaveAttribute('aria-controls')
+  await page.keyboard.press('Space')
+  await expect(x).toBeVisible()
+  await expect(redfenn).toBeFocused()
+  // Detail & evidence is the next stop
+  await page.keyboard.press('Tab')
+  const detail = x.getByRole('button', { name: 'Detail & evidence →' })
+  await expect(detail).toBeFocused()
+  await page.keyboard.press('Enter')
+  const modal = page.getByRole('dialog', { name: /^Redfenn Timber Holdings — covenant headroom/ })
+  await expect(modal).toBeVisible()
+  await expect(modal.getByRole('button', { name: 'Close' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(modal).toHaveCount(0)
+  await expect(detail).toBeFocused() // focus returns to the control that opened it
+  await expect(redfenn).toHaveAttribute('aria-expanded', 'true')
+  // back to the Borrower header, keyboard only, and sort
+  await page.keyboard.press('Shift+Tab')
+  await expect(redfenn).toBeFocused()
+  for (let i = 0; i < n; i++) await page.keyboard.press('Shift+Tab')
+  await expect(borrowerTh.getByRole('button')).toBeFocused()
+  await expect(flagsTh).toHaveAttribute('aria-sort', 'descending')
+  await page.keyboard.press('Enter') // a new column starts descending
+  await expect(borrowerTh).toHaveAttribute('aria-sort', 'descending')
+  await expect(flagsTh).not.toHaveAttribute('aria-sort')
+  await expect(rows.first()).toHaveAttribute('data-rxm', 'RXM-6430') // Veyland
+  await page.keyboard.press('Space')
+  await expect(borrowerTh).toHaveAttribute('aria-sort', 'ascending')
+  await expect(rows.first()).toHaveAttribute('data-rxm', 'RXM-5120') // Ambervale
+  await expect(borrowerTh.getByRole('button')).toBeFocused()
+  // the open pair still travels together
+  expect(
+    await redfenn.evaluate((el) => el.nextElementSibling?.getAttribute('data-expansion')),
+  ).toBe('RXM-6292')
 })
 
 test('runs: newest first, frozen revisit of a historical run', async ({ page }) => {
