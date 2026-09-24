@@ -170,13 +170,14 @@ test('Prompt only asks ONE question: the single-question shape, no group-by togg
   // expansion: the full answer with grade + confidence, then Detail & evidence
   await page.locator('tr[data-rxm="RXM-6430"]').click()
   const x = page.locator('tr[data-expansion="RXM-6430"]')
-  await expect(x).toContainText('revolver renewal due Q2 2027')
+  await expect(x).toContainText('the Q3 update states no near-term maturities')
   await expect(x.getByText('derived', { exact: true })).toBeVisible()
   await expect(x.getByText('conf medium')).toBeVisible()
   await x.getByRole('button', { name: 'Detail & evidence →' }).click()
   const modal = page.getByRole('dialog', { name: 'Veyland US Holdco LLC — answer' })
   await expect(modal).toBeVisible()
-  await expect(modal.getByText('Evidence (2)')).toBeVisible()
+  // every input quoted from the Q3 update: maturities, expected case, headroom
+  await expect(modal.getByText('Evidence (3)')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(modal).toHaveCount(0)
 })

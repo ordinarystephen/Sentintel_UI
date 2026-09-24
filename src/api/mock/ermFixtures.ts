@@ -18,6 +18,7 @@ import type {
   QuestionSet,
 } from '../types'
 import { expectedGrade } from '@/lib/ermModel'
+import { DOCUMENTS } from './fixtures'
 
 // ---------------------------------------------------------------------------
 // Question sets
@@ -711,7 +712,9 @@ const ROWS: RowSpec[] = [
       pd: ['B1', 'h'],
       reg: ['Pass', 'h'],
       dscr: ['DSCR 1.6x LTM', 'm'],
-      ev: ['2.1x', 'm', 'inf'],
+      // 8.6x EV/EBITDA ÷ 5.9x leverage — the annual review's own 1.46x (hygiene
+      // sweep: the concept's 2.1x contradicted it and CRR's 1.5x trigger case)
+      ev: ['1.46x', 'm', 'inf'],
       fccr: ['1.8x', 'h'],
       lev: ['5.9x', 'h'],
       hd: ['0.6x', 'h'],
@@ -782,7 +785,7 @@ const ROWS: RowSpec[] = [
       cwl: ['No', 'h'],
       exp: ['$460mm CMT', 'h'],
       risk: ['Low', 'h'],
-      summary: ['Headroom 1.1x and stable; step-down to 4.75x from Q4 2027.', 'h'],
+      summary: ['Headroom 1.1x and stable; step-down to 4.75x after Q4 2027.', 'h'],
     },
   },
   {
@@ -815,6 +818,20 @@ const ROWS: RowSpec[] = [
   },
 ]
 
+/**
+ * A generated ref's page: 2 + the field's index, held inside the cited
+ * section's page range on the document record (hygiene sweep — generated
+ * pages had run past the section, and past the end of short documents).
+ */
+function refPage(r: RowSpec, i: number): number {
+  const sec = DOCUMENTS.find((d) => d.docId === r.doc.docId)?.sections?.find(
+    (x) => x.title === r.doc.section,
+  )
+  const p = 2 + i
+  if (!sec || (p >= sec.pageStart && p <= sec.pageEnd)) return p
+  return sec.pageStart + (i % (sec.pageEnd - sec.pageStart + 1))
+}
+
 function buildAnswers(rows: RowSpec[], set: QuestionSet): ErmAnswer[] {
   const out: ErmAnswer[] = []
   for (const r of rows) {
@@ -831,7 +848,7 @@ function buildAnswers(rows: RowSpec[], set: QuestionSet): ErmAnswer[] {
                 fileName: r.doc.fileName,
                 docId: r.doc.docId,
                 sectionName: r.doc.section,
-                page: 2 + set.fields.indexOf(fd),
+                page: refPage(r, set.fields.indexOf(fd)),
                 quote:
                   mark === 'inf'
                     ? `Stated inputs for ${fd.label.toLowerCase()} as reported for ${r.name}.`
@@ -889,7 +906,7 @@ export const ERM_ANSWERS: ErmAnswer[] = buildAnswers(ROWS, QUARTERLY_PULSE)
     {
       fileName: 'Ambervale_Foods_Q2_Performance_Update.pdf',
       docId: 'doc-ambervale-q2u',
-      sectionName: 'Financial Performance',
+      sectionName: 'Covenant Compliance',
       page: 9,
       quote:
         'LTM EBITDA revised to $412mm following the Q2 restatement of the co-manufacturing segment.',
@@ -912,7 +929,10 @@ function augustAnswers(): ErmAnswer[] {
   const out = buildAnswers(ROWS, QUARTERLY_PULSE).map((a) => ({ ...a }))
   for (const a of out) {
     if (a.rxm !== 'RXM-6292') continue
-    // In August only four Redfenn answers were ungrounded.
+    // In August only four Redfenn answers were ungrounded — and its derived
+    // summary says so (today's run says eight).
+    if (a.questionId === 'summary')
+      a.value = 'Stale document set: four answers unsupported pending the amended agreement.'
     if (['reg', 'dscr', 'ev', 'fccr'].includes(a.questionId)) continue
     if (a.grade === 'unsupported') {
       a.evidenceRefs = [

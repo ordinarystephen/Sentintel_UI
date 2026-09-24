@@ -115,7 +115,7 @@ test('deep entry: the demo run renders its frozen single-question results', asyn
     page.locator(
       'tr[data-rxm="RXM-6430"] [title="Derived from stated inputs — expand for the derivation"]',
     ),
-  ).toContainText('Elevated — revolver renewal due Q2 2027')
+  ).toContainText('Not near-term — the Q3 update states no near-term maturities')
   await expectNoQuestionSetUi(page)
 })
 

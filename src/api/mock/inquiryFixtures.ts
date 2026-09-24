@@ -101,34 +101,44 @@ export const INQUIRY_DEMO_ANSWERS: ErmAnswer[] = [
       ),
     ],
   ),
+  // Re-grounded in the hygiene sweep (2026-09-24): the v1.8 answer claimed
+  // a Q2 2027 revolver renewal against the Q3 update's own "No near-term
+  // maturities". Every input below is quoted from the Q3 update's text.
   answer(
     'RXM-6430',
-    'Elevated — revolver renewal due Q2 2027; derived from the maturity schedule and the revised expected case, not stated as a plan.',
+    'Not near-term — the Q3 update states no near-term maturities; derived: the revised expected case and 0.6x headroom point to tighter terms at the next refinancing.',
     'medium',
     [
       ref(
-        'Veyland_Holdco_Annual_Review_FY25.pdf',
-        'doc-veyland-annual',
-        'Capitalization',
-        11,
-        'The $150mm revolving credit facility, as extended, terminates on June 30, 2027.',
+        'Veyland_Holdco_Q3_Update.pdf',
+        'doc-veyland-q3',
+        'Liquidity Summary',
+        14,
+        'The $150 million revolving credit facility remains undrawn, with $6.0 million utilized for standby letters of credit, leaving availability of approximately $144 million. No near-term maturities.',
       ),
       ref(
         'Veyland_Holdco_Q3_Update.pdf',
         'doc-veyland-q3',
-        'Renewal Pipeline',
-        8,
-        'Management expects the two slipped renewals to close in Q4 at flat-to-modestly-lower pricing.',
+        'Highlights',
+        1,
+        'Two enterprise renewals slipped from Q3 into Q4; management now guides to mid-single-digit revenue growth for FY26.',
         'page',
+      ),
+      ref(
+        'Veyland_Holdco_Q3_Update.pdf',
+        'doc-veyland-q3',
+        'Financial Update',
+        11,
+        'Covenant headroom narrows to 0.6x at the revised EBITDA.',
       ),
     ],
     {
-      inferredFrom: ['revolver maturity (annual review)', 'revised expected case (Q3 update)'],
+      inferredFrom: ['revised expected case (Q3 update)', 'covenant headroom 0.6x (Q3 update)'],
       rationale: {
         memoFacts:
-          'The annual review puts the revolver’s termination date at June 30, 2027 — inside the 12-month window. The Q3 update revises the expected case downward on two slipped enterprise renewals.',
+          'The Q3 update states no near-term maturities — the $150mm revolver is undrawn with ~$144mm available. The same update revises the expected case downward on two slipped enterprise renewals, and covenant headroom narrows to 0.6x at the revised EBITDA.',
         basis:
-          'The refinancing risk is inferred, not quoted: both inputs are stated, but no document states a renewal plan. Medium confidence until the lenders’ renewal terms are on system.',
+          'The timing is stated: the Q3 update reports no near-term maturities (read here as none inside the 12-month window). The pressure on terms is inferred, not quoted — both inputs are stated, but no document states refinancing terms. Medium confidence until the lenders’ terms are on system.',
       },
     },
   ),
@@ -190,7 +200,9 @@ const EXPOSURE_QUESTION = 'Where is our largest single-name exposure, and has it
 const EXPOSURE_ANSWERS: ErmAnswer[] = [
   answer(
     'RXM-6430',
-    '$1,390mm committed ($1,240mm TLB + $150mm RCF) — the largest in the population; down $35mm this year on the June prepayment.',
+    // Hygiene sweep: was "down $35mm this year on the June prepayment" — the
+    // cited annual review books that prepayment in FY25, not this year.
+    '$1,390mm committed ($1,240mm TLB + $150mm RCF) — the largest in the population; it has not grown this year.',
     'high',
     [
       ref(
@@ -269,7 +281,7 @@ const HEADROOM_ANSWERS: ErmAnswer[] = [
       ref(
         'Ambervale_Foods_Q2_Performance_Update.pdf',
         'doc-ambervale-q2u',
-        'Financial Performance',
+        'Covenant Compliance',
         9,
         'LTM EBITDA revised to $412mm following the Q2 restatement of the co-manufacturing segment.',
         'page',

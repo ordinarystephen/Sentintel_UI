@@ -10,7 +10,7 @@ import {
   VEYLAND_ID,
   PROCESSING,
 } from './mockApi'
-import { LEADERSHIP_USER } from './fixtures'
+import { DOCUMENTS, LEADERSHIP_USER } from './fixtures'
 import { INQUIRY_DEMO_QUESTION } from './inquiryFixtures'
 import { VANTAGE_DEMO_BLOCKS, VANTAGE_DEMO_DOCS, WATCHLIST_QS } from './vantageFixtures'
 import { expectedGrade, gradeCounts } from '@/lib/ermModel'
@@ -900,6 +900,27 @@ describe('fixture integrity: evidence comes from the run’s own documents', () 
           .flatMap((a) => a.evidenceRefs.map((r) => `${a.rxm} → ${r.fileName}`))
           .filter((s) => !scope.has(s.split(' → ')[1]))
         expect({ run: run.runId, outside }).toEqual({ run: run.runId, outside: [] })
+      }
+  })
+
+  it('every cited section exists on its document, and every cited page sits inside it', async () => {
+    // hygiene sweep: generated refs had cited pages past a section's end (and
+    // past the end of short documents), and one showcase ref named a section
+    // its document does not have
+    const api = make()
+    for (const app of ['erm', 'inquiry'] as const)
+      for (const run of await api.listRuns(app)) {
+        const bad = run.answers.flatMap((a) =>
+          a.evidenceRefs.flatMap((r) => {
+            const doc = DOCUMENTS.find((d) => d.docId === r.docId)
+            const sec = doc?.sections?.find((x) => x.title === r.sectionName)
+            const ok = sec && r.page >= sec.pageStart && r.page <= sec.pageEnd
+            return ok
+              ? []
+              : [`${a.rxm} ${a.questionId} → ${r.docId} · ${r.sectionName} p.${r.page}`]
+          }),
+        )
+        expect({ run: run.runId, bad }).toEqual({ run: run.runId, bad: [] })
       }
   })
 })
