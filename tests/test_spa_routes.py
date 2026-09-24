@@ -53,9 +53,9 @@ def test_placeholder_when_frontend_not_built(client, tmp_path, monkeypatch):
 def test_forwarded_proxy_prefix_still_serves_assets(client, tmp_path, monkeypatch):
     """A workspace proxy that forwards its own prefix must not break asset serving.
 
-    Domino exposes a port at `<workspace>/proxy/<port>/`. Some proxies strip
-    that prefix before forwarding, some pass the whole path through. In the
-    second case the catch-all previously saw
+    A workspace proxy exposes a port at `<workspace>/proxy/<port>/`. Some
+    proxies strip that prefix before forwarding, some pass the whole path
+    through. In the second case the catch-all previously saw
     `u/me/proj/r/notebookSession/abc/proxy/8082/assets/x.js`, found no such
     file, and returned index.html — so the browser got HTML where it asked for
     JavaScript and the page died on a MIME error rather than a 404.

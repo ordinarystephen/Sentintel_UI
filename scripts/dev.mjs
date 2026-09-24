@@ -9,8 +9,9 @@
  * port itself, binds it where the proxy can see it, and prints the exact URL
  * to open, so the verb stays `make dev`.
  *
- * Which mode applies is decided by scripts/workspace.mjs — pinned, not
- * guessed. See docs/environment.md → "Domino workspaces".
+ * Which mode applies is decided by scripts/workspace.mjs — an explicit path,
+ * a pin or a discovered prefix, never a guess.
+ * See docs/environment.md → "Target-environment workspaces".
  */
 import { spawn } from 'node:child_process'
 import net from 'node:net'
@@ -67,7 +68,7 @@ async function startWorkspace() {
     // whether the proxy strips its prefix or forwards it.
     env.VITE_BASE_PATH = `${ws}/proxy/${port}/`
     console.log(`\n  Workspace mode — binding 0.0.0.0:${port}`)
-    console.log(`\n  Open:  <your-domino-host>${ws}/proxy/${port}/\n`)
+    console.log(`\n  Open:  <your-workspace-host>${ws}/proxy/${port}/\n`)
   } else {
     console.log(`\n  Workspace mode — binding 0.0.0.0:${port}`)
     console.log('\n  No workspace path pinned, so no base path is set. If the page is')

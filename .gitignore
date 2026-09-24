@@ -12,5 +12,7 @@ __pycache__/
 # local scratch drops (not project files)
 Claude outputs/
 
-# Pinned workspace proxy path, set per-workspace when DOMINO_RUN_HOST_PATH is absent
-.domino-workspace-path
+# Pinned workspace proxy path — one line, per workspace session. A pin holds the
+# pasted workspace URL (an internal host), so no pin may ever become
+# committable: the glob also covers a pin written under the pre-v1.8.1 name.
+/.*-workspace-path

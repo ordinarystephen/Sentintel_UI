@@ -15,7 +15,7 @@ import { isWorkspace } from './scripts/workspace.mjs'
  * VITE_HMR_OVERLAY=off hides Vite's full-screen error overlay when a proxy
  * refuses the HMR websocket (the app still works; the error stays in console).
  * SENTINEL_TARGET=workspace|local forces the mode scripts/workspace.mjs picks.
- * See docs/environment.md → "Domino workspaces".
+ * See docs/environment.md → "Target-environment workspaces".
  */
 const workspace = isWorkspace()
 

@@ -121,9 +121,9 @@ VITE_ALLOWED_HOSTS=sentinel.example.internal npm run dev -- --host 0.0.0.0
 
 The mock API runs entirely in the browser, so no API traffic needs proxying in demo mode. When `VITE_API=http` arrives, the base URL for the real API is a separate build-time variable (see `docs/api-handoff.md`).
 
-## Domino workspaces (verified 2026-09-22)
+## Target-environment workspaces (verified 2026-09-22)
 
-**Use the normal verbs.** `make dev`, `make build` and `make run` share one notion of where the app will be served and adjust themselves; there is no Domino-specific verb.
+**Use the normal verbs.** `make dev`, `make build` and `make run` share one notion of where the app will be served and adjust themselves; there is no workspace-specific verb.
 
 ### How the prefix is found
 
@@ -131,27 +131,27 @@ A workspace has to know its own base path — the JupyterLab / VS Code server in
 
 | Source | What it reads |
 | ------ | ------------- |
-| `DOMINO_RUN_HOST_PATH` | the variable, where an image exports it |
-| environment | any workspace-shaped variable value |
-| process table | `--ServerApp.base_url` / `--NotebookApp.base_url` / `--base-path` on the running IDE server (`/proc/*/cmdline`) |
-| jupyter config | `c.ServerApp.base_url` in `~/.jupyter/` or `/etc/jupyter/` |
-| domino metadata | `/domino/run.json` and friends |
+| environment | a `*_HOST_PATH`, `JUPYTER*`, `NB_*`, `JPY*`, `WORKSPACE*`, `BASE_URL*` or `NOTEBOOK*` variable whose value — a bare path, or a full URL reduced to its path — is workspace-shaped (an `/r/`, `/notebookSession/` or `/proxy/` segment) |
+| process table | `--ServerApp.base_url` / `--NotebookApp.base_url` / `--base-path` and their variants on the running IDE server (`/proc/*/cmdline`) |
+| jupyter config | `c.ServerApp.base_url` (or `NotebookApp`) in `~/.jupyter/`, `/etc/jupyter/` or `/opt/conda/etc/jupyter/` |
 
-`make doctor` prints what every probe saw, so a miss is diagnosable rather than mysterious.
+`make doctor` prints what every probe saw, so a miss is diagnosable rather than mysterious. v1.8.1 removed a platform-specific run-metadata probe (it was never observed firing in a real workspace, and the pin covers any miss) and folded the platform's host-path variable into the environment probe, which now asks for a workspace-shaped value where the old dedicated probe took any value. The environment probe keeps a name filter on purpose — matched on value shape alone, `PWD`, `INIT_CWD` or `PATH` under a directory called `r` or `proxy` would silently switch a laptop build into workspace mode.
 
 If no probe finds it, pin it once — the file is gitignored and takes the URL verbatim, full URL or bare path, with or without a trailing `/proxy/<port>/`:
 
 ```sh
-echo '<paste your workspace URL from the browser address bar>' > .domino-workspace-path
+echo '<paste your workspace URL from the browser address bar>' > .sentinel-workspace-path
 ```
+
+v1.8.1 also renamed the pin file. A pin written under an earlier `.*-workspace-path` name is still read (after `.sentinel-workspace-path`), and `make doctor` prints the one `mv` that renames it.
 
 Precedence is `SENTINEL_WORKSPACE_PATH` → pinned file → discovery, so a value someone deliberately wrote down is never silently overridden. `SENTINEL_TARGET=workspace|local` forces the mode either way.
 
 **A pin can go stale**: the session id changes when the workspace restarts. `make doctor` warns when the pinned and discovered paths disagree — delete the pin and let discovery run.
 
-### Why discovery is not keyed off `DOMINO_*`
+### Why mode is not inferred from a platform variable's presence
 
-The first version was. **A real UBS Domino workspace exports none of those variables** — confirmed by running `make doctor` in the container (node v22.17.1, npm 10.9.2, flask importable, zero `DOMINO_*` vars). Detection that guesses wrong is worse than none here, because all three verbs then quietly take the laptop path while the terminal still reports success.
+The first version did that. **The real target workspace exports no platform-prefixed variables** — confirmed by running `make doctor` in the container (node v22.17.1, npm 10.9.2, flask importable, zero platform-prefixed vars). Detection that guesses wrong is worse than none here, because all three verbs then quietly take the laptop path while the terminal still reports success.
 
 ### What was actually broken
 

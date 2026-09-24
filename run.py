@@ -13,18 +13,20 @@ from server import create_app
 
 
 def _discover_via_node() -> str:
-    """Ask scripts/workspace.mjs to probe for the prefix.
+    """Ask scripts/workspace.mjs for the rest of the chain: a pin written
+    under an earlier file name, then the discovery probes.
 
-    why shell out: the probes (process table, jupyter config, run metadata)
-    live in one place so JS and Python cannot drift. Failure is silent and
-    non-fatal — serving must never depend on discovery succeeding.
+    why shell out: the legacy-pin rule and the probes (environment, process
+    table, jupyter config) live in one place so JS and Python cannot drift.
+    Failure is silent and non-fatal — serving must never depend on discovery
+    succeeding.
     """
     try:
         out = subprocess.run(
             [
                 "node",
                 "-e",
-                "import('./scripts/workspace.mjs').then(m=>console.log(m.discoverWorkspacePath()))",
+                "import('./scripts/workspace.mjs').then(m=>console.log(m.workspacePath()))",
             ],
             cwd=Path(__file__).resolve().parent,
             capture_output=True,
@@ -37,20 +39,18 @@ def _discover_via_node() -> str:
 
 
 def _workspace_path() -> str:
-    """The pinned workspace prefix, or "" when serving locally.
+    """The workspace prefix (explicit, pinned or discovered), or "" locally.
 
-    why a pinned file rather than DOMINO_* detection: a real UBS Domino
-    workspace exports none of those variables (verified 2026-09-22), so
-    anything keyed off them silently takes the laptop path. Mirrors
-    scripts/workspace.mjs — keep the two in step.
+    why a pin and discovery rather than platform-variable detection: the real
+    target workspace exports none of the platform's variables (verified
+    2026-09-22), so anything keyed off them silently takes the laptop path.
+    Mirrors scripts/workspace.mjs — keep the two in step.
     """
     raw = os.getenv("SENTINEL_WORKSPACE_PATH", "")
     if not raw:
-        pin = Path(__file__).resolve().parent / ".domino-workspace-path"
+        pin = Path(__file__).resolve().parent / ".sentinel-workspace-path"
         if pin.is_file():
             raw = pin.read_text().strip()
-    if not raw:
-        raw = os.getenv("DOMINO_RUN_HOST_PATH", "")
     if not raw:
         raw = _discover_via_node()
     raw = raw.strip()
@@ -71,9 +71,7 @@ def _in_workspace() -> bool:
         return True
     if target == "local":
         return False
-    if _workspace_path():
-        return True
-    return any(k.startswith("DOMINO_") for k in os.environ)
+    return bool(_workspace_path())
 
 
 def _announce(port: int) -> None:
@@ -89,7 +87,7 @@ def _announce(port: int) -> None:
     workspace = _workspace_path()
     print()
     if workspace:
-        print(f"  Open:  <your-domino-host>{workspace}/proxy/{port}/")
+        print(f"  Open:  <your-workspace-host>{workspace}/proxy/{port}/")
     else:
         print(f"  Open your workspace URL with  /proxy/{port}/  appended.")
     print("  A blank page means dist/ was built for the wrong base path — see")
