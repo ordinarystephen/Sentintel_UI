@@ -83,6 +83,11 @@ export function ErmProcessingView({ run }: { run: ErmRun }) {
   // a prompt-only run asks exactly one question
   const single = !run.questionSetId
   const qTotal = single ? 1 : (set?.fields.length ?? 17)
+  const questionsPhrase = plural(
+    qTotal,
+    app.copy.results.questionsOne,
+    app.copy.results.questionsOther,
+  )
   const p = run.progress
   const scope = scopeShort(run.criteria, app.copy.start.borrowerScope)
   const borrowers = plural(
@@ -106,7 +111,7 @@ export function ErmProcessingView({ run }: { run: ErmRun }) {
             ? fmt(s.subSingle, { scope, borrowers, documents })
             : fmt(s.sub, {
                 set: set?.name ?? run.questionSetId ?? '',
-                questions: qTotal,
+                questions: questionsPhrase,
                 scope,
                 borrowers,
                 documents,
@@ -138,7 +143,10 @@ export function ErmProcessingView({ run }: { run: ErmRun }) {
           label={
             single
               ? fmt(s.stepQuestionSingle, { documents })
-              : fmt(s.stepQuestions, { questions: qTotal, documents: run.documents.length })
+              : fmt(s.stepQuestions, {
+                  questions: questionsPhrase,
+                  documents: run.documents.length,
+                })
           }
           meta={fmt(s.stepQuestionsMeta, {
             done: p?.documentsDone ?? 0,

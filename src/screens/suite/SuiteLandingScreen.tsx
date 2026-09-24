@@ -101,7 +101,7 @@ export function SuiteLandingScreen() {
               <AppCard key={a.id} app={a} />
             ))}
           </nav>
-          <p className="mt-[34px] flex animate-[settle_0.3s_ease_0.32s_both] flex-wrap gap-3.5 border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
+          <p className="mt-[34px] flex animate-[settle_0.3s_ease_0.32s_backwards] flex-wrap gap-3.5 border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
             {s.fictionalNote}
           </p>
         </div>

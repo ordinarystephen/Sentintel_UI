@@ -7,6 +7,10 @@
  * up for REVIEW before anything runs. Nothing is retained unless the user
  * saves the questions as a set.
  *
+ * ONE question file at a time: a new drop replaces any row still in
+ * flight, and only the latest drop's read is ever handed up (a slower
+ * read of an earlier drop is discarded).
+ *
  * ParsedQuestionsCard is that review: mono file name, "N questions read",
  * each question in serif italic with its own remove ✕, the file's ✕, and
  * "Save as a question set". Three rows show; the rest open on request —
@@ -27,36 +31,54 @@ const VISIBLE_ROWS = 3
 
 export function QuestionFileIntake({
   onParsed,
+  onPending,
 }: {
   onParsed: (file: File, parsed: ParsedQuestionFile) => void
+  /** The file still uploading or being read (null when none) — Ask waits for it. */
+  onPending?: (fileName: string | null) => void
 }) {
   const upload = useUploadList(isXlsx)
   const parse = useParseQuestionFile()
   const [results, setResults] = useState<ReadonlyMap<File, ParsedQuestionFile>>(new Map())
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // the one file this intake is reading (the latest accepted drop)
+  const latest = useRef<File | null>(null)
 
   function add(list: FileList | File[]) {
     const files = Array.from(list)
-    upload.addFiles(files)
-    const file = files.filter((f) => gateFile(f, isXlsx) === null).pop()
+    const file = files.filter((f) => gateFile(f, isXlsx) === null).pop() ?? null
+    // one at a time: clear any row still in flight BEFORE adding, so the
+    // name+size dedupe never keeps a stale row in place of this drop
+    if (file) for (const f of upload.files) upload.removeFile(f)
+    // the chosen file, plus any rejects (they still get their amber row)
+    upload.addFiles(files.filter((f) => f === file || gateFile(f, isXlsx) !== null))
     if (!file) return
+    latest.current = file
     setError(null)
     parse.mutateAsync(file).then(
-      (r) => setResults((prev) => new Map(prev).set(file, r)),
+      (r) => {
+        if (latest.current === file) setResults(new Map([[file, r]]))
+      },
       (e: Error) => {
+        if (latest.current !== file) return
         upload.removeFile(file)
         setError(e.message)
       },
     )
   }
 
-  // hand a file up for review once its upload has landed AND it has been
-  // read; each hand-off removes the file, so this settles after one pass
+  // a file in flight holds Ask: its questions are not reviewed yet
+  const pendingName = upload.files.find((f) => f === latest.current)?.name ?? null
+  useEffect(() => onPending?.(pendingName), [pendingName, onPending])
+  useEffect(() => () => onPending?.(null), [onPending])
+
+  // hand the latest file up for review once its upload has landed AND it
+  // has been read; the hand-off removes the file, so this settles in a pass
   useEffect(() => {
     for (const f of upload.files) {
       const r = results.get(f)
-      if (!r || upload.progressOf(f) < 100) continue
+      if (!r || f !== latest.current || upload.progressOf(f) < 100) continue
       onParsed(f, r)
       upload.removeFile(f)
       setResults((prev) => {
@@ -121,7 +143,7 @@ export function QuestionFileIntake({
         progressOf={upload.progressOf}
         onRemove={upload.removeFile}
         onRemoveRejected={upload.removeRejected}
-        listAria={s.fileAria}
+        listAria={s.fileListAria}
       />
       {error && (
         <p role="alert" className="mt-2 text-ui-sm text-warn">
@@ -135,6 +157,7 @@ export function QuestionFileIntake({
 export function ParsedQuestionsCard({
   fileName,
   read,
+  placeholder,
   questions,
   saved,
   onRemoveQuestion,
@@ -144,6 +167,8 @@ export function ParsedQuestionsCard({
   fileName: string
   /** How many questions the file yielded (the badge — a fact about the file). */
   read: number
+  /** Mock only: the list is a labeled placeholder, not the file's contents. */
+  placeholder?: boolean
   /** The questions still kept for this run, in file order. */
   questions: string[]
   saved: boolean
@@ -162,10 +187,16 @@ export function ParsedQuestionsCard({
         <span className="min-w-0 flex-1 truncate font-mono text-[0.78125rem] font-medium">
           {fileName}
         </span>
-        <Badge tone="green">{plural(read, s.parsedOne, s.parsedOther)}</Badge>
+        {placeholder ? (
+          <Badge tone="neutral">
+            {plural(read, s.parsedPlaceholderOne, s.parsedPlaceholderOther)}
+          </Badge>
+        ) : (
+          <Badge tone="green">{plural(read, s.parsedOne, s.parsedOther)}</Badge>
+        )}
         {saved ? (
           <span className="text-[0.75rem] text-faint">{s.savedAsSet}</span>
-        ) : (
+        ) : questions.length === 0 ? null : (
           <button
             type="button"
             onClick={onSaveAsSet}

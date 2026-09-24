@@ -120,10 +120,12 @@ export const MESSAGES = {
     'Placeholder question {n} for "{name}" — the uploaded file is not parsed in this build.',
   qsPlaceholderDesc:
     'Saved set "{name}" — placeholder questions (file parsing arrives with the backend).',
-  qsFromFileDescOne: '1 question read from {file}.',
-  qsFromFileDescOther: '{n} questions read from {file}.',
+  qsFromFileDescOne: '1 question from {file}.',
+  qsFromFileDescOther: '{n} questions from {file}.',
+  qsNoQuestions: 'A question set needs at least one question.',
   emptyQuestion: 'Type a question or a search term first.',
   runNeedsQuestion: 'Type a question first — or choose a question set.',
+  runNeedsQuestionOneOff: 'Type a question first.',
   runOneMode: 'A run asks a typed question or a question set, not both.',
   noQuestionSet: 'No question set with id {id} in this application.',
   ungrounded: 'The documents on system for this borrower do not ground an answer to this question.',
@@ -256,7 +258,7 @@ interface ProcessingSeed {
 }
 
 /**
- * A user-started ERM run as persisted: meta only — running state derives
+ * A user-started CPEA-workflow run (CPEA or Inquiry) as persisted: meta only — running state derives
  * from elapsed time (so "you can leave" is true), and a completed run's
  * answers/population are materialized from the canonical demo payload on
  * read rather than stored (keeps localStorage small).
@@ -1284,7 +1286,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       return delay(clone(review))
     },
 
-    // ---- ERM (v1.5) ------------------------------------------------------
+    // ---- Question sets (per-application v1.8) · CPEA workflow (CPEA + Inquiry) ----
 
     // Per-application shelves (v1.8): each store reads its own fixtures
     // plus its own saved sets — never another application's.
@@ -1296,6 +1298,10 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       if (!name) return fail(MESSAGES.qsNameRequired)
       const id = `${store === 'vantage' ? 'vqs' : 'qs'}-user-${(now() % 1e8).toString(36)}`
       const read = (input.questions ?? []).map((q) => q.trim()).filter(Boolean)
+      // a reviewed list with nothing left in it is not a set (never invent one)
+      if (input.questions && read.length === 0) return fail(MESSAGES.qsNoQuestions)
+      // really read = the demo file the mock can "parse"; anything else was placeholders
+      const reallyRead = !!input.fileName && !!QUESTION_FILES[input.fileName.toLowerCase()]
       // With already-read questions (a reviewed file) those ARE the set.
       // Without them the mock parses nothing: a placeholder question list
       // (5 generic questions), labeled honestly in its description.
@@ -1322,10 +1328,10 @@ export function createMockApi(options: MockOptions = {}): MockApi {
         name,
         description:
           input.description.trim() ||
-          (read.length > 0
+          (read.length > 0 && reallyRead
             ? fmt(read.length === 1 ? MESSAGES.qsFromFileDescOne : MESSAGES.qsFromFileDescOther, {
                 n: read.length,
-                file: input.fileName ?? name,
+                file: input.fileName!,
               })
             : fmt(MESSAGES.qsPlaceholderDesc, { name })),
         fields,
@@ -1337,20 +1343,22 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     parseQuestionFile: (file) => {
       // THE CONTRACT the mock declares (parsing is backend work): .xlsx
-      // (or .csv), first sheet, first column, one question per row, blank
-      // cells skipped, row order kept. The mock reads no bytes: the demo
+      // (the first sheet) or .csv; the first column; one question per row;
+      // blank cells skipped; row order kept; no header row. The mock reads no bytes: the demo
       // file parses to its fixture questions; any other file gets an
       // honestly labeled placeholder list.
       if (!/\.(xlsx|csv)$/i.test(file.name))
         return fail(fmt(MESSAGES.parseWrongType, { file: file.name }))
       if (file.size === 0) return fail(fmt(MESSAGES.parseEmpty, { file: file.name }))
       const known = QUESTION_FILES[file.name.toLowerCase()]
-      const questions =
-        known ??
-        Array.from({ length: 3 }, (_, i) =>
+      if (known) return delay({ fileName: file.name, questions: [...known] })
+      return delay({
+        fileName: file.name,
+        questions: Array.from({ length: 3 }, (_, i) =>
           fmt(MESSAGES.parsePlaceholder, { n: i + 1, file: file.name }),
-        )
-      return delay({ fileName: file.name, questions: [...questions] })
+        ),
+        placeholder: true as const,
+      })
     },
 
     searchBorrowers: (query) => {
@@ -1386,7 +1394,9 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     startRun: (app, input) => {
       const prompt = input.prompt?.trim() ?? ''
       if (input.questionSetId && prompt) return fail(MESSAGES.runOneMode)
-      if (!input.questionSetId && !prompt) return fail(MESSAGES.runNeedsQuestion)
+      if (!input.questionSetId && !prompt)
+        // Inquiry has no question sets: its message must not offer one
+        return fail(app === 'erm' ? MESSAGES.runNeedsQuestion : MESSAGES.runNeedsQuestionOneOff)
       // Only CPEA keeps a shelf; Inquiry has question sets switched off.
       const shelf = app === 'erm' ? [...QUESTION_SETS, ...state.questionSets.erm] : []
       if (input.questionSetId && !shelf.some((q) => q.id === input.questionSetId))

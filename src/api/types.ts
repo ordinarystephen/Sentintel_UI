@@ -136,12 +136,18 @@ export type QuestionSetStore = 'erm' | 'vantage'
 
 /**
  * A question file read back for review before anything runs (v1.8). THE
- * FILE CONTRACT: .xlsx, first sheet, first column, one question per row;
- * blank cells skipped; row order kept. Parsing is the backend's job.
+ * FILE CONTRACT: .xlsx (the first sheet) or .csv; the first column; one
+ * question per row; blank cells skipped; row order kept; no header row.
+ * Parsing is the backend's job.
  */
 export interface ParsedQuestionFile {
   fileName: string
   questions: string[]
+  /**
+   * MOCK ONLY: the list is a labeled placeholder, not the file's contents
+   * (the mock reads only its demo file). Real parsing never sets this.
+   */
+  placeholder?: true
 }
 
 /** Input to addQuestionSet — `questions` present when saving a parsed file. */

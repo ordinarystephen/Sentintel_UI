@@ -7,7 +7,7 @@
  * switched off (Inquiry) never import this module — see the Inquiry
  * route guard test.
  */
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useQuestionSets } from '@/api/hooks'
 import type { QuestionSetStore } from '@/api/types'
 import { cx } from '@/lib/cx'
@@ -40,11 +40,36 @@ export function QuestionSetControl({
 }) {
   const sets = useQuestionSets(store)
   const [addOpen, setAddOpen] = useState(false)
+  const groupRef = useRef<HTMLDivElement>(null)
+  const MODES = ['oneoff', 'set'] as const
+
+  // WAI-ARIA radio group: one Tab stop (the checked radio); arrows and
+  // Home/End move the selection AND focus together.
+  function onGroupKey(e: KeyboardEvent<HTMLDivElement>) {
+    const i = MODES.indexOf(mode)
+    const next =
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? MODES[(i + 1) % MODES.length]
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? MODES[(i + MODES.length - 1) % MODES.length]
+          : e.key === 'Home'
+            ? MODES[0]
+            : e.key === 'End'
+              ? MODES[MODES.length - 1]
+              : null
+    if (!next) return
+    e.preventDefault()
+    onModeChange(next)
+    groupRef.current?.querySelector<HTMLElement>(`[data-mode="${next}"]`)?.focus()
+  }
+
   return (
     <>
       <div
+        ref={groupRef}
         role="radiogroup"
         aria-label={s.modeAria}
+        onKeyDown={onGroupKey}
         className="inline-flex gap-[3px] rounded-[9px] border border-rule bg-bg-subtle p-[3px]"
       >
         {(
@@ -58,6 +83,8 @@ export function QuestionSetControl({
             type="button"
             role="radio"
             aria-checked={mode === id}
+            tabIndex={mode === id ? 0 : -1}
+            data-mode={id}
             onClick={() => onModeChange(id)}
             className={cx(
               'rounded-[7px] px-[18px] py-[7px] text-[0.8125rem] font-medium text-muted',

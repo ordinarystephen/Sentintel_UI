@@ -98,10 +98,14 @@ export function ErmStartScreen() {
   )
   const pop = useResolvePopulation(scoped)
 
-  // arriving pre-scoped from Documents: bring the population zone into view
+  // arriving pre-scoped from Documents: bring the population zone into view,
+  // and consume the router state — a scope the user then clears must not
+  // come back on reload or Back
   useEffect(() => {
-    if (arrivedWith) populationRef.current?.scrollIntoView?.({ block: 'center' })
-  }, [arrivedWith])
+    if (!arrivedWith) return
+    populationRef.current?.scrollIntoView?.({ block: 'center' })
+    navigate(location.pathname, { replace: true, state: null })
+  }, [arrivedWith, navigate, location.pathname])
 
   const attachedNames = useMemo(
     () => [...files.map((f) => f.name), ...picked.map((p) => p.fileName)],
@@ -110,10 +114,16 @@ export function ErmStartScreen() {
   const set = (k: keyof PopulationCriteria) => (v: string) => setCriteria((c) => ({ ...c, [k]: v }))
 
   async function go() {
+    const setRun = !!QuestionSets && mode === 'set'
+    // nothing to ask: say so in THIS application's words, before the seam does
+    if (!setRun && !prompt.trim()) {
+      setError(s.needsQuestion)
+      return
+    }
     setError(null)
     try {
       const { runId } = await m.startRun.mutateAsync(
-        QuestionSets && mode === 'set'
+        setRun
           ? { questionSetId: setId, criteria: scoped, documents: attachedNames }
           : { prompt, criteria: scoped, documents: attachedNames },
       )
@@ -150,9 +160,15 @@ export function ErmStartScreen() {
         {QuestionSets ? (
           <QuestionSets
             mode={mode}
-            onModeChange={setMode}
+            onModeChange={(next) => {
+              setMode(next)
+              setError(null)
+            }}
             selectedId={setId}
-            onSelect={setSetId}
+            onSelect={(id) => {
+              setSetId(id)
+              setError(null)
+            }}
             prompt={promptBox}
           />
         ) : (
@@ -211,7 +227,8 @@ export function ErmStartScreen() {
         </div>
       </div>
 
-      <div ref={populationRef}>
+      {/* the borrower typeahead's list overlays the blocks below this zone */}
+      <div ref={populationRef} className="relative z-10">
         <ZoneHeading title={s.populationZone} aside={s.populationAside} />
         <BorrowerScope value={borrower} onChange={setBorrower} />
         {/* Option lists are placeholder vocabulary — see POP_VOCAB in ./config.
@@ -264,8 +281,8 @@ export function ErmStartScreen() {
               borrowers: plural(resolved.included.length, s.borrowersOne, s.borrowersOther),
               documents: plural(
                 pop.data.documentCount,
-                strings.erm.documents.docsOne,
-                strings.erm.documents.docsOther,
+                app.copy.documents.docsOne,
+                app.copy.documents.docsOther,
               ),
             })}
         </span>

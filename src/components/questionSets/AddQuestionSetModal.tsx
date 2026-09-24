@@ -24,15 +24,22 @@ const isQuestionFile = (name: string) => /\.(csv|xlsx)$/i.test(name)
 export interface QuestionSetPrefill {
   file: { name: string; size: number }
   title: string
+  /** The questions the user KEPT in review (the set's fields, in order). */
   questions: string[]
+  /** How many the file yielded, before any were removed. */
+  read: number
+  placeholder?: true
 }
 
-function ReadLine({ read }: { read: ParsedQuestionFile }) {
-  return (
-    <p className="mt-2 text-dense text-muted">
-      {fmt(plural(read.questions.length, s.fileReadOne, s.fileReadOther), { file: read.fileName })}
-    </p>
-  )
+/** What was read, said honestly: all of it, some of it, or placeholders. */
+function ReadLine({ read, of }: { read: ParsedQuestionFile; of?: number }) {
+  const n = read.questions.length
+  const text = read.placeholder
+    ? fmt(plural(n, s.filePlaceholderOne, s.filePlaceholderOther), { file: read.fileName })
+    : of !== undefined && n < of
+      ? fmt(s.fileKept, { kept: n, read: of, file: read.fileName })
+      : fmt(plural(n, s.fileReadOne, s.fileReadOther), { file: read.fileName })
+  return <p className="mt-2 text-dense text-muted">{text}</p>
 }
 
 export function AddQuestionSetModal({
@@ -52,10 +59,18 @@ export function AddQuestionSetModal({
   const [title, setTitle] = useState(prefill?.title ?? '')
   const [desc, setDesc] = useState('')
   const [read, setRead] = useState<ParsedQuestionFile | null>(
-    prefill ? { fileName: prefill.file.name, questions: prefill.questions } : null,
+    prefill
+      ? {
+          fileName: prefill.file.name,
+          questions: prefill.questions,
+          placeholder: prefill.placeholder,
+        }
+      : null,
   )
   const [error, setError] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  // the file whose read may land — a removed or superseded file's never does
+  const latest = useRef<File | null>(null)
 
   function addFiles(list: FileList | File[]) {
     const files = Array.from(list)
@@ -63,11 +78,18 @@ export function AddQuestionSetModal({
     // the latest accepted file is the set's file — read it back now
     const file = files.filter((f) => gateFile(f, isQuestionFile) === null).pop()
     if (!file) return
+    latest.current = file
     setError(null)
-    parse.mutateAsync(file).then(setRead, (e: Error) => {
-      setRead(null)
-      setError(e.message)
-    })
+    parse.mutateAsync(file).then(
+      (r) => {
+        if (latest.current === file) setRead(r)
+      },
+      (e: Error) => {
+        if (latest.current !== file) return
+        setRead(null)
+        setError(e.message)
+      },
+    )
   }
 
   async function saveSet() {
@@ -148,10 +170,13 @@ export function AddQuestionSetModal({
             progressOf={upload.progressOf}
             onRemove={(f) => {
               upload.removeFile(f)
-              if (read?.fileName === f.name) setRead(null)
+              if (latest.current === f) {
+                latest.current = null
+                setRead(null)
+              }
             }}
             onRemoveRejected={upload.removeRejected}
-            listAria={s.dropAria}
+            listAria={s.listAria}
           />
           {parse.isPending && (
             <p className="mt-2 text-dense text-faint" aria-live="polite">
@@ -160,7 +185,7 @@ export function AddQuestionSetModal({
           )}
         </>
       )}
-      {read && !parse.isPending && <ReadLine read={read} />}
+      {read && !parse.isPending && <ReadLine read={read} of={prefill?.read} />}
       {error && (
         <p role="alert" className="mt-2 text-ui-sm text-warn">
           {error}
@@ -199,7 +224,12 @@ export function AddQuestionSetModal({
         <Button
           variant="primary"
           small
-          disabled={!title.trim() || parse.isPending || m.addQuestionSet.isPending}
+          disabled={
+            !title.trim() ||
+            parse.isPending ||
+            m.addQuestionSet.isPending ||
+            (read !== null && read.questions.length === 0)
+          }
           onClick={saveSet}
         >
           {s.save}

@@ -34,6 +34,7 @@ interface ReviewedFile {
   fileName: string
   size: number
   read: number
+  placeholder?: true
   questions: string[]
 }
 
@@ -53,6 +54,9 @@ export function VantageAskScreen() {
   const [reviewed, setReviewed] = useState<ReviewedFile | null>(null)
   const [savedFile, setSavedFile] = useState<string | null>(null)
   const [saveOpen, setSaveOpen] = useState(false)
+  // a question file still uploading or being read — Ask waits for its review
+  const [reading, setReading] = useState<string | null>(null)
+  const waiting = mode === 'oneoff' && reading !== null
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -72,8 +76,9 @@ export function VantageAskScreen() {
       ? (chosenSet?.fields.map((f) => f.question) ?? [])
       : combineQuestions(question, reviewed?.questions ?? [])
   const attached = plural(documents.length, s.attachedOne, s.attachedOther)
-  const countLine =
-    mode === 'set' && chosenSet
+  const countLine = waiting
+    ? fmt(strings.questionSets.readingFile, { file: reading! })
+    : mode === 'set' && chosenSet
       ? fmt(s.askCountSet, {
           set: chosenSet.name,
           questions: plural(questions.length, s.questionsOne, s.questionsOther),
@@ -223,11 +228,13 @@ export function VantageAskScreen() {
             className="mt-3 min-h-[84px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.84375rem]"
           />
           <QuestionFileIntake
+            onPending={setReading}
             onParsed={(file, parsed) => {
               setReviewed({
                 fileName: parsed.fileName,
                 size: file.size,
                 read: parsed.questions.length,
+                placeholder: parsed.placeholder,
                 questions: parsed.questions,
               })
               setSavedFile(null)
@@ -237,6 +244,7 @@ export function VantageAskScreen() {
             <ParsedQuestionsCard
               fileName={reviewed.fileName}
               read={reviewed.read}
+              placeholder={reviewed.placeholder}
               questions={reviewed.questions}
               saved={savedFile === reviewed.fileName}
               onRemoveQuestion={(i) =>
@@ -248,7 +256,7 @@ export function VantageAskScreen() {
           )}
         </QuestionSetControl>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Button variant="primary" disabled={m.ask.isPending} onClick={ask}>
+          <Button variant="primary" disabled={m.ask.isPending || waiting} onClick={ask}>
             {s.askBtn}
           </Button>
           <span className="text-[0.75rem] text-faint" data-testid="ask-count">
@@ -272,6 +280,8 @@ export function VantageAskScreen() {
             file: { name: reviewed.fileName, size: reviewed.size },
             title: deriveSetTitle(reviewed.fileName),
             questions: reviewed.questions,
+            read: reviewed.read,
+            placeholder: reviewed.placeholder,
           }}
           onClose={() => setSaveOpen(false)}
           onSaved={(set) => {

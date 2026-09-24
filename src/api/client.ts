@@ -223,8 +223,9 @@ export interface SentinelApi {
 
   /**
    * Read a question file back for review BEFORE anything runs (Vantage
-   * one-off intake). THE FILE CONTRACT: .xlsx, first sheet, first column,
-   * one question per row, blank cells skipped, row order kept. Nothing is
+   * one-off intake, and every shelf's Add new). THE FILE CONTRACT: .xlsx
+   * (the first sheet) or .csv; the first column; one question per row;
+   * blank cells skipped; row order kept; no header row. Nothing is
    * retained server-side — the questions come back to the client, which
    * runs them once (or saves them as a set via addQuestionSet). Parsing is
    * backend work: the mock declares the contract with a fixture parse.

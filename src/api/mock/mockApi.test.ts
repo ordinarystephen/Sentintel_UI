@@ -651,7 +651,27 @@ describe('question-set stores are per-application (v1.8)', () => {
       questions: WATCHLIST_QS.slice(0, 12),
     })
     expect(set.fields.map((f) => f.question)).toEqual(WATCHLIST_QS.slice(0, 12))
-    expect(set.description).toBe('12 questions read from Watchlist_Qs.xlsx.')
+    expect(set.description).toBe('12 questions from Watchlist_Qs.xlsx.')
+  })
+
+  it('never invents a set: a reviewed list with nothing kept is refused; placeholders say so', async () => {
+    const api = make()
+    await expect(
+      api.addQuestionSet('vantage', { name: 'Empty', description: '', questions: [' '] }),
+    ).rejects.toThrow(/at least one question/)
+    const parsed = await api.parseQuestionFile(
+      new File([new Uint8Array(9)], 'Covenant_Qs.xlsx', { type: 'application/octet-stream' }),
+    )
+    expect(parsed.placeholder).toBe(true)
+    const saved = await api.addQuestionSet('erm', {
+      name: 'Covenant follow-ups',
+      description: '',
+      fileName: 'Covenant_Qs.xlsx',
+      questions: parsed.questions,
+    })
+    // nothing was really read — the card must not claim it was
+    expect(saved.description).toMatch(/placeholder questions/)
+    expect(saved.description).not.toMatch(/read from/)
   })
 })
 
@@ -667,6 +687,7 @@ describe('question file parse (v1.8 — the mock declares the contract)', () => 
     expect(parsed.questions).toHaveLength(14)
     expect(parsed.questions[0]).toBe('Has covenant headroom been recomputed at the revised EBITDA?')
     expect(parsed.questions).toEqual(WATCHLIST_QS)
+    expect(parsed.placeholder).toBeUndefined()
   })
 
   it('any other file gets an honestly labeled placeholder list; wrong types and empty files reject', async () => {
@@ -866,5 +887,19 @@ describe('mock sign-in switch (v1.8)', () => {
     expect(LEADERSHIP_USER.entitlements).toEqual(['inquiry'])
     storage.setItem(MOCK_USER_KEY, 'u-nobody')
     expect(await make(storage).me()).toEqual(ME)
+  })
+})
+
+describe('fixture integrity: evidence comes from the run’s own documents', () => {
+  it('every quote in every completed fixture run cites a document IN that run’s scope', async () => {
+    const api = make()
+    for (const app of ['erm', 'inquiry'] as const)
+      for (const run of await api.listRuns(app)) {
+        const scope = new Set(run.documents)
+        const outside = run.answers
+          .flatMap((a) => a.evidenceRefs.map((r) => `${a.rxm} → ${r.fileName}`))
+          .filter((s) => !scope.has(s.split(' → ')[1]))
+        expect({ run: run.runId, outside }).toEqual({ run: run.runId, outside: [] })
+      }
   })
 })

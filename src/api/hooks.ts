@@ -98,7 +98,7 @@ export const useRun = (app: PortfolioAppId, runId: string) =>
 export const useRuns = (app: PortfolioAppId) =>
   useQuery({ queryKey: queryKeys.runs(app), queryFn: () => api.listRuns(app) })
 
-// ---- Vantage (v1.7) ----
+// ---- Vantage (v1.7; questions[] v1.8) ----
 
 /** Polls while the run is queued/running so processing advances live. */
 export const useVantageRun = (runId: string) =>

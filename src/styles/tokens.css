@@ -110,7 +110,7 @@ body.dark {
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
   --overlay: rgba(0, 0, 0, 0.6);
 }
-/* Cobalt — Steve's navy palette, mapped onto the same token contract */
+/* Cobalt — the navy palette, mapped onto the same token contract */
 body.theme-cobalt {
   --ink: #0b0f1d;
   --ink-soft: #39415a;

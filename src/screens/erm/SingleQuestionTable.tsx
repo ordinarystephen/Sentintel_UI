@@ -13,6 +13,9 @@
  * chips, the decision-table footer, and Detail & evidence → the shared
  * verification modal. Default sort most-flags-first (stable); header
  * sorting is pair-aware — the expansion row travels with its data row.
+ * Keyboard: each borrower name is a real toggle button (aria-expanded) and
+ * each header a sort button — this table is Inquiry's only path to the
+ * evidence, so nothing here may be mouse-only.
  */
 import { Fragment, useMemo, useState } from 'react'
 import type { ErmAnswer, ErmRun, QuestionField } from '@/api/types'
@@ -20,7 +23,6 @@ import { AnswerDetailModal, GradeChip } from '@/components/viewers/AnswerDetailM
 import { flagCount } from '@/lib/ermModel'
 import { cx } from '@/lib/cx'
 import { fmt } from '@/lib/fmt'
-import { strings } from '@/strings'
 import { ERM_RATIONALE_LABELS } from './config'
 import { usePortfolioApp } from './portfolioApp'
 
@@ -34,7 +36,8 @@ interface Row {
 type SortKey = 'name' | 'rxm' | 'flags' | 'answer'
 
 export function SingleQuestionTable({ run, field }: { run: ErmRun; field: QuestionField }) {
-  const s = usePortfolioApp().copy.results
+  const { copy } = usePortfolioApp()
+  const s = copy.results
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'flags', desc: true })
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set())
   const [detail, setDetail] = useState<{ answer: ErmAnswer; borrower: string } | null>(null)
@@ -61,12 +64,17 @@ export function SingleQuestionTable({ run, field }: { run: ErmRun; field: Questi
     return (
       <th
         key={key}
-        onClick={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
         aria-sort={active ? (sort.desc ? 'descending' : 'ascending') : undefined}
-        className="cursor-pointer border-b border-rule-strong bg-bg-subtle px-3 py-[9px] text-left text-micro font-semibold whitespace-nowrap text-muted hover:text-ink"
+        className="border-b border-rule-strong bg-bg-subtle px-3 py-[9px] text-left text-micro font-semibold whitespace-nowrap text-muted"
       >
-        {label}
-        {active && <span className="text-ink">{sort.desc ? ' ↓' : ' ↑'}</span>}
+        <button
+          type="button"
+          onClick={() => setSort((p) => ({ key, desc: p.key === key ? !p.desc : true }))}
+          className="text-micro font-semibold whitespace-nowrap text-muted hover:text-ink"
+        >
+          {label}
+          {active && <span className="text-ink">{sort.desc ? ' ↓' : ' ↑'}</span>}
+        </button>
       </th>
     )
   }
@@ -112,10 +120,22 @@ export function SingleQuestionTable({ run, field }: { run: ErmRun; field: Questi
                 <tr
                   className="cursor-pointer whitespace-nowrap transition-colors hover:bg-bg-hover"
                   data-rxm={r.rxm}
-                  aria-expanded={open.has(r.rxm)}
                   onClick={() => toggle(r.rxm)}
                 >
-                  <td className="border-b border-rule px-3 py-2.5 font-semibold">{r.name}</td>
+                  <td className="border-b border-rule px-3 py-2.5 font-semibold">
+                    <button
+                      type="button"
+                      aria-expanded={open.has(r.rxm)}
+                      onClick={(e) => {
+                        // the row's own click would toggle it back
+                        e.stopPropagation()
+                        toggle(r.rxm)
+                      }}
+                      className="text-left font-semibold"
+                    >
+                      {r.name}
+                    </button>
+                  </td>
                   <td className="border-b border-rule px-3 py-2.5 font-mono text-[0.75rem]">
                     {r.rxm}
                   </td>
@@ -178,7 +198,7 @@ export function SingleQuestionTable({ run, field }: { run: ErmRun; field: Questi
       <p className="mt-2 text-dense text-faint">{s.tableNoteSingle}</p>
       {detail && (
         <AnswerDetailModal
-          title={fmt(strings.erm.detail.titleSingle, { borrower: detail.borrower })}
+          title={fmt(copy.detail.titleSingle, { borrower: detail.borrower })}
           answer={detail.answer}
           rationaleCards={
             detail.answer.rationale

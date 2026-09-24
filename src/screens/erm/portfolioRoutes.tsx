@@ -20,7 +20,11 @@ import type { PortfolioApp } from './portfolioApp'
 export function portfolioRoute(app: PortfolioApp): RouteObject {
   return {
     path: app.base.replace(/^\//, ''),
-    element: <ErmShell app={app} />,
+    // keyed by application: CPEA and Inquiry mount the same component types
+    // at the same tree positions, so without a key react-router reconciles
+    // one into the other and a typed question or borrower scope would carry
+    // across applications
+    element: <ErmShell key={app.id} app={app} />,
     // Last-resort boundary (a crash in the shell itself): no rail, full page.
     errorElement: <RouteErrorScreen />,
     children: [

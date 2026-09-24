@@ -3,7 +3,9 @@
  * The golden file was captured from the v1.7 renderer before the
  * questions[] model landed; the multi-question surface must reduce to it
  * when a run carries one question. Only the locale/timezone-dependent
- * run-line time is normalized.
+ * run-line time is normalized. The golden is NEVER rewritten implicitly —
+ * a missing golden fails; regenerate only deliberately, with
+ * UPDATE_GOLDEN=1 (which re-baselines the regression: review the diff).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -37,10 +39,11 @@ describe('v1.7 single-question regression', () => {
       </QueryClientProvider>,
     )
     const html = normalize(container.innerHTML)
-    if (!fs.existsSync(GOLDEN)) {
+    if (process.env.UPDATE_GOLDEN === '1') {
       fs.mkdirSync(path.dirname(GOLDEN), { recursive: true })
       fs.writeFileSync(GOLDEN, html)
     }
+    expect(fs.existsSync(GOLDEN), `missing golden ${GOLDEN}`).toBe(true)
     expect(html).toBe(fs.readFileSync(GOLDEN, 'utf8'))
   })
 })

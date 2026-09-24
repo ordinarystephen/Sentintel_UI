@@ -6,9 +6,9 @@
  * chips (from the app's latest run), and both faces of a document — the
  * extraction (shared preview viewer) and the raw pages (shared raw
  * viewer). Each group header ends with "Ask about this borrower →": Start,
- * pre-scoped to that borrower (router state). The lens = the latest run's
- * population universe (included + indeterminate); nothing here is a
- * second document store.
+ * pre-scoped to that borrower (router state). The lens = the population
+ * universe (included + indeterminate) of the latest completed run that
+ * was NOT borrower-scoped; nothing here is a second document store.
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -38,7 +38,10 @@ export function ErmDocumentsScreen() {
   const [preview, setPreview] = useState<{ docId: string; fileName: string } | null>(null)
   const [raw, setRaw] = useState<{ fileName: string; doc: DocumentText | null } | null>(null)
 
-  const latest = runs.data?.find((r) => r.state === 'completed')
+  // The lens is what this application SEES — never narrowed by a single
+  // borrower: a borrower-scoped run's population is that one borrower, so
+  // the lens comes from the latest completed run that was not scoped.
+  const latest = runs.data?.find((r) => r.state === 'completed' && !r.criteria.borrower)
   const lens = useMemo<BorrowerRef[]>(() => {
     if (!latest) return []
     return [...latest.population.included, ...latest.population.indeterminate.map((i) => i.ref)]

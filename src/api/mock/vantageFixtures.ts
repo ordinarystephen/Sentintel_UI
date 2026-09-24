@@ -432,9 +432,9 @@ export const KEY_CUSTOMER_SCAN: QuestionSet = {
 export const VANTAGE_QUESTION_SETS: QuestionSet[] = [EXPOSURE_LIMITS_SWEEP, KEY_CUSTOMER_SCAN]
 
 // ---------------------------------------------------------------------------
-// The question-file parse (v1.8). THE CONTRACT the mock declares: .xlsx,
-// first sheet, first column, one question per row, blank cells skipped,
-// row order kept. Parsing is backend work — the mock reads no bytes: the
+// The question-file parse (v1.8). THE CONTRACT the mock declares: .xlsx
+// (the first sheet) or .csv; the first column; one question per row; blank
+// cells skipped; row order kept; no header row. Parsing is backend work — the mock reads no bytes: the
 // demo file below parses to its fixture questions; any other file gets an
 // honestly labeled placeholder list (see MESSAGES.parsePlaceholder).
 // ---------------------------------------------------------------------------

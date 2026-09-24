@@ -1,10 +1,11 @@
 /**
- * Suite landing + entitlement routing (suite round, 2026-09-17):
- * the landing renders from the registry (CRR live card, two in-design
- * cards that are not links), `/` decides by entitlement + last-used app,
- * entering CRR records `sentinel.lastApp`, and the masthead brand is the
- * switcher (menu: entitled apps, disabled in-design entries, All
- * applications → /apps).
+ * Suite landing + entitlement routing (suite round, 2026-09-17; four
+ * applications 2026-09-24): the landing renders from the registry (four
+ * live cards — CRR, CPEA, Vantage, Inquiry — none in design), `/` decides
+ * by entitlement + last-used app, entering an app records
+ * `sentinel.lastApp`, the masthead brand is the switcher (menu: entitled
+ * apps, All applications → /apps), and a user entitled to Inquiry ONLY
+ * lands straight in it (mock sign-in switch `sentinel.mock.user`).
  */
 import { expect, test, type Page } from '@playwright/test'
 
@@ -25,9 +26,14 @@ test('first visit: / shows the landing; Open enters CRR and records last-used', 
   await expect(nav).toBeVisible()
   // no app chrome on the suite landing
   await expect(page.getByRole('navigation', { name: 'App navigation' })).toHaveCount(0)
-  // all three applications are live (v1.7)
+  // all four applications are live (v1.8), in registry order
   await expect(nav.getByText('In design')).toHaveCount(0)
-  await expect(nav.getByRole('link')).toHaveCount(3)
+  await expect(nav.getByRole('link')).toHaveCount(4)
+  await expect(nav.getByRole('link').nth(3)).toContainText('Inquiry')
+  await expect(nav.getByRole('link').nth(3)).toContainText('Senior leadership')
+  await expect(nav.getByRole('link').nth(3)).toContainText(
+    'One-off questions of the portfolio, for senior leadership.',
+  )
 
   await nav.getByRole('link', { name: /CRR.*Open/s }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Start a review' })).toBeVisible()
@@ -84,4 +90,71 @@ test('deep links under the prefix survive refresh (history mode)', async ({ page
   await expect(page.getByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' })).toBeVisible()
   await page.reload()
   await expect(page.getByRole('heading', { level: 1, name: 'Veyland US Holdco LLC' })).toBeVisible()
+})
+
+test('the Inquiry card and the switcher both enter Inquiry; it records last-used', async ({
+  page,
+}) => {
+  await fresh(page)
+  await page.goto('/apps')
+  await page
+    .getByRole('navigation', { name: 'Applications' })
+    .getByRole('link', { name: /Inquiry.*Senior leadership.*Open/s })
+    .click()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Ask a question of the portfolio' }),
+  ).toBeVisible()
+  await expect(page).toHaveURL(/\/inquiry$/)
+  expect(await page.evaluate(() => localStorage.getItem('sentinel.lastApp'))).toBe('inquiry')
+  const brand = page.getByRole('button', { name: 'Switch application' })
+  await expect(brand).toContainText('Sentinel · Inquiry')
+  // the switcher lists all four entitled apps, none disabled
+  await brand.click()
+  const menu = page.getByRole('menu')
+  await expect(menu.getByRole('menuitem', { name: /Inquiry.*Senior leadership/ })).toBeVisible()
+  await expect(menu.locator('[role="menuitem"][aria-disabled="true"]')).toHaveCount(0)
+  await menu.getByRole('menuitem', { name: /Vantage/ }).click()
+  await expect(page).toHaveURL(/\/vantage$/)
+  await page.getByRole('button', { name: 'Switch application' }).click()
+  await page
+    .getByRole('menu')
+    .getByRole('menuitem', { name: /Inquiry/ })
+    .click()
+  await expect(page).toHaveURL(/\/inquiry$/)
+})
+
+test('a user entitled to Inquiry ONLY lands straight in it — no landing, no switcher menu', async ({
+  page,
+}) => {
+  await fresh(page)
+  await page.addInitScript(() => localStorage.setItem('sentinel.mock.user', 'u-leadership'))
+  await page.goto('/')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Ask a question of the portfolio' }),
+  ).toBeVisible()
+  await expect(page).toHaveURL(/\/inquiry$/)
+  await expect(page.getByRole('navigation', { name: 'Applications' })).toHaveCount(0)
+  // one entitlement: the static brand, no menu button
+  await expect(page.getByRole('button', { name: 'Switch application' })).toHaveCount(0)
+  await expect(page.getByRole('banner')).toContainText('Sentinel · Inquiry')
+  // and a stale last-used app it is not entitled to never wins
+  await page.evaluate(() => localStorage.setItem('sentinel.lastApp', 'crr'))
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/inquiry$/)
+})
+
+test('the ⌘K palette offers only what the user is entitled to (inquiry-only: Inquiry’s actions)', async ({
+  page,
+}) => {
+  await fresh(page)
+  await page.addInitScript(() => localStorage.setItem('sentinel.mock.user', 'u-leadership'))
+  await page.goto('/inquiry')
+  await page.keyboard.press('ControlOrMeta+k')
+  const palette = page.getByRole('dialog', { name: 'Search everything' })
+  await expect(palette).toBeVisible()
+  await expect(palette.getByText('Ask a question of the portfolio')).toBeVisible()
+  await expect(palette.getByText('Runs (Inquiry)')).toBeVisible()
+  await expect(palette.getByText('Start a review')).toHaveCount(0)
+  await expect(palette.getByText('Runs (CPEA)')).toHaveCount(0)
+  await expect(palette.getByText('Veyland US Holdco LLC')).toHaveCount(0)
 })

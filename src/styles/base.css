@@ -89,7 +89,13 @@
 }
 /* Screen content settles in: opacity 0→1 + 6px rise, ~300ms, staggered ~80ms
    per top-level block, capped after six (§3.3). Apply `settle` to a screen's
-   root; its direct children animate once on mount. */
+   root; its direct children animate once on mount.
+   Fill mode is `backwards` (v1.8), not `both`: the from-state still covers
+   each block's stagger delay, but once the entrance ends the block keeps NO
+   transform — a filled transform left every block a stacking context and
+   the containing block of any `position: fixed` descendant, so popovers
+   (the borrower typeahead) and dialogs opened inside a block were painted
+   under — or trapped by — the blocks after it. */
 @keyframes settle {
   from {
     opacity: 0;
@@ -102,7 +108,7 @@
 }
 @utility settle {
   & > * {
-    animation: settle 0.3s ease both;
+    animation: settle 0.3s ease backwards;
   }
   & > *:nth-child(2) {
     animation-delay: 0.08s;

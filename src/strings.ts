@@ -68,9 +68,16 @@ export const strings = {
     dropTitle: 'Drop a question file here',
     dropHint: 'or browse files · CSV or XLSX, one question per row',
     dropAria: 'Upload a question file',
+    listAria: 'Question file',
     readingFile: 'Reading {file}…',
     fileReadOne: '1 question read from {file}',
     fileReadOther: '{n} questions read from {file}',
+    /* saving a reviewed file after removing some of its questions */
+    fileKept: '{kept} of the {read} questions read from {file}',
+    /* the demo build reads only its demo file — any other file is placeholders */
+    filePlaceholderOne: '1 placeholder question for {file} — this build reads only the demo file',
+    filePlaceholderOther:
+      '{n} placeholder questions for {file} — this build reads only the demo file',
     titleLabel: 'Title',
     titlePlaceholder: 'e.g. Watchlist deep-dive',
     descLabel: 'Description',
@@ -100,6 +107,8 @@ export const strings = {
     actAllReviews: 'All reviews',
     actCrrDocuments: 'Documents (CRR)',
     actCpeaRuns: 'Runs (CPEA)',
+    actAskPortfolio: 'Ask a question of the portfolio',
+    actInquiryRuns: 'Runs (Inquiry)',
     actPolicy: 'Policy search',
     statusInProgress: '{n} open',
     statusReady: 'completed',
@@ -190,13 +199,15 @@ export const strings = {
       borrowersOne: '1 borrower',
       borrowersOther: '{n} borrowers',
       run: 'Run analysis',
+      /* Run with nothing to ask (Inquiry has its own — it has no question sets) */
+      needsQuestion: 'Type a question first — or choose a question set.',
       attached: '{files} attached',
       filesOne: '1 file',
       filesOther: '{n} files',
     },
     processing: {
       title: 'Running the analysis',
-      sub: '{set} · {questions} questions · {scope} — {borrowers}, {documents}.',
+      sub: '{set} · {questions} · {scope} — {borrowers}, {documents}.',
       /* a one-question (prompt-only) run */
       subSingle: 'One-off question · {scope} — {borrowers}, {documents}.',
       stepQuestionSingle: 'Running the question across {documents}',
@@ -206,7 +217,7 @@ export const strings = {
       stepPopulationMeta: '{borrowers} · {documents}',
       stepIndex: 'Document index current',
       stepIndexMeta: 'no re-parsing needed',
-      stepQuestions: 'Running {questions} questions across {documents} documents',
+      stepQuestions: 'Running {questions} across {documents} documents',
       stepQuestionsMeta: '{done} of {total}',
       stepComputing: 'Computing status & materiality',
     },
@@ -357,6 +368,7 @@ export const strings = {
       promptAria: 'Your question',
       promptPlaceholder:
         'What do you want to know? e.g. Which borrowers face refinancing risk in the next 12 months, and what drives it?',
+      needsQuestion: 'Type a question first.',
     },
     results: { title: 'Results' },
     runs: { sub: 'Every question asked, kept — open any prior answer exactly as it stood.' },
@@ -387,9 +399,12 @@ export const strings = {
       fileRowExt: '.xlsx',
       fileRowPost: 'here, one question per row. Runs once; nothing is saved.',
       fileAria: 'Add a file of questions',
+      fileListAria: 'Question file',
       /* The parse-and-review card */
       parsedOne: '1 question read',
       parsedOther: '{n} questions read',
+      parsedPlaceholderOne: '1 placeholder question',
+      parsedPlaceholderOther: '{n} placeholder questions',
       parsedListAria: 'Questions read from {file}',
       saveAsSet: 'Save as a question set',
       savedAsSet: 'Saved as a question set',

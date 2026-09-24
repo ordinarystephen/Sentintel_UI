@@ -5,7 +5,7 @@
  * honestly (amber, never red drama). Used by CRR start, the add-document
  * modal, CPEA start, and the Add-new question-set modal.
  */
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { MAX_UPLOAD_BYTES } from './config'
 
 export type RejectReason = 'over_limit' | 'wrong_type'
@@ -26,11 +26,24 @@ export function gateFile(
   return null
 }
 
+const keyOf = (f: { name: string; size: number }) => `${f.name}:${f.size}`
+
 export function useUploadList(accept?: (name: string) => boolean) {
   const [files, setFiles] = useState<File[]>([])
   const [rejected, setRejected] = useState<RejectedFile[]>([])
   const [progress, setProgress] = useState<Record<string, number>>({})
   const timers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
+  // The files as last committed — dedupe reads this, so no side effect ever
+  // runs inside a state updater (StrictMode calls updaters twice; v1.8 fix:
+  // a random step + clearInterval inside the updater could clear the timer
+  // on one call while React kept the other call's sub-100 value, stalling a
+  // row's progress below 100 for good).
+  const filesRef = useRef<File[]>([])
+
+  useEffect(() => {
+    const live = timers.current
+    return () => Object.values(live).forEach(clearInterval)
+  }, [])
 
   const addFiles = useCallback(
     (list: FileList | File[]) => {
@@ -44,30 +57,42 @@ export function useUploadList(accept?: (name: string) => boolean) {
       }
       if (bad.length)
         setRejected((prev) => [...prev, ...bad.filter((b) => !prev.some((p) => p.name === b.name))])
-      setFiles((prev) => {
-        const seen = new Set(prev.map((f) => `${f.name}:${f.size}`))
-        const fresh = good.filter((f) => !seen.has(`${f.name}:${f.size}`))
-        for (const f of fresh) {
-          const key = `${f.name}:${f.size}`
-          setProgress((p) => ({ ...p, [key]: 8 }))
-          timers.current[key] = setInterval(() => {
-            setProgress((p) => {
-              const next = Math.min(100, (p[key] ?? 0) + 18 + Math.random() * 20)
-              if (next >= 100) {
-                clearInterval(timers.current[key])
-                delete timers.current[key]
-              }
-              return { ...p, [key]: next }
-            })
-          }, 140)
-        }
-        return [...prev, ...fresh]
-      })
+      // one row per name + size — against what is listed AND within this batch
+      const seen = new Set(filesRef.current.map(keyOf))
+      const fresh = good.filter((f) => !seen.has(keyOf(f)) && !!seen.add(keyOf(f)))
+      if (fresh.length === 0) return
+      filesRef.current = [...filesRef.current, ...fresh]
+      setFiles(filesRef.current)
+      for (const f of fresh) {
+        const key = keyOf(f)
+        let pct = 8
+        setProgress((p) => ({ ...p, [key]: pct }))
+        const id = setInterval(() => {
+          // the step is decided HERE, once; the updater below stays pure
+          pct = Math.min(100, pct + 18 + Math.random() * 20)
+          const value = pct
+          setProgress((p) => ({ ...p, [key]: value }))
+          if (value >= 100) {
+            clearInterval(id)
+            delete timers.current[key]
+          }
+        }, 140)
+        timers.current[key] = id
+      }
     },
     [accept],
   )
 
-  const removeFile = useCallback((f: File) => setFiles((prev) => prev.filter((x) => x !== f)), [])
+  const removeFile = useCallback((f: File) => {
+    filesRef.current = filesRef.current.filter((x) => x !== f)
+    setFiles(filesRef.current)
+    // stop its simulated upload, so a re-drop of the same file starts clean
+    const key = keyOf(f)
+    if (!filesRef.current.some((x) => keyOf(x) === key) && timers.current[key]) {
+      clearInterval(timers.current[key])
+      delete timers.current[key]
+    }
+  }, [])
   const removeRejected = useCallback(
     (name: string) => setRejected((prev) => prev.filter((r) => r.name !== name)),
     [],

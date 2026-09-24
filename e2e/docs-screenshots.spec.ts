@@ -16,6 +16,15 @@ const THEMES = [
   { name: 'cobalt-dark', family: 'cobalt', dark: true },
 ]
 async function prep(page: Page, family: string, dark: boolean) {
+  // the handoff set shows the product: hide the dev-only Font Lab trigger
+  // (mounted by `make dev` in its own root; never in a build)
+  await page.addInitScript(() =>
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style')
+      style.textContent = '#sentinel-font-lab { display: none !important; }'
+      document.head.appendChild(style)
+    }),
+  )
   await page.addInitScript(
     ([pref]) => {
       localStorage.setItem('sentinel.theme', pref)
@@ -28,7 +37,7 @@ async function prep(page: Page, family: string, dark: boolean) {
 const settle = (page: Page) => page.waitForTimeout(900)
 
 test('stone-light: every screen', async ({ page }) => {
-  test.setTimeout(90_000)
+  test.setTimeout(150_000)
   await prep(page, 'stone', false)
   await page.goto('/apps')
   await expect(page.getByRole('navigation', { name: 'Applications' })).toBeVisible()
@@ -76,6 +85,72 @@ test('stone-light: every screen', async ({ page }) => {
   await expect(page.getByText('Not in these documents')).toBeVisible()
   await settle(page)
   await page.screenshot({ path: `${OUT}/24-vantage-answer.png`, fullPage: true })
+
+  // ---- demo feedback round (v1.8) ----
+  await page.goto('/inquiry')
+  await page
+    .getByRole('textbox', { name: 'Your question' })
+    .fill('Which borrowers face refinancing risk in the next 12 months, and what drives it?')
+  await page.getByRole('combobox', { name: 'Borrower search' }).fill('amber')
+  await page.getByRole('option', { name: /Ambervale Foods Group/ }).click()
+  await expect(page.getByTestId('borrower-chip')).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/25-inquiry-start-scoped.png`, fullPage: true })
+
+  await page.goto('/inquiry/runs/inquiry-run-2026-09-24-0912')
+  await expect(page.getByTestId('single-question-table')).toBeVisible()
+  await page.locator('tr[data-rxm="RXM-6430"]').click()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/26-inquiry-results.png`, fullPage: true })
+
+  await page.goto('/inquiry/runs')
+  await expect(page.getByText('all stated')).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/27-inquiry-runs.png` })
+
+  await page.goto('/erm')
+  await page.getByRole('combobox', { name: 'Borrower search' }).fill('rxm-')
+  await expect(page.getByRole('listbox', { name: 'Matching borrowers' })).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/28-cpea-borrower-typeahead.png`, fullPage: true })
+  await page.getByRole('option', { name: /Veyland US Holdco LLC/ }).click()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/29-cpea-borrower-scoped.png`, fullPage: true })
+
+  await page.goto('/vantage')
+  await page
+    .getByLabel('Your question')
+    .fill('Which exposures were above the single-name limit at year end?')
+  await page
+    .getByLabel('Add a file of questions')
+    .last()
+    .setInputFiles({
+      name: 'Watchlist_Qs.xlsx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: Buffer.alloc(9_000, 1),
+    })
+  await expect(page.getByTestId('parsed-questions')).toBeVisible()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/30-vantage-one-off-review.png`, fullPage: true })
+  await page.getByRole('radio', { name: 'Question set' }).click()
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/31-vantage-question-sets.png` })
+
+  // the default set (Exposure limits sweep) fits the demo docset's answers
+  await page
+    .getByLabel('Upload documents')
+    .last()
+    .setInputFiles({
+      name: 'Group_Lending_Policy_Extract.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.alloc(400_000, 1),
+    })
+  await page.getByRole('button', { name: 'Ask', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1, name: '6 questions' })).toBeVisible({
+    timeout: 15_000,
+  })
+  await settle(page)
+  await page.screenshot({ path: `${OUT}/32-vantage-multi-answer.png`, fullPage: true })
 
   await page.goto('/crr')
   await expect(page.getByRole('link', { name: /Veyland US Holdco LLC/ })).toBeVisible()

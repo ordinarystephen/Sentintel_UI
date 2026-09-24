@@ -16,7 +16,14 @@
 import type { AnswerEvidenceRef, ErmAnswer, ErmRun } from '../types'
 import { PROMPT_QUESTION_ID } from '../types'
 import { expectedGrade } from '@/lib/ermModel'
-import { ERM_BORROWERS, ERM_CRITERIA, ERM_POPULATION, ERM_RUN_SCOPE } from './ermFixtures'
+import {
+  ERM_CRITERIA,
+  ERM_POPULATION,
+  ERM_RUN_SCOPE,
+  LEVERAGED_CRITERIA,
+  LEVERAGED_POPULATION,
+  LEVERAGED_SCOPE,
+} from './ermFixtures'
 
 type Conf = ErmAnswer['conf']
 
@@ -100,11 +107,11 @@ export const INQUIRY_DEMO_ANSWERS: ErmAnswer[] = [
     'medium',
     [
       ref(
-        'Veyland_Holdco_Revolver_Amend_No2.pdf',
-        'doc-veyland-ra2',
-        'Amendment No. 2 to the Revolving Facility',
-        3,
-        'The Revolving Commitment Termination Date is extended to June 30, 2027.',
+        'Veyland_Holdco_Annual_Review_FY25.pdf',
+        'doc-veyland-annual',
+        'Capitalization',
+        11,
+        'The $150mm revolving credit facility, as extended, terminates on June 30, 2027.',
       ),
       ref(
         'Veyland_Holdco_Q3_Update.pdf',
@@ -116,10 +123,10 @@ export const INQUIRY_DEMO_ANSWERS: ErmAnswer[] = [
       ),
     ],
     {
-      inferredFrom: ['revolver maturity (Amendment No. 2)', 'revised expected case (Q3 update)'],
+      inferredFrom: ['revolver maturity (annual review)', 'revised expected case (Q3 update)'],
       rationale: {
         memoFacts:
-          'Amendment No. 2 sets the revolver’s termination date at June 30, 2027 — inside the 12-month window. The Q3 update revises the expected case downward on two slipped enterprise renewals.',
+          'The annual review puts the revolver’s termination date at June 30, 2027 — inside the 12-month window. The Q3 update revises the expected case downward on two slipped enterprise renewals.',
         basis:
           'The refinancing risk is inferred, not quoted: both inputs are stated, but no document states a renewal plan. Medium confidence until the lenders’ renewal terms are on system.',
       },
@@ -133,7 +140,7 @@ export const INQUIRY_DEMO_ANSWERS: ErmAnswer[] = [
       ref(
         'Torvane_Aggregates_Credit_Agreement_2026.pdf',
         'doc-torvane-ca',
-        'Maturity and Repayment',
+        'Financial Covenants',
         12,
         'The Term Loan shall be repaid in full on the Maturity Date, March 31, 2030; no scheduled amortization falls due before that date.',
       ),
@@ -325,8 +332,6 @@ const HEADROOM_ANSWERS: ErmAnswer[] = [
   ),
 ]
 
-const LEVERAGED = { ...ERM_CRITERIA, subPortfolio: 'Leveraged Lending' }
-
 /** Inquiry's run store — its own slice, never CPEA's Runs. Newest first. */
 export const INQUIRY_RUNS: ErmRun[] = [
   {
@@ -363,17 +368,10 @@ export const INQUIRY_RUNS: ErmRun[] = [
     runId: 'inquiry-run-2026-09-12-0840',
     startedAt: '2026-09-12T08:40:00Z',
     prompt: 'Summarize covenant pressure across the leveraged book.',
-    criteria: LEVERAGED,
+    criteria: LEVERAGED_CRITERIA,
     state: 'cancelled',
-    population: {
-      ...ERM_POPULATION,
-      criteria: LEVERAGED,
-      included: ERM_BORROWERS.filter((b) =>
-        ['RXM-5120', 'RXM-6430', 'RXM-4100', 'RXM-4488'].includes(b.rxm),
-      ),
-      indeterminate: [],
-    },
-    documents: ERM_RUN_SCOPE.slice(0, 7),
+    population: LEVERAGED_POPULATION,
+    documents: LEVERAGED_SCOPE,
     answers: [],
     cancelledAt: '2026-09-12T08:40:50Z',
   },

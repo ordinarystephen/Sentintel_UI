@@ -13,10 +13,8 @@ import type { ErmAnswer, ErmRun, QuestionSet } from '@/api/types'
 import { AnswerDetailModal, GradeChip } from '@/components/viewers/AnswerDetailModal'
 import { flagCount } from '@/lib/ermModel'
 import { fmt } from '@/lib/fmt'
-import { strings } from '@/strings'
 import { ERM_RATIONALE_LABELS } from './config'
-
-const s = strings.erm.results
+import { usePortfolioApp } from './portfolioApp'
 
 interface Row {
   rxm: string
@@ -28,6 +26,8 @@ interface Row {
 type SortKey = 'name' | 'rxm' | 'flags' | string
 
 export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet }) {
+  const { copy } = usePortfolioApp()
+  const s = copy.results
   const visible = set.fields.filter((f) => f.visible)
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'flags', desc: true })
   const [openRxm, setOpenRxm] = useState<string | null>(null)
@@ -204,7 +204,7 @@ export function ErmMonitorTable({ run, set }: { run: ErmRun; set: QuestionSet })
       </p>
       {detail && (
         <AnswerDetailModal
-          title={fmt(strings.erm.detail.titleAnswer, {
+          title={fmt(copy.detail.titleAnswer, {
             borrower: detail.borrower,
             label:
               set.fields.find((f) => f.id === detail.answer.questionId)?.label.toLowerCase() ?? '',

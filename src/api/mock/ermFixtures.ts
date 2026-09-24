@@ -542,6 +542,23 @@ export const ERM_RUN_SCOPE: string[] = [
   'Orvalon_Freight_Refinancing_Memo_2026.pdf',
 ]
 
+/**
+ * The Leveraged Lending slice's 7 documents: the in-scope files of ITS four
+ * borrowers (Ambervale, Veyland, Northgale, Torvane). v1.8 fix — the
+ * slice had been ERM_RUN_SCOPE.slice(0, 7), which named Redfenn's files
+ * (not in the slice) and omitted Torvane's and Northgale's, whose answers
+ * cite them; the displayed count (7) is unchanged.
+ */
+export const LEVERAGED_SCOPE: string[] = [
+  'Ambervale_Foods_Q2_Performance_Update.pdf',
+  'Ambervale_Foods_Covenant_Cert_2026-06.pdf',
+  'Veyland_Holdco_Annual_Review_FY25.pdf',
+  'Veyland_Holdco_Q3_Update.pdf',
+  'Northgale_Health_Q2_Update.pdf',
+  'Northgale_Health_Annual_Review_FY25.pdf',
+  'Torvane_Aggregates_Credit_Agreement_2026.pdf',
+]
+
 export const ERM_POPULATION: PopulationAccounting = {
   criteria: ERM_CRITERIA,
   included: ERM_BORROWERS.filter((b) => b.rxm !== 'RXM-8093'),
@@ -566,6 +583,31 @@ export const ERM_POPULATION: PopulationAccounting = {
         'indeterminate — insufficient look-through information; included in the count, flagged for review',
     },
   ],
+}
+
+export const LEVERAGED_CRITERIA: PopulationCriteria = {
+  ...ERM_CRITERIA,
+  subPortfolio: 'Leveraged Lending',
+}
+
+/**
+ * The Leveraged Lending slice's accounting: its four borrowers included;
+ * EVERY other monitored borrower excluded with a named reason (v1.8 fix —
+ * the slice had dropped Redfenn, Orvalon and Farrowdale without naming
+ * them; exclusions are named, never silent).
+ */
+export const LEVERAGED_POPULATION: PopulationAccounting = {
+  criteria: LEVERAGED_CRITERIA,
+  included: ERM_BORROWERS.filter((b) =>
+    ['RXM-5120', 'RXM-6430', 'RXM-4100', 'RXM-4488'].includes(b.rxm),
+  ),
+  excluded: [
+    ...ERM_POPULATION.excluded,
+    ...ERM_BORROWERS.filter((b) => ['RXM-6292', 'RXM-5744', 'RXM-8093'].includes(b.rxm)).map(
+      (ref) => ({ ref, reason: 'excluded — outside selected sub-portfolio (Leveraged Lending)' }),
+    ),
+  ],
+  indeterminate: [],
 }
 
 // ---------------------------------------------------------------------------
@@ -906,17 +948,10 @@ export const ERM_RUNS: ErmRun[] = [
     runId: 'erm-run-2026-09-11-1430',
     startedAt: '2026-09-11T14:30:00Z',
     questionSetId: COVENANT_SWEEP.id,
-    criteria: { ...ERM_CRITERIA, subPortfolio: 'Leveraged Lending' },
+    criteria: LEVERAGED_CRITERIA,
     state: 'completed',
-    population: {
-      ...ERM_POPULATION,
-      criteria: { ...ERM_CRITERIA, subPortfolio: 'Leveraged Lending' },
-      included: ERM_BORROWERS.filter((b) =>
-        ['RXM-5120', 'RXM-6430', 'RXM-4100', 'RXM-4488'].includes(b.rxm),
-      ),
-      indeterminate: [],
-    },
-    documents: ERM_RUN_SCOPE.slice(0, 7),
+    population: LEVERAGED_POPULATION,
+    documents: LEVERAGED_SCOPE,
     answers: buildAnswers(sweepRows, COVENANT_SWEEP),
   },
   {
@@ -926,7 +961,9 @@ export const ERM_RUNS: ErmRun[] = [
     criteria: ERM_CRITERIA,
     state: 'completed',
     population: ERM_POPULATION,
-    documents: ERM_RUN_SCOPE.slice(0, 10),
+    // 10 documents: the June covenant certificate was not yet on system
+    // (v1.8 fix — the slice had dropped the Orvalon memo its answers cite)
+    documents: ERM_RUN_SCOPE.filter((f) => f !== 'Ambervale_Foods_Covenant_Cert_2026-06.pdf'),
     answers: augustAnswers(),
   },
 ]

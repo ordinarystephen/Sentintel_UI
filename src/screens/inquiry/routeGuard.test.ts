@@ -2,10 +2,13 @@
  * THE INQUIRY ROUTE GUARD (demo feedback round — the build constraint):
  * Inquiry is CPEA with a configuration flag off, not copied screens — and
  * no question-set control may be reachable from Inquiry's route
- * configuration. This walks the STATIC import graph from
- * src/screens/inquiry/routes.ts (every `import … from` / `export … from`,
- * resolving `@/` and relative specifiers) and fails if any question-set
- * control module is in it.
+ * configuration. This walks the import graph from
+ * src/screens/inquiry/routes.ts — every import TypeScript itself sees:
+ * `import … from`, `export … from`, side-effect imports, dynamic
+ * `import()` (lazy loading) and inline `import('…')` types, collected with
+ * the compiler's own preProcessFile, not a regex — plus any
+ * `import.meta.glob` pattern, resolving `@/` and relative specifiers. It
+ * fails if any question-set control module is in it.
  *
  * The walker is proven live against CPEA's route configuration, where the
  * control MUST be reachable — a walker that found nothing would otherwise
@@ -13,6 +16,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 import { APPS } from '@/apps'
 import { INQUIRY_APP } from './routes'
@@ -42,22 +46,28 @@ function resolve(from: string, spec: string): string | null {
   throw new Error(`unresolved import "${spec}" from ${path.relative(SRC, from)}`)
 }
 
-/** Every app module statically reachable from `entry` (type-only imports included — stricter). */
+/** Every specifier a module references: static, dynamic, re-export and import-type. */
+function specifiers(text: string): string[] {
+  const found = ts.preProcessFile(text, true, true).importedFiles.map((f) => f.fileName)
+  // Vite's import.meta.glob is not an import to the compiler: treat each
+  // pattern's directory as referenced, so a glob into the control is caught
+  for (const m of text.matchAll(/import\.meta\.glob\(\s*['"]([^'"]+)['"]/g))
+    found.push(m[1].replace(/\/[^/]*\*.*$/, ''))
+  return found
+}
+
+/** Every app module reachable from `entry` (type-only and lazy imports included — stricter). */
 function reachable(entry: string): Set<string> {
   const seen = new Set<string>()
   const queue = [path.join(SRC, entry)]
-  const IMPORT = /(?:^|\n)\s*(?:import|export)\s[^;]*?\sfrom\s+['"]([^'"]+)['"]/g
-  const BARE = /(?:^|\n)\s*import\s+['"]([^'"]+)['"]/g
   while (queue.length) {
     const file = queue.pop()!
     if (seen.has(file)) continue
     seen.add(file)
-    const text = fs.readFileSync(file, 'utf8')
-    for (const re of [IMPORT, BARE])
-      for (const m of text.matchAll(re)) {
-        const next = resolve(file, m[1])
-        if (next && !seen.has(next)) queue.push(next)
-      }
+    for (const spec of specifiers(fs.readFileSync(file, 'utf8'))) {
+      const next = resolve(file, spec)
+      if (next && !seen.has(next)) queue.push(next)
+    }
   }
   return new Set([...seen].map((f) => path.relative(SRC, f)))
 }
@@ -77,6 +87,26 @@ describe('the Inquiry route guard', () => {
   it('the walker is live: CPEA’s route configuration DOES reach the control', () => {
     const graph = reachable('screens/erm/routes.ts')
     for (const m of CONTROL) expect(graph).toContain(m)
+  })
+
+  it('the collector sees the forms a regex would miss: lazy import(), import types, globs', () => {
+    const snippet = [
+      "const Lazy = lazy(() => import('@/components/questionSets/QuestionSetControl'))",
+      "type P = import('@/components/questionSets/AddQuestionSetModal').QuestionSetPrefill",
+      "export { CpeaQuestionSets } from '@/screens/erm/CpeaQuestionSets'",
+      "import '@/screens/erm/portfolioApp'; import { x } from './runModel'",
+      "const all = import.meta.glob('@/components/questionSets/*.tsx')",
+    ].join('\n')
+    expect(specifiers(snippet)).toEqual(
+      expect.arrayContaining([
+        '@/components/questionSets/QuestionSetControl',
+        '@/components/questionSets/AddQuestionSetModal',
+        '@/screens/erm/CpeaQuestionSets',
+        '@/screens/erm/portfolioApp',
+        './runModel',
+        '@/components/questionSets',
+      ]),
+    )
   })
 
   it('Inquiry is configuration, not a copy: the registry flag is off and no slot is wired', () => {

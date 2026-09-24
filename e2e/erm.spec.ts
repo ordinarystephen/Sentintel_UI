@@ -3,6 +3,9 @@
  * cancel-lands-in-Runs, deep entry, group-by consistency, per-answer
  * grades, flag sorting (pair-aware), the population disclosure, frozen
  * run revisits, and the Documents lens with both viewers.
+ * v1.8: Prompt only asks exactly ONE question, so the multi-question arc
+ * chooses its set explicitly (see cpea-borrower.spec for the one-question
+ * shape and the borrower scope).
  */
 import { expect, test, type Page } from '@playwright/test'
 
@@ -36,6 +39,10 @@ test('full arc: start → staged processing at the run URL → results; refresh 
 }) => {
   await fresh(page)
   await expect(page.getByText(/resolves to 6 borrowers · 11 documents/)).toBeVisible()
+  await page
+    .getByRole('radiogroup', { name: 'Question mode' })
+    .getByRole('radio', { name: 'Question set' })
+    .click()
   await page.getByRole('button', { name: 'Run analysis' }).click()
   await expect(page.getByRole('heading', { name: 'Running the analysis' })).toBeVisible()
   await expect(page).toHaveURL(/\/erm\/runs\/erm-run-/)
@@ -59,6 +66,7 @@ test('cancel: the run becomes cancelled and is kept in Runs, honestly rendered',
   page,
 }) => {
   await fresh(page)
+  await page.getByLabel('Prompt').fill('Which borrowers have a maturity inside 12 months?')
   await page.getByRole('button', { name: 'Run analysis' }).click()
   await expect(page.getByRole('heading', { name: 'Running the analysis' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel run' }).click()

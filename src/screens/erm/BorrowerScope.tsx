@@ -10,8 +10,11 @@
  * WAI-ARIA combobox (list autocomplete): ArrowDown/ArrowUp move the active
  * option, Enter picks it, Escape and blur close the list. Focus moves to
  * the chip's ✕ after picking and back to the input after clearing.
+ * Enter only ever commits results that belong to what is TYPED: while the
+ * search for the current text is still in flight, Enter waits and picks
+ * the first match once it lands (never a previous query's option).
  */
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useBorrowerSearch } from '@/api/hooks'
 import type { BorrowerIndexEntry, BorrowerRef } from '@/api/types'
 import { cx } from '@/lib/cx'
@@ -31,7 +34,17 @@ export function BorrowerScope({
   const [active, setActive] = useState(0)
   const debounced = useDebouncedValue(query.trim(), 120)
   const results = useBorrowerSearch(debounced, debounced.length > 0)
-  const options: BorrowerIndexEntry[] = debounced ? (results.data ?? []) : []
+  const options = useMemo<BorrowerIndexEntry[]>(
+    () => (debounced ? (results.data ?? []) : []),
+    [debounced, results.data],
+  )
+  // the list on screen answers the text in the box — not an earlier query
+  const settled =
+    debounced === query.trim() &&
+    !!results.data &&
+    !results.isPlaceholderData &&
+    !results.isFetching
+  const [enterPending, setEnterPending] = useState(false)
   const inputId = useId()
   const listId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -46,13 +59,25 @@ export function BorrowerScope({
   })
 
   const showList = open && query.trim().length > 0
+  const expanded = showList && options.length > 0
 
-  function pick(b: BorrowerIndexEntry) {
-    focusNext.current = 'clear'
-    setOpen(false)
-    setQuery('')
-    onChange({ rxm: b.rxm, name: b.name })
-  }
+  const pick = useCallback(
+    (b: BorrowerIndexEntry) => {
+      focusNext.current = 'clear'
+      setEnterPending(false)
+      setOpen(false)
+      setQuery('')
+      onChange({ rxm: b.rxm, name: b.name })
+    },
+    [onChange],
+  )
+
+  // Enter pressed before the current text's results landed: honour it now
+  useEffect(() => {
+    if (!enterPending || !settled) return
+    if (options[0]) pick(options[0])
+    else setEnterPending(false)
+  }, [enterPending, settled, options, pick])
 
   function clear() {
     focusNext.current = 'input'
@@ -89,10 +114,10 @@ export function BorrowerScope({
         type="text"
         role="combobox"
         aria-label={s.borrowerAria}
-        aria-expanded={showList}
-        aria-controls={listId}
+        aria-expanded={expanded}
+        aria-controls={expanded ? listId : undefined}
         aria-autocomplete="list"
-        aria-activedescendant={showList && options[active] ? `${listId}-${active}` : undefined}
+        aria-activedescendant={expanded && options[active] ? `${listId}-${active}` : undefined}
         autoComplete="off"
         placeholder={s.borrowerPlaceholder}
         value={query}
@@ -100,20 +125,25 @@ export function BorrowerScope({
           setQuery(e.target.value)
           setActive(0)
           setOpen(true)
+          setEnterPending(false)
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault()
-            setOpen(true)
-            if (options.length > 0)
+            // closed: reopen on the first option; open: move through the options
+            if (!showList) {
+              setOpen(true)
+              setActive(0)
+            } else if (options.length > 0)
               setActive(
                 (i) => (i + (e.key === 'ArrowDown' ? 1 : options.length - 1)) % options.length,
               )
-          } else if (e.key === 'Enter' && showList && options[active]) {
+          } else if (e.key === 'Enter' && query.trim()) {
             e.preventDefault()
-            pick(options[active])
+            if (settled && showList && options[active]) pick(options[active])
+            else if (!settled) setEnterPending(true)
           } else if (e.key === 'Escape' && showList) {
             e.preventDefault()
             setOpen(false)
@@ -149,7 +179,7 @@ export function BorrowerScope({
           ))}
         </ul>
       )}
-      {showList && results.data && !results.isPlaceholderData && options.length === 0 && (
+      {showList && settled && options.length === 0 && (
         <p
           role="status"
           className="absolute top-[calc(100%+4px)] right-0 left-0 z-30 rounded-[9px] border border-rule-strong bg-bg px-[13px] py-[9px] text-[0.8125rem] text-faint shadow-md"

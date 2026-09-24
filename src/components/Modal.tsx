@@ -1,8 +1,17 @@
 /**
  * Modal dialog: overlay on the `--overlay` token, Esc and overlay-click close,
  * focus moves to the close button on open, is trapped inside, and returns on close.
+ *
+ * Rendered through a portal into <body> (v1.8): screens animate their
+ * blocks in with a transform (`settle`), and a transformed ancestor becomes
+ * the containing block of a `position: fixed` descendant — a modal opened
+ * from inside such a block was trapped in it (later blocks painted over its
+ * buttons). The theme classes live on <body> and the text size on <html>,
+ * so the portaled dialog keeps both. React events still bubble through
+ * the React tree exactly as before.
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 /**
  * Open-dialog stack (v1.5): with chained modals (answer detail → source),
@@ -69,7 +78,7 @@ export function Modal({
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-overlay p-5"
       onMouseDown={(e) => {
@@ -99,6 +108,7 @@ export function Modal({
         </div>
         <div className="px-[18px] py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

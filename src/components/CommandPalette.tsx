@@ -4,11 +4,17 @@
  * ⌘K / Ctrl-K or the masthead Search trigger; grouped Reviews / Documents
  * / Actions sourced from mock state; the ratified search keys (borrower
  * name or RXM) turned into the fastest interaction in the app.
+ * v1.8: it offers only what the user is entitled to — CRR's reviews,
+ * documents and actions with CRR; CPEA's actions with CPEA; Inquiry's
+ * with Inquiry — so a one-application user is never led into another
+ * application with no way back.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
+import { useMe } from '@/api/hooks'
+import type { AppId } from '@/apps'
 import { fmt } from '@/lib/fmt'
 import { cx } from '@/lib/cx'
 import { strings } from '@/strings'
@@ -27,19 +33,23 @@ interface Item {
 }
 
 function useItems(open: boolean): Item[] {
+  const me = useMe()
+  const entitled = me.data?.entitlements
+  const crr = !!entitled?.includes('crr')
   const reviews = useQuery({
     queryKey: ['palette', 'reviews'],
     queryFn: () => api.listAllReviews({ period: 'all' }),
-    enabled: open,
+    enabled: open && crr,
   })
   const docs = useQuery({
     queryKey: ['palette', 'documents'],
     queryFn: () => api.searchRepository(''),
-    enabled: open,
+    enabled: open && crr,
   })
   return useMemo<Item[]>(() => {
     const out: Item[] = []
-    for (const r of (reviews.data?.reviews ?? []).slice(0, 40)) {
+    const has = (app: AppId) => !!entitled?.includes(app)
+    for (const r of has('crr') ? (reviews.data?.reviews ?? []).slice(0, 40) : []) {
       if (!r.borrowerName) continue
       out.push({
         key: `r:${r.id}`,
@@ -52,7 +62,7 @@ function useItems(open: boolean): Item[] {
         serif: true,
       })
     }
-    for (const d of docs.data ?? []) {
+    for (const d of has('crr') ? (docs.data ?? []) : []) {
       out.push({
         key: `d:${d.repoId}`,
         group: 'documents',
@@ -62,18 +72,21 @@ function useItems(open: boolean): Item[] {
         to: `/crr/documents?q=${encodeURIComponent(d.fileName.replace(/\.[a-z]+$/i, '').replaceAll('_', ' '))}`,
       })
     }
-    const actions: Array<[string, string]> = [
-      [s.actStartReview, '/crr'],
-      [s.actStartAnalysis, '/erm'],
-      [s.actAllReviews, '/crr/reviews/all'],
-      [s.actCrrDocuments, '/crr/documents'],
-      [s.actCpeaRuns, '/erm/runs'],
-      [s.actPolicy, '/crr/policy'],
+    const actions: Array<[string, string, AppId]> = [
+      [s.actStartReview, '/crr', 'crr'],
+      [s.actStartAnalysis, '/erm', 'erm'],
+      [s.actAskPortfolio, '/inquiry', 'inquiry'],
+      [s.actAllReviews, '/crr/reviews/all', 'crr'],
+      [s.actCrrDocuments, '/crr/documents', 'crr'],
+      [s.actCpeaRuns, '/erm/runs', 'erm'],
+      [s.actInquiryRuns, '/inquiry/runs', 'inquiry'],
+      [s.actPolicy, '/crr/policy', 'crr'],
     ]
-    for (const [label, to] of actions)
-      out.push({ key: `a:${to}`, group: 'actions', label, hay: label.toLowerCase(), to })
+    for (const [label, to, app] of actions)
+      if (has(app))
+        out.push({ key: `a:${to}`, group: 'actions', label, hay: label.toLowerCase(), to })
     return out
-  }, [reviews.data, docs.data])
+  }, [reviews.data, docs.data, entitled])
 }
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -25,12 +25,11 @@ import { shelfOf, usePortfolioApp } from './portfolioApp'
 import { isSingleQuestion, runQuestions, scopeShort } from './runModel'
 import { SingleQuestionTable } from './SingleQuestionTable'
 
-const s = strings.erm.results
-
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
 
 export function GradeCountChips({ answers }: { answers: readonly ErmAnswer[] }) {
+  const s = usePortfolioApp().copy.results
   const c = gradeCounts(answers)
   // every answer grounded by a quote: say so once, rather than "N stated"
   if (answers.length > 0 && c.stated === answers.length)
@@ -47,6 +46,7 @@ export function GradeCountChips({ answers }: { answers: readonly ErmAnswer[] }) 
 }
 
 function QuestionView({ run, set }: { run: ErmRun; set: QuestionSet }) {
+  const s = usePortfolioApp().copy.results
   const names = new Map(run.population.included.map((b) => [b.rxm, b.name]))
   return (
     <div>
@@ -90,7 +90,7 @@ function QuestionView({ run, set }: { run: ErmRun; set: QuestionSet }) {
 
 export function ErmResultsView({ run }: { run: ErmRun }) {
   const app = usePortfolioApp()
-  const copy = app.copy.results
+  const s = app.copy.results
   const navigate = useNavigate()
   const { toast } = useToast()
   const sets = useQuestionSets(run.questionSetId ? shelfOf(app) : null)
@@ -124,9 +124,7 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
   return (
     <div className="settle">
       <div>
-        <h1 className="font-display text-[1.375rem] font-semibold tracking-display">
-          {copy.title}
-        </h1>
+        <h1 className="font-display text-[1.375rem] font-semibold tracking-display">{s.title}</h1>
         <p className="mb-3.5 max-w-[70ch] text-ui-sm text-muted">
           {single
             ? fmt(s.subSingle, {
@@ -187,13 +185,13 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
               {fmt(s.countsLine, {
                 borrowers: plural(
                   pop.included.length,
-                  strings.erm.start.borrowersOne,
-                  strings.erm.start.borrowersOther,
+                  app.copy.start.borrowersOne,
+                  app.copy.start.borrowersOther,
                 ),
                 documents: plural(
                   run.documents.length,
-                  strings.erm.documents.docsOne,
-                  strings.erm.documents.docsOther,
+                  app.copy.documents.docsOne,
+                  app.copy.documents.docsOther,
                 ),
                 questions: questionCount,
                 answers: plural(run.answers.length, s.answersOne, s.answersOther),
@@ -290,6 +288,7 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
 }
 
 function PopulationDisclosure({ run }: { run: ErmRun }) {
+  const s = usePortfolioApp().copy.results
   const [open, setOpen] = useState(false)
   const pop = run.population
   return (
