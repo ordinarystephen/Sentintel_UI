@@ -6,7 +6,7 @@
 <title>Sentinel · Vantage — concept</title>
 <style>
 /* ============================================================
-   SENTINEL · VANTAGE — concept r2
+   SENTINEL · VANTAGE — concept r3
    Ask questions of any documents — text or tabular. Stripped to
    Steve's ruling: upload + prompt, a block-shaped answer, runs.
    Sibling of sentinel-mvp-concept.html — same token contract.
@@ -136,6 +136,23 @@ h1.page{font-family:var(--font-display);font-size:22px;font-weight:600;letter-sp
 textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;padding:10px 12px;font-size:13.5px;resize:vertical;min-height:84px;background:var(--bg)}
 .ask-bar{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
 .ask-scope{font-size:12px;color:var(--faint)}
+.seg{display:inline-flex;border:1px solid var(--rule-strong);border-radius:9px;background:var(--bg-subtle);padding:3px;gap:2px;margin-bottom:14px}
+.seg button{border-radius:7px;padding:6px 16px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-checked="true"]{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:var(--shadow-sm)}
+.qs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.qs-card{border:1px solid var(--rule);border-radius:10px;background:var(--bg);padding:9px 14px;cursor:pointer;text-align:left}
+.qs-card:hover{background:var(--bg-hover)}
+.qs-card.sel{border-color:var(--ink);box-shadow:var(--shadow-sm)}
+.qs-card .t{font-family:var(--font-display);font-weight:600;font-size:14px}
+.qs-card .d{font-size:12px;color:var(--muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.qs-card.add{border-style:dashed;display:flex;align-items:center;gap:8px;color:var(--muted)}
+.qfile{border:1.5px dashed var(--rule-strong);border-radius:10px;background:var(--bg-subtle);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin-top:10px;cursor:pointer}
+.qfile:hover{border-color:var(--faint);background:var(--bg-hover)}
+.qparsed{border:1px solid var(--rule);border-radius:10px;background:var(--bg);margin-top:10px}
+.qparsed .head{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--rule)}
+.qparsed .head .fname{font-family:var(--font-mono);font-size:12.5px;font-weight:500;flex:1}
+.qparsed .qrow{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink-soft);padding:7px 14px;border-bottom:1px solid var(--rule)}
+.qparsed .foot{display:flex;gap:12px;align-items:center;padding:8px 14px;font-size:12px;color:var(--muted)}
 
 /* processing */
 .proc-wrap{max-width:560px;margin:80px auto 0;text-align:center}
@@ -246,13 +263,39 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
         <div class="up-row"><span class="fname">Exposure_Register_FY25.csv</span><span class="badge slate">csv · 42 rows</span><span class="size">18 KB</span><button class="rm" aria-label="Remove">✕</button></div>
         <div class="up-row"><span class="fname">Group_Lending_Policy_Extract.pdf</span><span class="badge slate">pdf · 9 pages</span><span class="size">1.2 MB</span><button class="rm" aria-label="Remove">✕</button></div>
         <div class="up-row"><span class="fname">Torvane_Facility_Amendment_No1.pdf</span><span class="badge slate">pdf · 14 pages</span><span class="size">2.8 MB</span><button class="rm" aria-label="Remove">✕</button></div>
-        <div class="zone-h pin-anchor"><h3>Your question</h3><span class="aside">one question — the answer is a run, not a chat</span>
-          <span class="pin" style="top:-6px;right:-6px" data-pin>V3<span class="pin-pop"><span class="eyebrow">Note V3 · runs, not chats</span>One question in, one answer out — a run, same as CPEA. The multi-turn conversation stays cut (the POC ruling holds). A follow-up question is a new run against the same documents, offered right under the answer — the convenience of a thread without the ambiguity of one.</span></span>
+        <div class="zone-h pin-anchor"><h3>What to ask</h3><span class="aside">one-off questions, or a saved question set — every ask is a run, not a chat</span>
+          <span class="pin" style="top:-6px;right:-6px" data-pin>V3<span class="pin-pop"><span class="eyebrow">Note V3 · runs, not chats</span>Questions in, answers out — a run, same as CPEA. The multi-turn conversation stays cut (the POC ruling holds). A follow-up question is a new run against the same documents, offered right under the answer — the convenience of a thread without the ambiguity of one.</span></span>
         </div>
-        <textarea class="qbox" aria-label="Your question">Which exposures were above the single-name limit at year end, and does the policy allow exceptions?</textarea>
+        <div class="seg" role="radiogroup" aria-label="Question mode">
+          <button role="radio" aria-checked="true" data-mode="oneoff">One-off questions</button>
+          <button role="radio" aria-checked="false" data-mode="qset">Question set</button>
+        </div>
+        <div id="mode-oneoff">
+          <textarea class="qbox" aria-label="Your question">Which exposures were above the single-name limit at year end, and does the policy allow exceptions?</textarea>
+          <div class="qfile pin-anchor" role="button" tabindex="0" aria-label="Add a file of questions">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 17v2a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-2"/></svg>
+            <span>Or add a file of questions — drop an <span class="mono">.xlsx</span> here, one question per row. Runs once; nothing is saved.</span>
+            <span class="pin" style="top:-9px;right:-6px" data-pin>V12<span class="pin-pop"><span class="eyebrow">Note V12 · questions by spreadsheet</span>Demo feedback: people keep their question lists in Excel and want to run them one-off. The file is parsed on drop and the questions are shown back for review before anything runs — honest intake, same doctrine as the CSV schema card. Typed question and file questions combine into one run; a run simply carries one or many questions, and the answer surface repeats its anatomy per question. Nothing is retained unless they choose "Save as a question set."</span></span>
+          </div>
+          <div class="qparsed">
+            <div class="head"><span class="fname">Watchlist_Qs.xlsx</span><span class="badge green">14 questions read</span><button class="link quiet">Save as a question set</button><button class="rm" aria-label="Remove">✕</button></div>
+            <div class="qrow">"Has covenant headroom been recomputed at the revised EBITDA?"</div>
+            <div class="qrow">"Is there a springing condition on the revolver, and has it been triggered?"</div>
+            <div class="qrow">"Does the file reflect the most recent amendment?"</div>
+            <div class="foot"><span>+ 11 more — review all before running</span></div>
+          </div>
+        </div>
+        <div id="mode-qset" hidden>
+          <div class="qs-grid pin-anchor">
+            <button class="qs-card add"><span style="font-size:16px">＋</span><span><b>Add new</b> · upload a question set</span></button>
+            <button class="qs-card sel"><div class="t">Exposure limits sweep</div><div class="d">6 questions on single-name limits, exceptions and approval status.</div></button>
+            <button class="qs-card"><div class="t">Key-customer scan</div><div class="d">4 questions locating key-customer mentions across a client's documents.</div></button>
+            <span class="pin" style="top:-9px;right:-6px" data-pin>V13<span class="pin-pop"><span class="eyebrow">Note V13 · sets earn their way in</span>Demo feedback brought CPEA's saved question sets to Vantage — the same segmented control, cards, and Add-new modal, one shared component. Sets are per-application: Vantage's shelf is its own, not CPEA's. The two-nouns discipline holds — this is still the Ask screen, just with a shelf.</span></span>
+          </div>
+        </div>
         <div class="ask-bar">
           <button class="btn primary" id="ask-btn">Ask</button>
-          <span class="ask-scope">3 documents attached</span>
+          <span class="ask-scope" id="ask-count">15 questions · 3 documents attached</span>
         </div>
         <p class="disclaimer">All data in this demonstration build is fictional.</p>
       </section>
@@ -287,7 +330,7 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
         </div>
 
         <div class="blk blk-prose">
-          <p>Three exposures exceeded the 25.0m single-name limit at year end: <b>Torvane Aggregates</b>, <b>Northgale Systems</b>, and <b>Farrowdale Partners</b>. The policy does allow exceptions — a single-name exposure may exceed the limit with a documented exception approved by the Credit Committee. Of the three, only Torvane's exception is documented in the papers provided.</p>
+          <p>Three exposures exceeded the 25.0m single-name limit at year end: <b>Torvane Aggregates</b>, <b>Northgale Health Partners</b>, and <b>Farrowdale Logistics</b>. The policy does allow exceptions — a single-name exposure may exceed the limit with a documented exception approved by the Credit Committee. Of the three, only Torvane's exception is documented in the papers provided.</p>
         </div>
 
         <div class="blk pin-anchor">
@@ -305,8 +348,8 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
               <thead><tr><th>Borrower</th><th>RXM</th><th class="num">Exposure</th><th class="num">Over limit by</th><th>Exception status</th></tr></thead>
               <tbody>
                 <tr><td>Torvane Aggregates</td><td class="mono" style="font-size:11.5px">RXM-4100</td><td class="num">38.2m</td><td class="num">13.2m</td><td>Documented — Amendment No. 1</td></tr>
-                <tr><td>Northgale Systems</td><td class="mono" style="font-size:11.5px">RXM-4488</td><td class="num">31.7m</td><td class="num">6.7m</td><td class="warn-t">No approval found</td></tr>
-                <tr><td>Farrowdale Partners</td><td class="mono" style="font-size:11.5px">RXM-8093</td><td class="num">26.7m</td><td class="num">1.7m</td><td class="warn-t">No approval found</td></tr>
+                <tr><td>Northgale Health Partners</td><td class="mono" style="font-size:11.5px">RXM-4488</td><td class="num">31.7m</td><td class="num">6.7m</td><td class="warn-t">No approval found</td></tr>
+                <tr><td>Farrowdale Logistics</td><td class="mono" style="font-size:11.5px">RXM-8093</td><td class="num">26.7m</td><td class="num">1.7m</td><td class="warn-t">No approval found</td></tr>
               </tbody>
             </table>
             <div class="cite"><span class="mono">Exposure_Register_FY25.csv</span><span class="loc">rows 7, 18, 31 · limit from policy §3.1</span><button class="link" data-src="rows">View rows used</button></div>
@@ -326,7 +369,7 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
 
         <div class="blk blk-absence pin-anchor">
           <div class="h">Not in these documents</div>
-          <p>No exception approval appears for Northgale Systems or Farrowdale Partners in the three documents provided. That is an absence in the papers, not a finding of non-approval — the record may exist elsewhere.</p>
+          <p>No exception approval appears for Northgale Health Partners or Farrowdale Logistics in the three documents provided. That is an absence in the papers, not a finding of non-approval — the record may exist elsewhere.</p>
           <span class="pin" style="top:-9px;right:-6px" data-pin>V8<span class="pin-pop"><span class="eyebrow">Note V8 · absence is a block</span>What the documents don't say is a first-class part of the answer, not a silent omission — stated precisely, with the honest caveat that absence-in-these-papers is not absence-in-the-world. Amber because it needs the analyst, the only thing amber ever means here.</span></span>
         </div>
 
@@ -407,8 +450,8 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
           <thead><tr><th>row</th><th>borrower</th><th>rxm_id</th><th>exposure_m</th><th>as_of</th></tr></thead>
           <tbody>
             <tr><td class="rn">7</td><td>Torvane Aggregates</td><td>RXM-4100</td><td>38.2</td><td>2025-12-31</td></tr>
-            <tr><td class="rn">18</td><td>Northgale Systems</td><td>RXM-4488</td><td>31.7</td><td>2025-12-31</td></tr>
-            <tr><td class="rn">31</td><td>Farrowdale Partners</td><td>RXM-8093</td><td>26.7</td><td>2025-12-31</td></tr>
+            <tr><td class="rn">18</td><td>Northgale Health Partners</td><td>RXM-4488</td><td>31.7</td><td>2025-12-31</td></tr>
+            <tr><td class="rn">31</td><td>Farrowdale Logistics</td><td>RXM-8093</td><td>26.7</td><td>2025-12-31</td></tr>
           </tbody>
         </table>
       </div>
@@ -423,7 +466,7 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
   <button data-screen="screen-processing" aria-selected="false">2 · Processing</button>
   <button data-screen="screen-answer" aria-selected="false">3 · Answer</button>
   <button data-screen="screen-runs" aria-selected="false">4 · Runs</button>
-  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 11</button>
+  <button class="notes-toggle" id="notes-toggle" aria-pressed="true">Design notes · 13</button>
 </nav>
 
 <script>
@@ -438,6 +481,17 @@ textarea.qbox{width:100%;border:1px solid var(--rule-strong);border-radius:8px;p
   document.querySelectorAll('.crit-nav [data-screen]').forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.screen); }); });
   document.querySelectorAll('.rail-nav .nav-item').forEach(function(n){ n.addEventListener('click', function(){ show(n.dataset.nav); }); });
   document.querySelectorAll('[data-goto]').forEach(function(el){ el.addEventListener('click', function(e){ e.stopPropagation(); show(el.dataset.goto); }); });
+
+  // question-mode segmented control
+  document.querySelectorAll('.seg [data-mode]').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.seg [data-mode]').forEach(function(x){ x.setAttribute('aria-checked', x===b?'true':'false'); });
+      document.getElementById('mode-oneoff').hidden = b.dataset.mode!=='oneoff';
+      document.getElementById('mode-qset').hidden = b.dataset.mode!=='qset';
+      var c=document.getElementById('ask-count');
+      if(c) c.textContent = b.dataset.mode==='oneoff' ? '15 questions · 3 documents attached' : 'Exposure limits sweep · 6 questions · 3 documents attached';
+    });
+  });
 
   // ask → processing → answer (staged, auto-advance)
   var askBtn=document.getElementById('ask-btn');

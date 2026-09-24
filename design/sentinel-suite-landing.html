@@ -84,7 +84,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .apps > *,.foot{animation:settle .3s ease both}
 .apps > *:nth-child(2){animation-delay:.08s}
 .apps > *:nth-child(3){animation-delay:.16s}
-.foot{animation-delay:.24s}
+.apps > *:nth-child(4){animation-delay:.24s}
+.foot{animation-delay:.32s}
 
 /* application cards — wide rows, serif names, hairline accent on hover */
 .apps{display:flex;flex-direction:column;gap:12px;list-style:none}
@@ -132,30 +133,38 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         </div>
       </a>
 
-      <div class="app-card soon" aria-disabled="true">
+      <a class="app-card live" href="sentinel-erm-concept.html">
         <div class="app-body">
-          <div class="app-name">ERM <span class="full">Enterprise Risk Management</span></div>
+          <div class="app-name" style="font-size:1.05rem">Credit Portfolio Event Assessment <span class="full">CPEA</span></div>
           <p class="app-desc">Portfolio-level insights and analysis.</p>
         </div>
         <div class="app-side">
-          <span class="badge slate">In design</span>
-          <svg class="go" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span class="open-btn">Open<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </div>
-      </div>
+      </a>
 
-      <div class="app-card soon" aria-disabled="true">
+      <a class="app-card live" href="sentinel-vantage-concept.html">
         <div class="app-body">
           <div class="app-name">Vantage <span class="full">P&amp;C</span></div>
           <p class="app-desc">Generic document extraction and insights.</p>
         </div>
         <div class="app-side">
-          <span class="badge slate">In design</span>
-          <svg class="go" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span class="open-btn">Open<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </div>
-      </div>
+      </a>
+
+      <a class="app-card live" href="sentinel-inquiry-concept.html">
+        <div class="app-body">
+          <div class="app-name">Inquiry <span class="full">Senior leadership</span></div>
+          <p class="app-desc">One-off questions of the portfolio, for senior leadership.</p>
+        </div>
+        <div class="app-side">
+          <span class="open-btn">Open<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </a>
     </nav>
 
-    <p class="foot"><span>All data in this demonstration build is fictional.</span><span class="mono">landing concept · r4</span><span class="spacer" style="flex:1"></span><button class="theme-cycle" id="themer" type="button">Theme: Stone</button></p>
+    <p class="foot"><span>All data in this demonstration build is fictional.</span><span class="mono">landing concept · r5</span><span class="spacer" style="flex:1"></span><button class="theme-cycle" id="themer" type="button">Theme: Stone</button></p>
   </div>
 </main>
 
