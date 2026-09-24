@@ -8,3 +8,6 @@ e2e/screenshots
 package-lock.json
 docs/screenshots
 Claude outputs/
+
+# Regression goldens are byte-exact renderer captures — never reformat
+**/__golden__/

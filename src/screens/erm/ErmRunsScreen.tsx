@@ -1,7 +1,10 @@
 /**
- * Runs — every analysis, kept (concept pin E10): newest first, each a
- * frozen revisitable record — when, question set + count, scope line,
- * grade-count chips, honest state, View results.
+ * Runs — every analysis, kept (concept pins E10, I4): THIS application's
+ * runs, newest first, each a frozen revisitable record — when, what was
+ * asked (a set + its count, or the one question in quotes), the scope
+ * line (the borrower, when scoped), grade-count chips, honest state,
+ * View results. Inquiry keeps Runs deliberately: a question that moves a
+ * decision will be asked "where did that come from" — this is the answer.
  */
 import { Link } from 'react-router-dom'
 import { useQuestionSets, useRuns } from '@/api/hooks'
@@ -9,21 +12,23 @@ import { Badge } from '@/components/Badge'
 import { fmt, plural } from '@/lib/fmt'
 import { strings } from '@/strings'
 import { GradeCountChips } from './ErmResultsView'
-
-const s = strings.erm.runs
-const d = strings.erm.documents
+import { shelfOf, usePortfolioApp } from './portfolioApp'
+import { criteriaLine } from './runModel'
 
 const sameDay = (iso: string) => new Date(iso).toDateString() === new Date().toDateString()
-const formatWhen = (iso: string) => {
-  const t = new Date(iso)
-  const hm = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-  return sameDay(iso) ? fmt(s.today, { time: hm }) : `${iso.slice(0, 10)} ${hm}`
-}
 
 export function ErmRunsScreen() {
-  const runs = useRuns()
-  const sets = useQuestionSets()
+  const app = usePortfolioApp()
+  const s = app.copy.runs
+  const d = app.copy.documents
+  const runs = useRuns(app.id)
+  const sets = useQuestionSets(shelfOf(app))
   const setOf = (id: string) => sets.data?.find((q) => q.id === id)
+  const formatWhen = (iso: string) => {
+    const t = new Date(iso)
+    const hm = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    return sameDay(iso) ? fmt(s.today, { time: hm }) : `${iso.slice(0, 10)} ${hm}`
+  }
   return (
     <div className="settle">
       <div>
@@ -32,36 +37,45 @@ export function ErmRunsScreen() {
       </div>
       <div>
         {(runs.data ?? []).map((r) => {
-          const set = setOf(r.questionSetId)
+          const set = r.questionSetId ? setOf(r.questionSetId) : undefined
           return (
             <div
               key={r.runId}
+              data-run={r.runId}
               className="mb-2.5 flex flex-wrap items-center gap-3.5 rounded-[10px] border border-rule bg-bg px-4 py-3"
             >
               <span className="w-[130px] flex-none font-mono text-[0.75rem] text-muted">
                 {formatWhen(r.startedAt)}
               </span>
               <span className="min-w-[200px] flex-1">
-                <span className="font-semibold">{set?.name ?? r.questionSetId}</span>
-                {set && (
-                  <span>
-                    {' '}
-                    ·{' '}
-                    {plural(
-                      set.fields.length,
-                      strings.erm.results.questionsOne,
-                      strings.erm.results.questionsOther,
+                {r.questionSetId ? (
+                  <>
+                    <span className="font-semibold">{set?.name ?? r.questionSetId}</span>
+                    {set && (
+                      <span>
+                        {' '}
+                        ·{' '}
+                        {plural(
+                          set.fields.length,
+                          app.copy.results.questionsOne,
+                          app.copy.results.questionsOther,
+                        )}
+                      </span>
                     )}
+                  </>
+                ) : (
+                  <span className="font-semibold italic">
+                    {fmt(app.copy.results.quotedQuestion, { question: r.prompt ?? '' })}
                   </span>
                 )}
                 <br />
                 <span className="text-[0.75rem] text-muted">
                   {fmt(s.scopeLine, {
-                    criteria: `${r.criteria.portfolio} · ${r.criteria.subPortfolio.toLowerCase()} · ${r.criteria.region.toLowerCase()}`,
+                    criteria: criteriaLine(r.criteria, app.copy.start.borrowerScope),
                     borrowers: plural(
                       r.population.included.length,
-                      strings.erm.start.borrowersOne,
-                      strings.erm.start.borrowersOther,
+                      app.copy.start.borrowersOne,
+                      app.copy.start.borrowersOther,
                     ),
                     documents: plural(r.documents.length, d.docsOne, d.docsOther),
                   })}
@@ -77,7 +91,7 @@ export function ErmRunsScreen() {
                 <Badge tone="neutral">{s.stateRunning}</Badge>
               )}
               <Link
-                to={`/erm/runs/${r.runId}`}
+                to={`${app.base}/runs/${r.runId}`}
                 className="rounded-md border border-rule-strong bg-bg px-[11px] py-[5px] text-[0.75rem] font-medium hover:bg-bg-hover"
               >
                 {s.viewResults}

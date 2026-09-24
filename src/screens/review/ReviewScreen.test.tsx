@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { renderAt } from '@/test/renderAt'
 
 const VEYLAND = 'rev-veyland-2026-08'
-const HALCYON = 'rev-seldwyn-2026-08'
+const SELDWYN = 'rev-seldwyn-2026-08'
 
 describe('review page — read path', () => {
   it('renders sticky bar, sub line, story, attention and work paper from the seam', async () => {
@@ -124,7 +124,7 @@ describe('review page — read path', () => {
     )
     first.unmount()
 
-    renderAt(`/crr/review/${HALCYON}`)
+    renderAt(`/crr/review/${SELDWYN}`)
     await screen.findByRole('heading', { level: 1, name: 'Seldwyn Marine Finance' })
     await user.click(screen.getByRole('button', { name: 'Export Review' }))
     const alerts = await screen.findAllByRole('alert')

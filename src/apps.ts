@@ -1,13 +1,30 @@
 /**
- * The Sentinel application registry (suite round, ratified 2026-09-17).
- * Sentinel is a suite of applications on one platform; the app built so far
- * IS the CRR application. ERM and Vantage exist as landing-page entries
- * ("In design") — they have no routes and their cards are not links.
- * All user-facing names/descriptions live in strings.ts (suite block).
+ * The Sentinel application registry (suite round, ratified 2026-09-17;
+ * fourth application 2026-09-24). Sentinel is a suite of applications on
+ * one platform. Every entry is live. All user-facing names/descriptions
+ * live in strings.ts (suite block).
+ *
+ * Inquiry is the platform's workflow-definition-plus-configuration litmus
+ * made real: it is CPEA's workflow with one configuration flag off
+ * (`questionSets: false`) — the same screen components read `config`, and
+ * its route configuration never wires the question-set control in.
  */
 import { strings } from '@/strings'
 
-export type AppId = 'crr' | 'erm' | 'vantage'
+export type AppId = 'crr' | 'erm' | 'vantage' | 'inquiry'
+
+/**
+ * Per-application configuration the shared screen components read. An
+ * application that shares another's workflow differs from it here, never
+ * by copied screens.
+ */
+export interface AppConfig {
+  /**
+   * Saved question sets: the segmented ask-mode control, the saved-set
+   * cards, and Add new. Off = prompt-only (type it and go; nothing saved).
+   */
+  questionSets: boolean
+}
 
 export interface SentinelApp {
   id: AppId
@@ -22,6 +39,7 @@ export interface SentinelApp {
    * long serif name at reduced size, with the short label as the aside).
    */
   landingTitle?: 'short' | 'full'
+  config: AppConfig
 }
 
 export const APPS: readonly SentinelApp[] = [
@@ -32,6 +50,7 @@ export const APPS: readonly SentinelApp[] = [
     description: strings.suite.apps.crr.description,
     status: 'active',
     home: '/crr',
+    config: { questionSets: false },
   },
   {
     id: 'erm',
@@ -41,6 +60,7 @@ export const APPS: readonly SentinelApp[] = [
     status: 'active',
     home: '/erm',
     landingTitle: 'full',
+    config: { questionSets: true },
   },
   {
     id: 'vantage',
@@ -49,6 +69,17 @@ export const APPS: readonly SentinelApp[] = [
     description: strings.suite.apps.vantage.description,
     status: 'active',
     home: '/vantage',
+    config: { questionSets: true },
+  },
+  {
+    id: 'inquiry',
+    short: strings.suite.apps.inquiry.short,
+    full: strings.suite.apps.inquiry.full,
+    description: strings.suite.apps.inquiry.description,
+    status: 'active',
+    home: '/inquiry',
+    // CPEA with question sets switched off — a clone by configuration.
+    config: { questionSets: false },
   },
 ]
 

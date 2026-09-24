@@ -1,6 +1,7 @@
 /**
- * Runs — every question asked, frozen (concept pin V10): serif question,
- * when, document-count chip, honest state badge; row click revisits.
+ * Runs — every question asked, frozen (concept pin V10): serif question
+ * (a many-question run leads with its first), when, question-count and
+ * document-count chips, honest state badge; row click revisits.
  */
 import { useNavigate } from 'react-router-dom'
 import { useVantageRuns } from '@/api/hooks'
@@ -38,10 +39,13 @@ export function VantageRunsScreen() {
             className="mb-2 flex w-full flex-wrap items-center gap-3.5 rounded-[10px] border border-rule bg-bg px-4 py-[13px] text-left transition-colors hover:bg-bg-hover"
           >
             <span className="min-w-[260px] flex-1 font-display text-[0.90625rem] font-semibold">
-              {r.question}
+              {r.questions[0]}
             </span>
             <span className="flex flex-none flex-wrap items-center gap-2.5 text-dense text-muted">
               <span>{formatWhen(r.startedAt)}</span>
+              <Badge tone="neutral">
+                {plural(r.questions.length, s.questionsChipOne, s.questionsChipOther)}
+              </Badge>
               <Badge tone="neutral">
                 {plural(r.documents.length, s.docsChipOne, s.docsChipOther)}
               </Badge>

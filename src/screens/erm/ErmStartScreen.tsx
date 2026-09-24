@@ -1,35 +1,42 @@
 /**
- * ERM start — "Start a portfolio analysis" (concept pin E6: the suite's
- * three-beat arc; the monitor is a result, not a home). The question
- * (prompt + question set, combinable), the documents (optional — upload
- * or the shared repository picker), the population (labeled dropdowns
- * whose vocabulary is a deliberate placeholder — pin E7), a scope-preview
- * line resolved on system, and Run analysis.
+ * Start — CPEA's "Start a portfolio analysis" and Inquiry's "Ask a
+ * question of the portfolio": ONE screen, configured per application
+ * (concept pin E6: the suite's three-beat arc; the monitor is a result,
+ * not a home). The question (CPEA: the question-set slot — prompt only
+ * OR a saved set; Inquiry, question sets off: the prompt box alone), the
+ * documents (optional — upload or the shared repository picker), the
+ * population (demo feedback round: an optional borrower scope leads it;
+ * choosing one stands the four placeholder dropdowns down — pin E7 for
+ * their vocabulary), a scope-preview line resolved on system, and Run.
+ * Arriving from Documents' "Ask about this borrower →" pre-sets the scope
+ * (router state).
  */
-import { useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useQuestionSets, useResolvePopulation, useErmMutations } from '@/api/hooks'
-import type { PopulationCriteria, RepositoryDoc } from '@/api/types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { usePortfolioMutations, useResolvePopulation } from '@/api/hooks'
+import type { BorrowerRef, PopulationCriteria, RepositoryDoc } from '@/api/types'
 import { Button } from '@/components/Button'
 import { RepositoryPicker } from '@/components/viewers/RepositoryPicker'
 import { cx } from '@/lib/cx'
 import { fmt, plural } from '@/lib/fmt'
 import { strings } from '@/strings'
-import { AddQuestionSetModal } from './AddQuestionSetModal'
+import { BorrowerScope } from './BorrowerScope'
 import { POP_VOCAB } from './config'
-
-const s = strings.erm.start
+import { usePortfolioApp } from './portfolioApp'
+import { scopeLabel } from './runModel'
 
 function PopSelect({
   label,
   options,
   value,
   onChange,
+  disabled,
 }: {
   label: string
   options: readonly string[]
   value: string
   onChange: (v: string) => void
+  disabled: boolean
 }) {
   return (
     <div>
@@ -37,6 +44,7 @@ function PopSelect({
       <select
         aria-label={label}
         value={value}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-[7px] border border-rule-strong bg-bg px-2 py-[7px] text-[0.78125rem] text-ink-soft"
       >
@@ -58,24 +66,42 @@ function ZoneHeading({ title, aside }: { title: string; aside: string }) {
 }
 
 export function ErmStartScreen() {
+  const app = usePortfolioApp()
+  const s = app.copy.start
   const navigate = useNavigate()
-  const sets = useQuestionSets()
-  const m = useErmMutations()
-  const [mode, setMode] = useState<'prompt' | 'qset'>('prompt')
+  const location = useLocation()
+  const m = usePortfolioMutations(app.id)
+  // The question-set control exists only where the app config turns it on
+  // AND the route configuration wired it in (Inquiry: neither).
+  const QuestionSets = app.config.questionSets ? app.slots.QuestionSets : undefined
+  const [mode, setMode] = useState<'oneoff' | 'set'>('oneoff')
   const [prompt, setPrompt] = useState('')
   const [setId, setSetId] = useState<string>('qs-quarterly-pulse')
-  const [addOpen, setAddOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [picked, setPicked] = useState<RepositoryDoc[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const populationRef = useRef<HTMLDivElement>(null)
+  const arrivedWith = (location.state as { borrower?: BorrowerRef } | null)?.borrower ?? null
+  const [borrower, setBorrower] = useState<BorrowerRef | null>(arrivedWith)
   const [criteria, setCriteria] = useState<PopulationCriteria>({
     portfolio: 'IB Lending',
     subPortfolio: 'All sub-portfolios',
     region: 'All regions',
     asOf: 'Latest on system',
   })
-  const pop = useResolvePopulation(criteria)
+  // a chosen borrower IS the population; the dropdown values are carried, not applied
+  const scoped = useMemo<PopulationCriteria>(
+    () => (borrower ? { ...criteria, borrower } : criteria),
+    [criteria, borrower],
+  )
+  const pop = useResolvePopulation(scoped)
+
+  // arriving pre-scoped from Documents: bring the population zone into view
+  useEffect(() => {
+    if (arrivedWith) populationRef.current?.scrollIntoView?.({ block: 'center' })
+  }, [arrivedWith])
 
   const attachedNames = useMemo(
     () => [...files.map((f) => f.name), ...picked.map((p) => p.fileName)],
@@ -84,16 +110,34 @@ export function ErmStartScreen() {
   const set = (k: keyof PopulationCriteria) => (v: string) => setCriteria((c) => ({ ...c, [k]: v }))
 
   async function go() {
-    const { runId } = await m.startRun.mutateAsync({
-      questionSetId: mode === 'qset' ? setId : 'qs-quarterly-pulse',
-      prompt: mode === 'prompt' ? prompt.trim() || undefined : undefined,
-      criteria,
-      documents: attachedNames,
-    })
-    navigate(`/erm/runs/${runId}`)
+    setError(null)
+    try {
+      const { runId } = await m.startRun.mutateAsync(
+        QuestionSets && mode === 'set'
+          ? { questionSetId: setId, criteria: scoped, documents: attachedNames }
+          : { prompt, criteria: scoped, documents: attachedNames },
+      )
+      navigate(`${app.base}/runs/${runId}`)
+    } catch (e) {
+      setError((e as Error).message)
+    }
   }
 
-  const scopeText = `${criteria.portfolio} · ${criteria.subPortfolio} · ${criteria.region}`
+  const promptBox = (
+    <textarea
+      aria-label={s.promptAria}
+      value={prompt}
+      onChange={(e) => {
+        setPrompt(e.target.value)
+        setError(null)
+      }}
+      placeholder={s.promptPlaceholder}
+      className="mt-3 min-h-[76px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.8125rem]"
+    />
+  )
+
+  // the resolve line names what WAS resolved, so the scope and its counts never disagree
+  const resolved = pop.data?.population
   return (
     <div className="settle">
       <div>
@@ -103,67 +147,16 @@ export function ErmStartScreen() {
 
       <div>
         <ZoneHeading title={s.questionZone} aside={s.questionAside} />
-        <div
-          role="radiogroup"
-          aria-label={s.modeAria}
-          className="inline-flex gap-[3px] rounded-[9px] border border-rule bg-bg-subtle p-[3px]"
-        >
-          {(
-            [
-              ['prompt', s.modePrompt],
-              ['qset', s.modeQset],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={mode === id}
-              onClick={() => setMode(id)}
-              className={cx(
-                'rounded-[7px] px-[18px] py-[7px] text-[0.8125rem] font-medium text-muted',
-                mode === id && 'bg-bg font-semibold text-ink shadow-sm',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {mode === 'prompt' ? (
-          <textarea
-            aria-label={s.promptAria}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={s.promptPlaceholder}
-            className="mt-3 min-h-[76px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.8125rem]"
+        {QuestionSets ? (
+          <QuestionSets
+            mode={mode}
+            onModeChange={setMode}
+            selectedId={setId}
+            onSelect={setSetId}
+            prompt={promptBox}
           />
         ) : (
-          <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-2.5">
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="flex items-center justify-center gap-2 rounded-[10px] border border-dashed border-rule bg-bg-subtle px-3.5 py-[9px] text-muted hover:text-ink"
-            >
-              <span className="text-[1.25rem] leading-none">＋</span>
-              <span className="text-[0.8125rem] font-semibold">{s.addNew}</span>
-              <span className="text-dense text-faint">{s.addNewHint}</span>
-            </button>
-            {(sets.data ?? []).map((q) => (
-              <button
-                key={q.id}
-                type="button"
-                aria-pressed={setId === q.id}
-                onClick={() => setSetId(q.id)}
-                className={cx(
-                  'rounded-[10px] border border-rule bg-bg px-3.5 py-[9px] text-left transition-[box-shadow,border-color] duration-150 hover:border-rule-strong hover:shadow-md',
-                  setId === q.id && 'border-primary shadow-[0_0_0_1px_var(--primary)]',
-                )}
-              >
-                <h4 className="font-display text-[0.875rem] font-semibold">{q.name}</h4>
-                <p className="line-clamp-2 text-dense text-muted">{q.description}</p>
-              </button>
-            ))}
-          </div>
+          promptBox
         )}
       </div>
 
@@ -218,47 +211,57 @@ export function ErmStartScreen() {
         </div>
       </div>
 
-      <div>
+      <div ref={populationRef}>
         <ZoneHeading title={s.populationZone} aside={s.populationAside} />
-        {/* Option lists are placeholder vocabulary — see POP_VOCAB in ./config. */}
-        <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
+        <BorrowerScope value={borrower} onChange={setBorrower} />
+        {/* Option lists are placeholder vocabulary — see POP_VOCAB in ./config.
+            A chosen borrower stands them down: dimmed AND disabled. */}
+        <div
+          data-testid="population-dropdowns"
+          data-stood-down={borrower ? 'true' : undefined}
+          className={cx(
+            'grid grid-cols-4 gap-3 max-[900px]:grid-cols-2',
+            borrower && 'pointer-events-none opacity-40',
+          )}
+        >
           <PopSelect
             label={s.popPortfolio}
             options={POP_VOCAB.portfolio}
             value={criteria.portfolio}
             onChange={set('portfolio')}
+            disabled={!!borrower}
           />
           <PopSelect
             label={s.popSubPortfolio}
             options={POP_VOCAB.subPortfolio}
             value={criteria.subPortfolio}
             onChange={set('subPortfolio')}
+            disabled={!!borrower}
           />
           <PopSelect
             label={s.popRegion}
             options={POP_VOCAB.region}
             value={criteria.region}
             onChange={set('region')}
+            disabled={!!borrower}
           />
           <PopSelect
             label={s.popAsOf}
             options={POP_VOCAB.asOf}
             value={criteria.asOf}
             onChange={set('asOf')}
+            disabled={!!borrower}
           />
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <span className="text-[0.75rem] text-muted">
-          {pop.data &&
+        <span className="text-[0.75rem] text-muted" data-testid="scope-line">
+          {resolved &&
+            pop.data &&
             fmt(s.scopeLine, {
-              scope: scopeText,
-              borrowers: plural(
-                pop.data.population.included.length,
-                s.borrowersOne,
-                s.borrowersOther,
-              ),
+              scope: scopeLabel(resolved.criteria, s.borrowerScope),
+              borrowers: plural(resolved.included.length, s.borrowersOne, s.borrowersOther),
               documents: plural(
                 pop.data.documentCount,
                 strings.erm.documents.docsOne,
@@ -271,12 +274,16 @@ export function ErmStartScreen() {
           {s.run}
         </Button>
       </div>
+      {error && (
+        <p role="alert" className="mt-2 text-right text-ui-sm text-error">
+          {error}
+        </p>
+      )}
 
       <p className="mt-[30px] border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
         {strings.suite.fictionalNote}
       </p>
 
-      {addOpen && <AddQuestionSetModal onClose={() => setAddOpen(false)} />}
       {pickerOpen && (
         <RepositoryPicker
           onClose={() => setPickerOpen(false)}

@@ -1,13 +1,15 @@
 /**
- * Suite landing — the front door above the applications (concept r4,
- * design/sentinel-suite-landing.html; ratified 2026-09-17). Suite-level
+ * Suite landing — the front door above the applications (concept r5,
+ * design/sentinel-suite-landing.html; ratified 2026-09-17, four live
+ * applications 2026-09-24 — CRR, CPEA, Vantage, Inquiry). Suite-level
  * layout: NO app chrome — no left rail, no app masthead. A sparse top bar
  * with the serif wordmark, the application cards vertically centered, the
  * fictional-data line as the footer. Cards render from the registry:
  * `active` → the whole card is a link to the app home with the primary
  * Open button; `design` → not clickable, quiet "In design" chip, no
- * button, no hover lift. Entrance uses the app's settle stagger (dies
- * under prefers-reduced-motion like all motion).
+ * button, no hover lift (latent — every app is live). Entrance uses the
+ * app's settle stagger, the footer following the fourth card at .32s
+ * (dies under prefers-reduced-motion like all motion).
  */
 import { Link } from 'react-router-dom'
 import { APPS, type SentinelApp } from '@/apps'
@@ -99,7 +101,7 @@ export function SuiteLandingScreen() {
               <AppCard key={a.id} app={a} />
             ))}
           </nav>
-          <p className="mt-[34px] flex flex-wrap gap-3.5 border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
+          <p className="mt-[34px] flex animate-[settle_0.3s_ease_0.32s_both] flex-wrap gap-3.5 border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
             {s.fictionalNote}
           </p>
         </div>

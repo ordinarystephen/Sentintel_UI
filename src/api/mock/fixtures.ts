@@ -39,7 +39,19 @@ export const ME: User = {
   name: 'Stark, Tony',
   // The CRR team will hold access to every app — the demo shows the
   // multi-entitlement experience (landing once, then last-used).
-  entitlements: ['crr', 'erm', 'vantage'],
+  entitlements: ['crr', 'erm', 'vantage', 'inquiry'],
+}
+
+/**
+ * A senior-leadership user entitled to Inquiry ONLY (demo feedback round):
+ * `/` sends them straight into Inquiry — no landing page, no switcher
+ * menu. Mock-only sign-in switch: `localStorage['sentinel.mock.user'] =
+ * 'u-leadership'` (see MOCK_USER_KEY in mockApi.ts).
+ */
+export const LEADERSHIP_USER: User = {
+  id: 'u-leadership',
+  name: 'Potts, Pepper',
+  entitlements: ['inquiry'],
 }
 export const OWNERS: User[] = [
   ME,

@@ -5,9 +5,15 @@ import {
   createMockApi,
   EXPORT_FAILS_ID,
   ME,
+  MOCK_USER_KEY,
+  STORAGE_KEY,
   VEYLAND_ID,
   PROCESSING,
 } from './mockApi'
+import { LEADERSHIP_USER } from './fixtures'
+import { INQUIRY_DEMO_QUESTION } from './inquiryFixtures'
+import { VANTAGE_DEMO_BLOCKS, VANTAGE_DEMO_DOCS, WATCHLIST_QS } from './vantageFixtures'
+import { expectedGrade, gradeCounts } from '@/lib/ermModel'
 import { amendReRunning } from '@/screens/review/amendState'
 
 const T0 = Date.UTC(2026, 7, 29, 12, 0, 0)
@@ -15,6 +21,21 @@ const make = (storage: Storage | null = null) => createMockApi({ latencyMs: 0, s
 const file = (name: string, size = 1_000_000) =>
   new File([new Uint8Array(size)], name, { type: 'application/pdf' })
 const asReview = (r: unknown) => r as Review
+/** A Storage over a Map — lets a second api instance read what the first persisted. */
+function mapStorage(): Storage {
+  const store = new Map<string, string>()
+  return {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  } as Storage
+}
+const CRITERIA = {
+  portfolio: 'IB Lending',
+  subPortfolio: 'All sub-portfolios',
+  region: 'All regions',
+  asOf: 'Latest on system',
+}
 
 beforeEach(() => {
   vi.useFakeTimers({ now: T0 })
@@ -550,30 +571,300 @@ describe('amend evidence (v1.4)', () => {
 
 describe('question-set store (v1.6)', () => {
   it('7 fixture sets ship; Add-new appends a persisted set with an honest placeholder list', async () => {
-    const storage = new Map<string, string>()
-    const fakeStorage = {
-      getItem: (k: string) => storage.get(k) ?? null,
-      setItem: (k: string, v: string) => void storage.set(k, v),
-      removeItem: (k: string) => void storage.delete(k),
-    } as Storage
+    const fakeStorage = mapStorage()
     const api = make(fakeStorage)
-    const before = await api.getQuestionSets()
+    const before = await api.getQuestionSets('erm')
     expect(before).toHaveLength(7)
     expect(before.map((q) => q.name)).toContain('Watchlist deep-dive')
     // counts match the ratified card grid
     expect(before.find((q) => q.name === 'Quarterly credit pulse')?.fields).toHaveLength(17)
     expect(before.find((q) => q.name === 'Liquidity stress pulse')?.fields).toHaveLength(7)
 
-    await expect(api.addQuestionSet({ name: '  ', description: 'x' })).rejects.toThrow(/title/i)
-    const saved = await api.addQuestionSet({
+    await expect(api.addQuestionSet('erm', { name: '  ', description: 'x' })).rejects.toThrow(
+      /title/i,
+    )
+    const saved = await api.addQuestionSet('erm', {
       name: 'My covenant follow-ups',
       description: 'Ad hoc follow-ups from the September committee.',
     })
     expect(saved.fields.length).toBeGreaterThan(0)
-    const after = await api.getQuestionSets()
+    const after = await api.getQuestionSets('erm')
     expect(after).toHaveLength(8)
     // persists: a fresh api over the same storage still has it
-    const again = await createMockApi({ latencyMs: 0, storage: fakeStorage }).getQuestionSets()
+    const again = await createMockApi({ latencyMs: 0, storage: fakeStorage }).getQuestionSets('erm')
     expect(again.map((q) => q.name)).toContain('My covenant follow-ups')
+  })
+})
+
+describe('question-set stores are per-application (v1.8)', () => {
+  it('each shelf starts from its own fixtures only: CPEA 7 untouched, Vantage the concept’s 2', async () => {
+    const api = make()
+    const erm = await api.getQuestionSets('erm')
+    const vantage = await api.getQuestionSets('vantage')
+    expect(erm).toHaveLength(7)
+    expect(vantage.map((q) => `${q.name} · ${q.fields.length}q`)).toEqual([
+      'Exposure limits sweep · 6q',
+      'Key-customer scan · 4q',
+    ])
+    const ermIds = new Set(erm.map((q) => q.id))
+    expect(vantage.some((q) => ermIds.has(q.id))).toBe(false)
+  })
+
+  it('ISOLATION: a set saved in one application never appears in the other — live or after reload', async () => {
+    const storage = mapStorage()
+    const api = make(storage)
+    const inVantage = await api.addQuestionSet('vantage', {
+      name: 'Watchlist Qs',
+      description: '',
+      fileName: 'Watchlist_Qs.xlsx',
+      questions: WATCHLIST_QS,
+    })
+    const inCpea = await api.addQuestionSet('erm', { name: 'CPEA-only set', description: 'x' })
+
+    const vantage = await api.getQuestionSets('vantage')
+    const erm = await api.getQuestionSets('erm')
+    expect(vantage.map((q) => q.id)).toContain(inVantage.id)
+    expect(vantage.map((q) => q.id)).not.toContain(inCpea.id)
+    expect(erm.map((q) => q.id)).toContain(inCpea.id)
+    expect(erm.map((q) => q.id)).not.toContain(inVantage.id)
+    expect(erm).toHaveLength(8)
+    expect(vantage).toHaveLength(3)
+
+    // the same holds for a fresh instance over the same persisted state
+    const reloaded = make(storage)
+    expect((await reloaded.getQuestionSets('vantage')).map((q) => q.name)).toEqual([
+      'Exposure limits sweep',
+      'Key-customer scan',
+      'Watchlist Qs',
+    ])
+    expect((await reloaded.getQuestionSets('erm')).map((q) => q.name)).not.toContain('Watchlist Qs')
+    expect((await reloaded.getQuestionSets('vantage')).map((q) => q.name)).not.toContain(
+      'CPEA-only set',
+    )
+  })
+
+  it('saving a reviewed file keeps its questions verbatim, in order, and describes itself honestly', async () => {
+    const set = await make().addQuestionSet('vantage', {
+      name: 'Watchlist Qs',
+      description: '',
+      fileName: 'Watchlist_Qs.xlsx',
+      questions: WATCHLIST_QS.slice(0, 12),
+    })
+    expect(set.fields.map((f) => f.question)).toEqual(WATCHLIST_QS.slice(0, 12))
+    expect(set.description).toBe('12 questions read from Watchlist_Qs.xlsx.')
+  })
+})
+
+describe('question file parse (v1.8 — the mock declares the contract)', () => {
+  const xlsx = (name: string, size = 9_000) =>
+    new File([new Uint8Array(size)], name, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+
+  it('the demo file reads back its 14 questions, in row order', async () => {
+    const parsed = await make().parseQuestionFile(xlsx('Watchlist_Qs.xlsx'))
+    expect(parsed.fileName).toBe('Watchlist_Qs.xlsx')
+    expect(parsed.questions).toHaveLength(14)
+    expect(parsed.questions[0]).toBe('Has covenant headroom been recomputed at the revised EBITDA?')
+    expect(parsed.questions).toEqual(WATCHLIST_QS)
+  })
+
+  it('any other file gets an honestly labeled placeholder list; wrong types and empty files reject', async () => {
+    const api = make()
+    const other = await api.parseQuestionFile(xlsx('Covenant_Qs.xlsx'))
+    expect(other.questions.length).toBeGreaterThan(0)
+    expect(other.questions.every((q) => /placeholder/i.test(q))).toBe(true)
+    await expect(api.parseQuestionFile(xlsx('notes.docx'))).rejects.toThrow(/\.xlsx/)
+    await expect(api.parseQuestionFile(xlsx('Empty.xlsx', 0))).rejects.toThrow(/empty/)
+  })
+})
+
+describe('borrower scope (v1.8)', () => {
+  it('searchBorrowers: the index by name or RXM, with or without the prefix', async () => {
+    const api = make()
+    expect((await api.searchBorrowers('')).length).toBe(7)
+    expect((await api.searchBorrowers('amber')).map((b) => b.rxm)).toEqual(['RXM-5120'])
+    expect((await api.searchBorrowers('5120')).map((b) => b.name)).toEqual([
+      'Ambervale Foods Group',
+    ])
+    expect((await api.searchBorrowers('rxm-6430'))[0]).toMatchObject({
+      name: 'Veyland US Holdco LLC',
+      documentCount: 4,
+    })
+    expect(await api.searchBorrowers('zzz')).toEqual([])
+  })
+
+  it('resolvePopulation with a borrower: 1 included, nothing excluded, ALL their documents', async () => {
+    const api = make()
+    const borrower = { rxm: 'RXM-5120', name: 'Ambervale Foods Group' }
+    const { population, documentCount } = await api.resolvePopulation({ ...CRITERIA, borrower })
+    expect(population.included).toEqual([borrower])
+    expect(population.excluded).toEqual([])
+    expect(population.indeterminate).toEqual([])
+    expect(population.criteria.borrower).toEqual(borrower)
+    // every document on system, in or out of the monitor scope (the concept's "5 documents")
+    expect(documentCount).toBe(5)
+    // no silent change elsewhere: unscoped still resolves the canonical population
+    const unscoped = await api.resolvePopulation(CRITERIA)
+    expect(unscoped.population.included).toHaveLength(6)
+    expect(unscoped.documentCount).toBe(11)
+  })
+
+  it('a scoped run’s accounting names the borrower as its criterion; answers are that borrower’s only', async () => {
+    const api = make()
+    const borrower = { rxm: 'RXM-6430', name: 'Veyland US Holdco LLC' }
+    const { runId } = await api.startRun('erm', {
+      questionSetId: 'qs-quarterly-pulse',
+      criteria: { ...CRITERIA, borrower },
+    })
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getRun('erm', runId)
+    expect(run.state).toBe('completed')
+    expect(run.criteria.borrower).toEqual(borrower)
+    expect(run.population.criteria.borrower).toEqual(borrower)
+    expect(run.population.included).toEqual([borrower])
+    expect(run.documents).toHaveLength(4)
+    expect(run.answers).toHaveLength(17)
+    expect(new Set(run.answers.map((a) => a.rxm))).toEqual(new Set(['RXM-6430']))
+  })
+
+  it('a borrower with no canonical answers gets honest unsupported answers, never blanks', async () => {
+    const api = make()
+    const { runId } = await api.startRun('inquiry', {
+      prompt: 'Any refinancing risk?',
+      criteria: { ...CRITERIA, borrower: { rxm: 'RXM-8093', name: 'Farrowdale Logistics' } },
+    })
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getRun('inquiry', runId)
+    expect(run.answers).toHaveLength(1)
+    expect(run.answers[0]).toMatchObject({ rxm: 'RXM-8093', grade: 'unsupported' })
+    expect(run.answers[0].limitations).toBeTruthy()
+  })
+})
+
+describe('prompt-only runs ask exactly one question (v1.8)', () => {
+  it('a run needs a question: an empty prompt with no set rejects; prompt AND set rejects', async () => {
+    const api = make()
+    await expect(api.startRun('erm', { prompt: '   ', criteria: CRITERIA })).rejects.toThrow(
+      /question/i,
+    )
+    await expect(
+      api.startRun('erm', { prompt: 'x', questionSetId: 'qs-quarterly-pulse', criteria: CRITERIA }),
+    ).rejects.toThrow(/not both/)
+  })
+
+  it('completes with ONE answer per borrower, graded by the decision table', async () => {
+    const api = make()
+    const { runId } = await api.startRun('erm', {
+      prompt: 'Which borrowers face refinancing risk?',
+      criteria: CRITERIA,
+    })
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getRun('erm', runId)
+    expect(run.questionSetId).toBeUndefined()
+    expect(run.prompt).toBe('Which borrowers face refinancing risk?')
+    expect(run.answers).toHaveLength(6)
+    expect(new Set(run.answers.map((a) => a.questionId))).toEqual(new Set(['prompt']))
+    for (const a of run.answers) expect(a.grade).toBe(expectedGrade(a))
+    expect(gradeCounts(run.answers)).toEqual({ stated: 4, derived: 1, unsupported: 1 })
+  })
+})
+
+describe('app-scoped run stores (v1.8 — Inquiry keeps its own Runs)', () => {
+  it('Inquiry’s fixture runs: the demo + two history runs + one cancelled, never in CPEA’s list', async () => {
+    const api = make()
+    const inquiry = await api.listRuns('inquiry')
+    expect(inquiry.map((r) => r.state)).toEqual([
+      'completed',
+      'completed',
+      'completed',
+      'cancelled',
+    ])
+    expect(inquiry[0].prompt).toBe(INQUIRY_DEMO_QUESTION)
+    expect(inquiry.every((r) => !r.questionSetId)).toBe(true)
+    expect(gradeCounts(inquiry[0].answers)).toEqual({ stated: 4, derived: 1, unsupported: 1 })
+    // the demo's grades come from the decision table, never typed
+    for (const a of inquiry[0].answers) expect(a.grade).toBe(expectedGrade(a))
+    const erm = await api.listRuns('erm')
+    expect(erm).toHaveLength(3)
+    expect(erm.some((r) => r.runId.startsWith('inquiry-'))).toBe(false)
+  })
+
+  it('a run started in one application is invisible to the other', async () => {
+    const api = make()
+    const { runId } = await api.startRun('inquiry', { prompt: 'One question', criteria: CRITERIA })
+    expect((await api.listRuns('inquiry')).map((r) => r.runId)).toContain(runId)
+    expect((await api.listRuns('erm')).map((r) => r.runId)).not.toContain(runId)
+    await expect(api.getRun('erm', runId)).rejects.toThrow(/No run/)
+    await expect(api.cancelRun('erm', runId)).rejects.toThrow(/No run/)
+  })
+
+  it('Inquiry has question sets switched off: a set run is refused', async () => {
+    await expect(
+      make().startRun('inquiry', { questionSetId: 'qs-quarterly-pulse', criteria: CRITERIA }),
+    ).rejects.toThrow(/No question set/)
+  })
+
+  it('unscoped CPEA set runs are untouched: the canonical store, byte for byte', async () => {
+    const api = make()
+    const { runId } = await api.startRun('erm', {
+      questionSetId: 'qs-quarterly-pulse',
+      criteria: CRITERIA,
+    })
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getRun('erm', runId)
+    const canonical = (await api.getRun('erm', 'erm-run-2026-09-18-0912')).answers
+    expect(run.answers).toEqual(canonical)
+  })
+})
+
+describe('Vantage runs carry questions[] (v1.8)', () => {
+  it('one question: the demo answer, exactly as v1.7', async () => {
+    const api = make()
+    const { runId } = await api.askDocuments(['Anything above the limit?'], VANTAGE_DEMO_DOCS)
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getVantageRun(runId)
+    expect(run.questions).toEqual(['Anything above the limit?'])
+    expect(run.sections).toEqual([
+      { question: 'Anything above the limit?', blocks: VANTAGE_DEMO_BLOCKS },
+    ])
+  })
+
+  it('many questions: one section per question, in the order asked; blanks never count', async () => {
+    const api = make()
+    const asked = ['Typed question?', ...WATCHLIST_QS]
+    const { runId } = await api.askDocuments([...asked, '  '], VANTAGE_DEMO_DOCS)
+    vi.setSystemTime(T0 + 60_000)
+    const run = await api.getVantageRun(runId)
+    expect(run.questions).toEqual(asked)
+    expect(run.sections.map((sec) => sec.question)).toEqual(asked)
+    expect(run.sections.every((sec) => sec.blocks.length > 0)).toBe(true)
+  })
+
+  it('needs at least one question and one document', async () => {
+    const api = make()
+    await expect(api.askDocuments([' '], VANTAGE_DEMO_DOCS)).rejects.toThrow(/at least one/)
+    await expect(api.askDocuments(['q'], [])).rejects.toThrow(/at least one/)
+  })
+
+  it('persisted runs survive a reload in the new shape', async () => {
+    const storage = mapStorage()
+    const { runId } = await make(storage).askDocuments(['A?', 'B?'], VANTAGE_DEMO_DOCS)
+    const saved = JSON.parse(storage.getItem(STORAGE_KEY)!)
+    expect(saved.vantageRuns[runId].questions).toEqual(['A?', 'B?'])
+    vi.setSystemTime(T0 + 60_000)
+    expect((await make(storage).getVantageRun(runId)).sections).toHaveLength(2)
+  })
+})
+
+describe('mock sign-in switch (v1.8)', () => {
+  it('sentinel.mock.user picks the inquiry-only leadership user; unset is the demo user', async () => {
+    const storage = mapStorage()
+    expect((await make(storage).me()).entitlements).toEqual(['crr', 'erm', 'vantage', 'inquiry'])
+    storage.setItem(MOCK_USER_KEY, 'u-leadership')
+    expect(await make(storage).me()).toEqual(LEADERSHIP_USER)
+    expect(LEADERSHIP_USER.entitlements).toEqual(['inquiry'])
+    storage.setItem(MOCK_USER_KEY, 'u-nobody')
+    expect(await make(storage).me()).toEqual(ME)
   })
 })

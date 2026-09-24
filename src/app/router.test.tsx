@@ -16,7 +16,7 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/crr',
     )
-    // All three applications are live (v1.7): three cards, none in design
+    // All four applications are live (v1.8): four cards, none in design
     expect(
       screen.getByRole('link', { name: /Credit Portfolio Event Assessment.*CPEA.*Open/s }),
     ).toHaveAttribute('href', '/erm')
@@ -24,8 +24,25 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/vantage',
     )
+    expect(screen.getByRole('link', { name: /Inquiry.*Senior leadership.*Open/s })).toHaveAttribute(
+      'href',
+      '/inquiry',
+    )
     expect(screen.queryByText('In design')).toBeNull()
-    expect(screen.getAllByRole('link')).toHaveLength(3)
+    expect(screen.getAllByRole('link')).toHaveLength(4)
+  })
+
+  it('a user entitled to Inquiry ONLY lands straight in it — no landing, static brand', async () => {
+    localStorage.setItem('sentinel.mock.user', 'u-leadership')
+    renderAt('/')
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Ask a question of the portfolio' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Applications' })).toBeNull()
+    expect(screen.getByRole('navigation', { name: 'Inquiry navigation' })).toBeInTheDocument()
+    // one entitlement: the brand is static — no switcher menu button
+    expect(screen.queryByRole('button', { name: 'Switch application' })).toBeNull()
+    expect(localStorage.getItem('sentinel.lastApp')).toBe('inquiry')
   })
 
   it('/ redirects to the last-used entitled app', async () => {
@@ -55,6 +72,28 @@ describe('suite entry (entitlement routing)', () => {
     await screen.findByRole('heading', { level: 1 })
     expect(localStorage.getItem('sentinel.lastApp')).toBe('crr')
     localStorage.removeItem('sentinel.lastApp')
+  })
+})
+
+describe('the CPEA workflow, mounted twice (v1.8)', () => {
+  it.each([
+    ['/erm', 'Start a portfolio analysis', 'Credit Portfolio Event Assessment navigation'],
+    ['/inquiry', 'Ask a question of the portfolio', 'Inquiry navigation'],
+    ['/inquiry/runs', 'Runs', 'Inquiry navigation'],
+    ['/inquiry/documents', 'Documents', 'Inquiry navigation'],
+  ])('%s renders its screen in its own shell', async (path, title, navAria) => {
+    renderAt(path)
+    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: navAria })).toBeInTheDocument()
+  })
+
+  it('Inquiry start is prompt-only: no question-mode control, no shelf, the borrower scope kept', async () => {
+    renderAt('/inquiry')
+    await screen.findByRole('heading', { level: 1, name: 'Ask a question of the portfolio' })
+    expect(screen.queryByRole('radiogroup', { name: 'Question mode' })).toBeNull()
+    expect(screen.queryByText('Add new')).toBeNull()
+    expect(screen.getByRole('textbox', { name: 'Your question' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Borrower search' })).toBeInTheDocument()
   })
 })
 

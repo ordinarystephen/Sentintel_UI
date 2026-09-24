@@ -1,28 +1,46 @@
 /**
  * Ask (`/vantage`): the Documents zone (SHARED upload states; upload only
- * — no repository picker, no browse, anywhere in Vantage) and one
- * question. The answer is a run, not a chat.
+ * — no repository picker, no browse, anywhere in Vantage) and What to ask
+ * — the shared question-set control (demo feedback round; pins V12/V13)
+ * over VANTAGE'S OWN shelf: One-off questions (a typed question and/or a
+ * reviewed .xlsx of questions — they combine into one run; nothing saved
+ * unless "Save as a question set") | Question set (Vantage's saved sets +
+ * Add new). Every ask is a run, not a chat; still only Ask and Runs.
  */
 import { useRef, useState, type DragEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useVantageMutations } from '@/api/hooks'
+import { useQuestionSets, useVantageMutations } from '@/api/hooks'
 import type { VantageDocument } from '@/api/types'
 import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
+import { AddQuestionSetModal } from '@/components/questionSets/AddQuestionSetModal'
+import { QuestionSetControl, type QuestionMode } from '@/components/questionSets/QuestionSetControl'
+import { useToast } from '@/components/toastContext'
 import { UploadFileRows } from '@/components/upload/UploadFileRows'
 import { useUploadList } from '@/components/upload/uploadList'
 import { cx } from '@/lib/cx'
-import { plural } from '@/lib/fmt'
+import { fmt, plural } from '@/lib/fmt'
 import { formatBytes } from '@/lib/format'
 import { strings } from '@/strings'
+import { combineQuestions, deriveSetTitle } from './askQuestions'
 import { deriveDocMeta } from './docMeta'
+import { ParsedQuestionsCard, QuestionFileIntake } from './QuestionFileIntake'
 
 const s = strings.vantage.ask
 const isAccepted = (name: string) => /\.(pdf|docx|xlsx|csv)$/i.test(name)
 
+/** A reviewed question file: what it yielded, and what is kept for this run. */
+interface ReviewedFile {
+  fileName: string
+  size: number
+  read: number
+  questions: string[]
+}
+
 export function VantageAskScreen() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { toast } = useToast()
   // A follow-up arrives with the prior run's docset — a NEW run, no context.
   const carried = (location.state as { documents?: VantageDocument[] } | null)?.documents
   const upload = useUploadList(isAccepted)
@@ -30,10 +48,17 @@ export function VantageAskScreen() {
     (location.state as { question?: string } | null)?.question ?? '',
   )
   const [carriedDocs, setCarriedDocs] = useState<VantageDocument[]>(carried ?? [])
+  const [mode, setMode] = useState<QuestionMode>('oneoff')
+  const [setId, setSetId] = useState('vqs-exposure-limits')
+  const [reviewed, setReviewed] = useState<ReviewedFile | null>(null)
+  const [savedFile, setSavedFile] = useState<string | null>(null)
+  const [saveOpen, setSaveOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const m = useVantageMutations()
+  const sets = useQuestionSets('vantage')
+  const chosenSet = sets.data?.find((q) => q.id === setId)
 
   const documents: VantageDocument[] = [
     ...carriedDocs,
@@ -41,6 +66,25 @@ export function VantageAskScreen() {
       .map((f) => deriveDocMeta(f.name, f.size))
       .filter((d): d is VantageDocument => d !== null),
   ]
+  // typed + file questions combine into ONE run; a set runs its own questions
+  const questions =
+    mode === 'set'
+      ? (chosenSet?.fields.map((f) => f.question) ?? [])
+      : combineQuestions(question, reviewed?.questions ?? [])
+  const attached = plural(documents.length, s.attachedOne, s.attachedOther)
+  const countLine =
+    mode === 'set' && chosenSet
+      ? fmt(s.askCountSet, {
+          set: chosenSet.name,
+          questions: plural(questions.length, s.questionsOne, s.questionsOther),
+          attached,
+        })
+      : questions.length > 0
+        ? fmt(s.askCount, {
+            questions: plural(questions.length, s.questionsOne, s.questionsOther),
+            attached,
+          })
+        : attached
 
   function onDrop(e: DragEvent) {
     e.preventDefault()
@@ -57,7 +101,7 @@ export function VantageAskScreen() {
   async function ask() {
     setError(null)
     try {
-      const { runId } = await m.ask.mutateAsync({ question, documents })
+      const { runId } = await m.ask.mutateAsync({ questions, documents })
       navigate(`/vantage/runs/${runId}`)
     } catch (e) {
       setError((e as Error).message)
@@ -164,18 +208,51 @@ export function VantageAskScreen() {
           <h3 className="font-display text-[1rem] font-semibold">{s.questionZone}</h3>
           <span className="text-dense text-faint">{s.questionAside}</span>
         </div>
-        <textarea
-          aria-label={s.questionAria}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="min-h-[84px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.84375rem]"
-        />
+        <QuestionSetControl
+          store="vantage"
+          labels={{ oneOff: s.modeOneOff, set: s.modeSet }}
+          mode={mode}
+          onModeChange={setMode}
+          selectedId={setId}
+          onSelect={setSetId}
+        >
+          <textarea
+            aria-label={s.questionAria}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            className="mt-3 min-h-[84px] w-full resize-y rounded-lg border border-rule-strong bg-bg px-3 py-2.5 text-[0.84375rem]"
+          />
+          <QuestionFileIntake
+            onParsed={(file, parsed) => {
+              setReviewed({
+                fileName: parsed.fileName,
+                size: file.size,
+                read: parsed.questions.length,
+                questions: parsed.questions,
+              })
+              setSavedFile(null)
+            }}
+          />
+          {reviewed && (
+            <ParsedQuestionsCard
+              fileName={reviewed.fileName}
+              read={reviewed.read}
+              questions={reviewed.questions}
+              saved={savedFile === reviewed.fileName}
+              onRemoveQuestion={(i) =>
+                setReviewed((r) => r && { ...r, questions: r.questions.filter((_, j) => j !== i) })
+              }
+              onRemoveFile={() => setReviewed(null)}
+              onSaveAsSet={() => setSaveOpen(true)}
+            />
+          )}
+        </QuestionSetControl>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <Button variant="primary" disabled={m.ask.isPending} onClick={ask}>
             {s.askBtn}
           </Button>
-          <span className="text-[0.75rem] text-faint">
-            {plural(documents.length, s.attachedOne, s.attachedOther)}
+          <span className="text-[0.75rem] text-faint" data-testid="ask-count">
+            {countLine}
           </span>
         </div>
         {error && (
@@ -187,6 +264,22 @@ export function VantageAskScreen() {
       <p className="mt-[30px] border-t border-rule pt-3 text-micro normal-case tracking-normal text-faint">
         {strings.suite.fictionalNote}
       </p>
+
+      {saveOpen && reviewed && (
+        <AddQuestionSetModal
+          store="vantage"
+          prefill={{
+            file: { name: reviewed.fileName, size: reviewed.size },
+            title: deriveSetTitle(reviewed.fileName),
+            questions: reviewed.questions,
+          }}
+          onClose={() => setSaveOpen(false)}
+          onSaved={(set) => {
+            setSavedFile(reviewed.fileName)
+            toast({ message: fmt(strings.questionSets.savedToast, { name: set.name }) })
+          }}
+        />
+      )}
     </div>
   )
 }

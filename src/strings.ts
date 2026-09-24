@@ -57,6 +57,29 @@ export const strings = {
     remove: 'Remove',
   },
 
+  /* ════════ Shared question-set control (CPEA + Vantage — one component, per-application shelves) ════════ */
+  questionSets: {
+    modeAria: 'Question mode',
+    addNew: 'Add new',
+    addNewHint: '· upload a question set',
+    /* Add-a-question-set modal */
+    modalTitle: 'Add a question set',
+    modalClose: 'Close',
+    dropTitle: 'Drop a question file here',
+    dropHint: 'or browse files · CSV or XLSX, one question per row',
+    dropAria: 'Upload a question file',
+    readingFile: 'Reading {file}…',
+    fileReadOne: '1 question read from {file}',
+    fileReadOther: '{n} questions read from {file}',
+    titleLabel: 'Title',
+    titlePlaceholder: 'e.g. Watchlist deep-dive',
+    descLabel: 'Description',
+    descPlaceholder: 'One line on what this set asks and when to use it',
+    save: 'Save',
+    cancel: 'Cancel',
+    savedToast: 'Saved “{name}” to this application’s question sets.',
+  },
+
   /* ════════ Command palette (⌘K) ════════ */
   palette: {
     trigger: 'Search',
@@ -85,7 +108,7 @@ export const strings = {
   /* ════════ Suite landing + application switcher ════════ */
   suite: {
     apps: {
-      /* Descriptions are single-line Steve-drafts — wordsmithing later. */
+      /* Descriptions are single-line drafts — wordsmithing later. */
       crr: {
         short: 'CRR',
         full: 'Credit Risk Review',
@@ -102,6 +125,12 @@ export const strings = {
         short: 'Vantage',
         full: 'P&C',
         description: 'Generic document extraction and insights.',
+      },
+      /* Added 2026-09-24 (demo feedback round) — wordsmithing later. */
+      inquiry: {
+        short: 'Inquiry',
+        full: 'Senior leadership',
+        description: 'One-off questions of the portfolio, for senior leadership.',
       },
     },
     landingAria: 'Applications',
@@ -126,24 +155,9 @@ export const strings = {
       sub: 'Ask a question of any population — documents you bring, documents on system, or a whole portfolio slice.',
       questionZone: 'What to ask',
       questionAside: 'one prompt, or a saved question set',
-      modeAria: 'Question mode',
+      /* The shared question-set control's copy lives under questionSets. */
       modePrompt: 'Prompt only',
       modeQset: 'Question set',
-      addNew: 'Add new',
-      addNewHint: '· upload a question set',
-      qsCardCount: '{n} questions',
-      /* Add-a-question-set modal */
-      qsModalTitle: 'Add a question set',
-      qsModalClose: 'Close',
-      qsDropTitle: 'Drop a question file here',
-      qsDropHint: 'or browse files · CSV or XLSX, one question per row',
-      qsDropAria: 'Upload a question file',
-      qsTitleLabel: 'Title',
-      qsTitlePlaceholder: 'e.g. Watchlist deep-dive',
-      qsDescLabel: 'Description',
-      qsDescPlaceholder: 'One line on what this set asks and when to use it',
-      qsSave: 'Save',
-      qsCancel: 'Cancel',
       promptAria: 'Prompt',
       promptPlaceholder:
         'What do you want to know? e.g. Which borrowers have covenant headroom below 1.0x at the latest test?',
@@ -161,6 +175,17 @@ export const strings = {
       popSubPortfolio: 'Sub-portfolio',
       popRegion: 'Region',
       popAsOf: 'As of',
+      /* Borrower scope (demo feedback round) — leads the population zone */
+      borrowerLabel: 'Borrower',
+      borrowerOptional: '— optional',
+      borrowerPlaceholder:
+        'Search a single borrower — name or RXM — to scope the run to their documents',
+      borrowerAria: 'Borrower search',
+      borrowerListAria: 'Matching borrowers',
+      borrowerNoMatch: 'No borrower matches — try a name or an RXM.',
+      borrowerClear: 'Clear borrower',
+      /* how a borrower-scoped population names itself, everywhere it appears */
+      borrowerScope: '{name} ({rxm})',
       scopeLine: 'Will run against: {scope} — resolves to {borrowers} · {documents}',
       borrowersOne: '1 borrower',
       borrowersOther: '{n} borrowers',
@@ -172,6 +197,9 @@ export const strings = {
     processing: {
       title: 'Running the analysis',
       sub: '{set} · {questions} questions · {scope} — {borrowers}, {documents}.',
+      /* a one-question (prompt-only) run */
+      subSingle: 'One-off question · {scope} — {borrowers}, {documents}.',
+      stepQuestionSingle: 'Running the question across {documents}',
       leave: 'You can leave — the run continues and lands in Runs.',
       cancel: 'Cancel run',
       stepPopulation: 'Population resolved',
@@ -195,9 +223,23 @@ export const strings = {
       cancelledNote:
         'This run was cancelled before completion — no answers were recorded. The run is kept here as a record.',
       summary: 'Summary',
-      setChip: '{name} · {n} questions',
+      setChip: '{name} · {questions}',
       runLine: 'run {time} · {portfolio} · {asOf}',
-      countsLine: '{borrowers} analyzed · {documents} · {questions} questions · {answers} answers',
+      countsLine: '{borrowers} analyzed · {documents} · {questions} · {answers}',
+      /* The single-question shape (one question per run — CPEA prompt-only, every Inquiry run) */
+      subSingle:
+        'Run {state} {time} · one question · {scope} — one row per borrower, one graded answer each.',
+      oneOffChip: 'One-off question',
+      quotedQuestion: '"{question}"',
+      colAnswer: 'Answer',
+      attentionSingle: '{name} — answer could not be grounded',
+      tableNoteSingle:
+        'Expand a row for the full answer with its grade and evidence · default sort: most flags first',
+      allStated: 'all stated',
+      /* A borrower-scoped run's accounting — however trivially, it still states itself */
+      borrowerAsOf: 'all documents on system',
+      popCriteriaBorrower:
+        'Criteria: {name} ({rxm}) — the borrower you named, with all of their documents on system. One borrower in scope; nothing excluded.',
       questionsOne: '1 question',
       questionsOther: '{n} questions',
       answersOne: '1 answer',
@@ -255,6 +297,7 @@ export const strings = {
       borrowersOther: '{n} borrowers',
       inScope: 'in monitor scope',
       notInScope: 'not in scope',
+      askAbout: 'Ask about this borrower →',
       viewExtraction: 'View extraction',
       rawDocument: 'Raw document',
       groupDocsOne: '1 document',
@@ -264,6 +307,7 @@ export const strings = {
     /* Rationale-card LABELS are per-application config; these two are ERM's. */
     detail: {
       titleAnswer: '{borrower} — {label} {value}',
+      titleSingle: '{borrower} — answer',
       answer: 'Answer',
       rationale: 'Rationale',
       memoFacts: 'Memo facts',
@@ -300,6 +344,27 @@ export const strings = {
     },
   },
 
+  /* ════════ Inquiry application — CPEA's workflow with question sets off ════════
+     ONLY the words that differ from CPEA live here; every other word on
+     Inquiry's screens is CPEA's (the erm block above), by design. */
+  inquiry: {
+    nav: { aria: 'Inquiry navigation' },
+    start: {
+      title: 'Ask a question of the portfolio',
+      sub: 'One question, any population — documents you bring, documents on system, or a whole portfolio slice.',
+      questionZone: 'Your question',
+      questionAside: 'type it and go — nothing here is saved for reuse',
+      promptAria: 'Your question',
+      promptPlaceholder:
+        'What do you want to know? e.g. Which borrowers face refinancing risk in the next 12 months, and what drives it?',
+    },
+    results: { title: 'Results' },
+    runs: { sub: 'Every question asked, kept — open any prior answer exactly as it stood.' },
+    documents: {
+      sub: 'Everything on system this application can see — search it, and view any document’s extraction or raw pages.',
+    },
+  },
+
   /* ════════ Vantage application (ask · processing · answer · runs) ════════ */
   vantage: {
     nav: { ask: 'Ask', runs: 'Runs', aria: 'Vantage navigation' },
@@ -312,9 +377,31 @@ export const strings = {
       dropBrowse: 'or browse files',
       dropHint: 'PDF · DOCX · XLSX · CSV — questions run against text and data alike',
       dropAria: 'Upload documents',
-      questionZone: 'Your question',
-      questionAside: 'one question — the answer is a run, not a chat',
+      questionZone: 'What to ask',
+      questionAside: 'one-off questions, or a saved question set — every ask is a run, not a chat',
+      modeOneOff: 'One-off questions',
+      modeSet: 'Question set',
       questionAria: 'Your question',
+      /* The slim question-file row (one-off mode): {ext} renders in mono */
+      fileRowPre: 'Or add a file of questions — drop an',
+      fileRowExt: '.xlsx',
+      fileRowPost: 'here, one question per row. Runs once; nothing is saved.',
+      fileAria: 'Add a file of questions',
+      /* The parse-and-review card */
+      parsedOne: '1 question read',
+      parsedOther: '{n} questions read',
+      parsedListAria: 'Questions read from {file}',
+      saveAsSet: 'Save as a question set',
+      savedAsSet: 'Saved as a question set',
+      removeFile: 'Remove {file}',
+      removeQuestion: 'Remove question {n}',
+      quotedQuestion: '"{question}"',
+      moreQuestions: '+ {n} more — review all before running',
+      /* the count beside Ask */
+      questionsOne: '1 question',
+      questionsOther: '{n} questions',
+      askCount: '{questions} · {attached}',
+      askCountSet: '{set} · {questions} · {attached}',
       askBtn: 'Ask',
       attachedOne: '1 document attached',
       attachedOther: '{n} documents attached',
@@ -329,6 +416,10 @@ export const strings = {
       runLine: 'Run · {when} ·',
       viewInRuns: 'view in Runs',
       eyebrow: 'Answer',
+      /* a many-question run: the anatomy repeats per question */
+      eyebrowMany: 'Answers',
+      titleMany: '{n} questions',
+      sectionIndex: 'Q{n} of {total}',
       viewSource: 'View source',
       viewRows: 'View rows used',
       rowsLoc: 'rows {rows} of {of}',
@@ -350,6 +441,8 @@ export const strings = {
       sub: "Every question you've asked — the documents, the question, and the answer, frozen as of that moment.",
       docsChipOne: '1 document',
       docsChipOther: '{n} documents',
+      questionsChipOne: '1 question',
+      questionsChipOther: '{n} questions',
       answered: 'answered',
       cancelled: 'cancelled',
       failed: 'failed',

@@ -6,12 +6,15 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './index'
 import type {
+  AddQuestionSetInput,
   AmendSource,
   ClearReason,
   CreateReviewInput,
   DocumentFilters,
   ErmRun,
   PopulationCriteria,
+  PortfolioAppId,
+  QuestionSetStore,
   ReviewFilters,
   VantageDocument,
   VantageRun,
@@ -28,18 +31,51 @@ export const queryKeys = {
   policies: (reviewId: string) => ['policies', reviewId] as const,
   documents: (query: string, filters: DocumentFilters) => ['documents', query, filters] as const,
   documentText: (docId: string) => ['documentText', docId] as const,
-  questionSets: ['erm', 'questionSets'] as const,
-  population: (criteria: PopulationCriteria) => ['erm', 'population', criteria] as const,
-  runs: ['erm', 'runs'] as const,
-  run: (runId: string) => ['erm', 'run', runId] as const,
+  /** Per-application shelves (v1.8): one cache entry per store. */
+  questionSets: (store: QuestionSetStore) => ['questionSets', store] as const,
+  borrowers: (query: string) => ['borrowers', query] as const,
+  population: (criteria: PopulationCriteria) => ['population', criteria] as const,
+  /** App-scoped run slices (v1.8): CPEA's and Inquiry's never share a key. */
+  runs: (app: PortfolioAppId) => ['runs', app] as const,
+  run: (app: PortfolioAppId, runId: string) => ['runs', app, 'run', runId] as const,
 }
 
 export const useMe = () => useQuery({ queryKey: queryKeys.me, queryFn: () => api.me() })
 
-// ---- ERM (v1.5) ----
+// ---- Question sets (per-application stores, v1.8) ----
 
-export const useQuestionSets = () =>
-  useQuery({ queryKey: queryKeys.questionSets, queryFn: () => api.getQuestionSets() })
+/** One application's shelf; `null` (an application without sets) fetches nothing. */
+export const useQuestionSets = (store: QuestionSetStore | null) =>
+  useQuery({
+    // no shelf → its own inert key, so it can never read another store's cache
+    queryKey: store ? queryKeys.questionSets(store) : (['questionSets', 'none'] as const),
+    queryFn: () => api.getQuestionSets(store!),
+    enabled: store !== null,
+  })
+
+export function useQuestionSetMutations(store: QuestionSetStore) {
+  const qc = useQueryClient()
+  return {
+    addQuestionSet: useMutation({
+      mutationFn: (input: AddQuestionSetInput) => api.addQuestionSet(store, input),
+      onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.questionSets(store) }),
+    }),
+  }
+}
+
+/** Read a question file back for review (nothing retained server-side). */
+export const useParseQuestionFile = () =>
+  useMutation({ mutationFn: (file: File) => api.parseQuestionFile(file) })
+
+// ---- The CPEA workflow (v1.5; app-scoped v1.8 — CPEA and Inquiry) ----
+
+export const useBorrowerSearch = (query: string, enabled = true) =>
+  useQuery({
+    queryKey: queryKeys.borrowers(query),
+    queryFn: () => api.searchBorrowers(query),
+    placeholderData: keepPreviousData,
+    enabled,
+  })
 
 export const useResolvePopulation = (criteria: PopulationCriteria) =>
   useQuery({
@@ -49,17 +85,18 @@ export const useResolvePopulation = (criteria: PopulationCriteria) =>
   })
 
 /** Polls while the run is queued/running so processing advances live. */
-export const useRun = (runId: string) =>
+export const useRun = (app: PortfolioAppId, runId: string) =>
   useQuery({
-    queryKey: queryKeys.run(runId),
-    queryFn: () => api.getRun(runId),
+    queryKey: queryKeys.run(app, runId),
+    queryFn: () => api.getRun(app, runId),
     refetchInterval: (q) => {
       const state = (q.state.data as ErmRun | undefined)?.state
       return state === 'queued' || state === 'running' ? 400 : false
     },
   })
 
-export const useRuns = () => useQuery({ queryKey: queryKeys.runs, queryFn: () => api.listRuns() })
+export const useRuns = (app: PortfolioAppId) =>
+  useQuery({ queryKey: queryKeys.runs(app), queryFn: () => api.listRuns(app) })
 
 // ---- Vantage (v1.7) ----
 
@@ -82,8 +119,8 @@ export function useVantageMutations() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['vantage'] })
   return {
     ask: useMutation({
-      mutationFn: (v: { question: string; documents: VantageDocument[] }) =>
-        api.askDocuments(v.question, v.documents),
+      mutationFn: (v: { questions: string[]; documents: VantageDocument[] }) =>
+        api.askDocuments(v.questions, v.documents),
       onSuccess: invalidate,
     }),
     cancel: useMutation({
@@ -96,22 +133,18 @@ export function useVantageMutations() {
 export const usePolicyDocs = () =>
   useQuery({ queryKey: ['policyDocs'], queryFn: () => api.listPolicyDocs() })
 
-export function useErmMutations() {
+/** Start/cancel runs in ONE application's slice (CPEA = 'erm', Inquiry = 'inquiry'). */
+export function usePortfolioMutations(app: PortfolioAppId) {
   const qc = useQueryClient()
-  const invalidateRuns = () => qc.invalidateQueries({ queryKey: ['erm'] })
+  const invalidateRuns = () => qc.invalidateQueries({ queryKey: queryKeys.runs(app) })
   return {
     startRun: useMutation({
-      mutationFn: (input: Parameters<typeof api.startRun>[0]) => api.startRun(input),
+      mutationFn: (input: Parameters<typeof api.startRun>[1]) => api.startRun(app, input),
       onSuccess: invalidateRuns,
     }),
     cancelRun: useMutation({
-      mutationFn: (runId: string) => api.cancelRun(runId),
+      mutationFn: (runId: string) => api.cancelRun(app, runId),
       onSuccess: invalidateRuns,
-    }),
-    addQuestionSet: useMutation({
-      mutationFn: (input: { name: string; description: string; fileName?: string }) =>
-        api.addQuestionSet(input),
-      onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.questionSets }),
     }),
   }
 }

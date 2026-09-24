@@ -3,35 +3,10 @@ import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 import { api } from '@/api'
 
-// Node ≥ 22 exposes an experimental `localStorage` global that shadows jsdom's
-// and is inert without --localstorage-file. Tests need a real Storage, so use
-// jsdom's window.localStorage when it is one, else a small in-memory shim.
-function memoryStorage(): Storage {
-  const store = new Map<string, string>()
-  return {
-    get length() {
-      return store.size
-    },
-    key: (i) => Array.from(store.keys())[i] ?? null,
-    getItem: (k) => store.get(k) ?? null,
-    setItem: (k, v) => void store.set(k, String(v)),
-    removeItem: (k) => void store.delete(k),
-    clear: () => store.clear(),
-  }
-}
-const domStorage = (() => {
-  try {
-    const s = window.localStorage
-    return typeof s?.clear === 'function' ? s : null
-  } catch {
-    return null
-  }
-})()
-Object.defineProperty(globalThis, 'localStorage', {
-  value: domStorage ?? memoryStorage(),
-  configurable: true,
-  writable: true,
-})
+// The real-Storage shim is installed by ./storage.ts, which runs FIRST
+// (vite.config setupFiles order): this file's imports are hoisted, so a
+// shim defined here would land after the api singleton had already
+// captured the inert Node global as its storage.
 
 afterEach(() => {
   cleanup()

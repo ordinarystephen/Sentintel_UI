@@ -1,10 +1,13 @@
 /**
- * ERM results — the Portfolio monitor (concept pins E1/E8/E9/E12/E13).
- * Summary card (grade counts computed from the answer store — grades live
- * only on answers), the population disclosure ("why these borrowers"),
- * the group-by toggle (two cuts of ONE answer store), the monitor table
- * with inline expansion, exports (contract open — quiet notice), and the
- * sticky scroll-to-top.
+ * Results — CPEA's Portfolio monitor and Inquiry's Results, ONE screen
+ * (concept pins E1/E8/E9/E12/E13; I3). Summary card (grade counts computed
+ * from the answer store — grades live only on answers), the population
+ * disclosure ("why these borrowers" — a borrower-scoped run names the
+ * borrower as its criterion), exports (contract open — quiet notice), and
+ * the sticky scroll-to-top. THE SHAPE SWITCH (v1.8): a run with exactly
+ * one question renders the single-question shape (SingleQuestionTable, no
+ * group-by toggle); more than one renders the group-by toggle (two cuts
+ * of ONE answer store) over the monitor table — untouched.
  */
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -18,6 +21,9 @@ import { cx } from '@/lib/cx'
 import { fmt, plural } from '@/lib/fmt'
 import { strings } from '@/strings'
 import { ErmMonitorTable } from './ErmMonitorTable'
+import { shelfOf, usePortfolioApp } from './portfolioApp'
+import { isSingleQuestion, runQuestions, scopeShort } from './runModel'
+import { SingleQuestionTable } from './SingleQuestionTable'
 
 const s = strings.erm.results
 
@@ -26,6 +32,9 @@ const formatTime = (iso: string) =>
 
 export function GradeCountChips({ answers }: { answers: readonly ErmAnswer[] }) {
   const c = gradeCounts(answers)
+  // every answer grounded by a quote: say so once, rather than "N stated"
+  if (answers.length > 0 && c.stated === answers.length)
+    return <Badge tone="neutral">{s.allStated}</Badge>
   return (
     <>
       {c.stated > 0 && <Badge tone="neutral">{fmt(s.chipStated, { n: c.stated })}</Badge>}
@@ -80,25 +89,31 @@ function QuestionView({ run, set }: { run: ErmRun; set: QuestionSet }) {
 }
 
 export function ErmResultsView({ run }: { run: ErmRun }) {
+  const app = usePortfolioApp()
+  const copy = app.copy.results
   const navigate = useNavigate()
   const { toast } = useToast()
-  const sets = useQuestionSets()
+  const sets = useQuestionSets(run.questionSetId ? shelfOf(app) : null)
   const set = sets.data?.find((q) => q.id === run.questionSetId)
+  const questions = runQuestions(run, set, s.colAnswer)
   const [view, setView] = useState<'borrower' | 'question'>('borrower')
   const pop = run.population
   const cancelled = run.state === 'cancelled' || run.state === 'failed'
 
   const attention = useMemo(() => {
-    if (!set || run.answers.length === 0) return null
+    if (!questions || run.answers.length === 0) return null
     let worst: { name: string; flags: number } | null = null
     for (const b of pop.included) {
       const f = flagCount(run.answers, b.rxm)
       if (f > 0 && (!worst || f > worst.flags)) worst = { name: b.name, flags: f }
     }
     return worst
-  }, [run.answers, pop.included, set])
+  }, [run.answers, pop.included, questions])
 
-  if (!set) return null
+  if (!questions) return null
+  const single = isSingleQuestion(questions)
+  const scope = scopeShort(run.criteria, app.copy.start.borrowerScope)
+  const questionCount = plural(questions.length, s.questionsOne, s.questionsOther)
   const stateLabel =
     run.state === 'cancelled'
       ? s.stateCancelled
@@ -109,19 +124,27 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
   return (
     <div className="settle">
       <div>
-        <h1 className="font-display text-[1.375rem] font-semibold tracking-display">{s.title}</h1>
+        <h1 className="font-display text-[1.375rem] font-semibold tracking-display">
+          {copy.title}
+        </h1>
         <p className="mb-3.5 max-w-[70ch] text-ui-sm text-muted">
-          {fmt(s.sub, {
-            state: stateLabel,
-            time: formatTime(run.cancelledAt ?? run.startedAt),
-            set: set.name,
-            portfolio: run.criteria.portfolio,
-          })}
+          {single
+            ? fmt(s.subSingle, {
+                state: stateLabel,
+                time: formatTime(run.cancelledAt ?? run.startedAt),
+                scope,
+              })
+            : fmt(s.sub, {
+                state: stateLabel,
+                time: formatTime(run.cancelledAt ?? run.startedAt),
+                set: set?.name ?? '',
+                portfolio: scope,
+              })}
         </p>
       </div>
 
       <div className="mb-3.5 flex flex-wrap items-center gap-2">
-        <Button variant="outline" small onClick={() => navigate('/erm')}>
+        <Button variant="outline" small onClick={() => navigate(app.base)}>
           {s.newAnalysis}
         </Button>
         <span className="flex-1" />
@@ -136,12 +159,23 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
       <div className="mb-4 rounded-xl border border-rule bg-bg-subtle px-[18px] py-4">
         <div className="mb-2.5 flex flex-wrap items-center gap-3.5 text-[0.8125rem]">
           <b className="font-display text-[0.9375rem]">{s.summary}</b>
-          <Badge tone="indigo">{fmt(s.setChip, { name: set.name, n: set.fields.length })}</Badge>
+          {set ? (
+            <Badge tone="indigo">
+              {fmt(s.setChip, { name: set.name, questions: questionCount })}
+            </Badge>
+          ) : (
+            <>
+              <Badge tone="indigo">{s.oneOffChip}</Badge>
+              <span className="font-display text-[0.8125rem] text-ink-soft italic">
+                {fmt(s.quotedQuestion, { question: questions[0].question })}
+              </span>
+            </>
+          )}
           <span className="font-mono text-micro normal-case tracking-normal text-faint">
             {fmt(s.runLine, {
               time: formatTime(run.startedAt),
-              portfolio: run.criteria.portfolio,
-              asOf: run.criteria.asOf.toLowerCase(),
+              portfolio: scope,
+              asOf: run.criteria.borrower ? s.borrowerAsOf : run.criteria.asOf.toLowerCase(),
             })}
           </span>
         </div>
@@ -161,8 +195,8 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
                   strings.erm.documents.docsOne,
                   strings.erm.documents.docsOther,
                 ),
-                questions: set.fields.length,
-                answers: run.answers.length,
+                questions: questionCount,
+                answers: plural(run.answers.length, s.answersOne, s.answersOther),
               })}
             </span>
             <GradeCountChips answers={run.answers} />
@@ -171,11 +205,14 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
                 {s.attention}
                 <b>{attention.name}</b>
                 {' — '}
-                {fmt(s.attentionLine, {
-                  name: '',
-                  flags: attention.flags,
-                  total: set.fields.length,
-                }).replace(/^ — /, '')}
+                {(single
+                  ? fmt(s.attentionSingle, { name: '' })
+                  : fmt(s.attentionLine, {
+                      name: '',
+                      flags: attention.flags,
+                      total: questions.length,
+                    })
+                ).replace(/^ — /, '')}
               </span>
             )}
           </div>
@@ -183,7 +220,9 @@ export function ErmResultsView({ run }: { run: ErmRun }) {
         <PopulationDisclosure run={run} />
       </div>
 
-      {!cancelled && (
+      {!cancelled && single && <SingleQuestionTable run={run} field={questions[0]} />}
+
+      {!cancelled && !single && set && (
         <>
           <div className="mb-2.5 flex items-center gap-2">
             <div
@@ -274,12 +313,17 @@ function PopulationDisclosure({ run }: { run: ErmRun }) {
       {open && (
         <div className="mt-2">
           <div className="text-[0.78125rem] text-muted">
-            {fmt(s.popCriteria, {
-              portfolio: pop.criteria.portfolio,
-              sub: pop.criteria.subPortfolio.toLowerCase(),
-              region: pop.criteria.region.toLowerCase(),
-              asOf: pop.criteria.asOf.toLowerCase(),
-            })}
+            {pop.criteria.borrower
+              ? fmt(s.popCriteriaBorrower, {
+                  name: pop.criteria.borrower.name,
+                  rxm: pop.criteria.borrower.rxm,
+                })
+              : fmt(s.popCriteria, {
+                  portfolio: pop.criteria.portfolio,
+                  sub: pop.criteria.subPortfolio.toLowerCase(),
+                  region: pop.criteria.region.toLowerCase(),
+                  asOf: pop.criteria.asOf.toLowerCase(),
+                })}
           </div>
           <div className="mt-1.5">
             {pop.excluded.map((e) => (

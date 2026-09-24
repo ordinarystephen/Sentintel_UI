@@ -10,20 +10,21 @@
  *   /crr/policy      policy library (stub)
  *   /crr/review/:id  the review page; `#sec-N` anchors deep-link into sections
  *   /crr/styleguide  dev-only type/token reference — not linked from navigation
- *   /erm             ERM start (portfolio analysis)   /erm/runs   runs kept
+ *   /erm             CPEA start (portfolio analysis)   /erm/runs   runs kept
  *   /erm/runs/:runId  results (a running run renders processing at its URL)
- *   /erm/documents    the shared repository through ERM's lens
+ *   /erm/documents    the shared repository through CPEA's lens
  *   /vantage         Vantage ask      /vantage/runs   runs kept
  *   /vantage/runs/:runId  the answer (running renders processing at its URL)
+ *   /inquiry         Inquiry start (one question)    /inquiry/runs   runs kept
+ *   /inquiry/runs/:runId  results      /inquiry/documents   Inquiry's lens
+ * CPEA and Inquiry are ONE workflow's screens mounted twice with
+ * different configuration (src/screens/erm/portfolioRoutes.tsx).
  */
 import { createBrowserRouter, createHashRouter, Navigate, type RouteObject } from 'react-router-dom'
 import { EntryScreen } from '@/screens/suite/EntryScreen'
 import { SuiteLandingScreen } from '@/screens/suite/SuiteLandingScreen'
-import { ErmDocumentsScreen } from '@/screens/erm/ErmDocumentsScreen'
-import { ErmRunScreen } from '@/screens/erm/ErmRunScreen'
-import { ErmRunsScreen } from '@/screens/erm/ErmRunsScreen'
-import { ErmShell } from '@/screens/erm/ErmShell'
-import { ErmStartScreen } from '@/screens/erm/ErmStartScreen'
+import { cpeaRoute } from '@/screens/erm/routes'
+import { inquiryRoute } from '@/screens/inquiry/routes'
 import { VantageAskScreen } from '@/screens/vantage/VantageAskScreen'
 import { VantageRunScreen } from '@/screens/vantage/VantageRunScreen'
 import { VantageRunsScreen } from '@/screens/vantage/VantageRunsScreen'
@@ -68,23 +69,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      {
-        path: 'erm',
-        element: <ErmShell />,
-        errorElement: <RouteErrorScreen />,
-        children: [
-          {
-            errorElement: <RouteErrorScreen />,
-            children: [
-              { index: true, element: <ErmStartScreen /> },
-              { path: 'runs', element: <ErmRunsScreen /> },
-              { path: 'runs/:runId', element: <ErmRunScreen /> },
-              { path: 'documents', element: <ErmDocumentsScreen /> },
-              { path: '*', element: <Navigate to="/erm" replace /> },
-            ],
-          },
-        ],
-      },
+      cpeaRoute,
       {
         path: 'vantage',
         element: <VantageShell />,
@@ -101,6 +86,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
+      inquiryRoute,
       // Unknown top-level paths (a stale link) go back through the entry
       // decision rather than a bare 404.
       { path: '*', element: <Navigate to="/" replace /> },

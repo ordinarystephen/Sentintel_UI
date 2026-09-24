@@ -1,14 +1,17 @@
 /**
- * ERM Documents — the shared platform repository through ERM's lens
- * (concept pins E5/E11): grouped by borrower (serif group header),
- * collapsible groups with 3 documents visible then scroll, name/RXM
- * search, data-driven in-monitor-scope chips (from the latest run), and
- * both faces of a document — the extraction (shared preview viewer) and
- * the raw pages (shared raw viewer). The lens = the latest run's
+ * Documents — the shared platform repository through THIS application's
+ * lens (CPEA's and Inquiry's — concept pins E5/E11/E16): grouped by
+ * borrower (serif group header), collapsible groups with 3 documents
+ * visible then scroll, name/RXM search, data-driven in-monitor-scope
+ * chips (from the app's latest run), and both faces of a document — the
+ * extraction (shared preview viewer) and the raw pages (shared raw
+ * viewer). Each group header ends with "Ask about this borrower →": Start,
+ * pre-scoped to that borrower (router state). The lens = the latest run's
  * population universe (included + indeterminate); nothing here is a
  * second document store.
  */
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api'
 import type { BorrowerRef, DocumentText, RepositoryDoc } from '@/api/types'
@@ -20,14 +23,16 @@ import { RawDocumentModal } from '@/components/viewers/RawDocumentModal'
 import { cx } from '@/lib/cx'
 import { fmt, plural } from '@/lib/fmt'
 import { strings } from '@/strings'
-
-const s = strings.erm.documents
+import { usePortfolioApp } from './portfolioApp'
 
 export function ErmDocumentsScreen() {
+  const app = usePortfolioApp()
+  const s = app.copy.documents
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const runs = useRuns()
+  const runs = useRuns(app.id)
   const repo = useQuery({
-    queryKey: ['repository', 'erm', query],
+    queryKey: ['repository', app.id, query],
     queryFn: () => api.searchRepository(query),
   })
   const [preview, setPreview] = useState<{ docId: string; fileName: string } | null>(null)
@@ -93,6 +98,19 @@ export function ErmDocumentsScreen() {
 
       <BorrowerGroups
         groups={groups}
+        headerAction={(b) => (
+          <button
+            type="button"
+            onClick={(e) => {
+              // never toggles the group: straight to Start, pre-scoped
+              e.stopPropagation()
+              navigate(app.base, { state: { borrower: { rxm: b.rxm, name: b.name } } })
+            }}
+            className="text-[0.75rem] text-muted underline underline-offset-2 hover:text-ink"
+          >
+            {s.askAbout}
+          </button>
+        )}
         renderDoc={(d) => (
           <div
             key={d.repoId}

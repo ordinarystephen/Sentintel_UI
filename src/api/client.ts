@@ -8,7 +8,12 @@
  */
 import { createMockApi } from './mock/mockApi'
 import type {
+  AddQuestionSetInput,
   AmendSource,
+  BorrowerIndexEntry,
+  ParsedQuestionFile,
+  PortfolioAppId,
+  QuestionSetStore,
   ErmRun,
   PopulationAccounting,
   PopulationCriteria,
@@ -198,63 +203,94 @@ export interface SentinelApi {
    */
   amendEvidence(reviewId: string, source: AmendSource, why: string): Promise<Review>
 
-  // ---- ERM (v1.5) ----
+  // ---- Question sets (v1.6, per-application stores v1.8) ----
 
-  /** The question sets the start screen can select. */
-  getQuestionSets(): Promise<QuestionSet[]>
+  /**
+   * One application's saved question sets (its shelf). Stores are
+   * PER-APPLICATION: CPEA's and Vantage's never mix — a set saved in one
+   * never appears in the other.
+   */
+  getQuestionSets(store: QuestionSetStore): Promise<QuestionSet[]>
+
+  /**
+   * Save a question set to ONE application's store ("Add new", or "Save
+   * as a question set" from a reviewed question file). With `questions`
+   * (an already-read file) those become the set's fields, in order;
+   * without them the mock parses nothing and gives the set a placeholder
+   * question list, labeled honestly. Persists; appends to that store only.
+   */
+  addQuestionSet(store: QuestionSetStore, input: AddQuestionSetInput): Promise<QuestionSet>
+
+  /**
+   * Read a question file back for review BEFORE anything runs (Vantage
+   * one-off intake). THE FILE CONTRACT: .xlsx, first sheet, first column,
+   * one question per row, blank cells skipped, row order kept. Nothing is
+   * retained server-side — the questions come back to the client, which
+   * runs them once (or saves them as a set via addQuestionSet). Parsing is
+   * backend work: the mock declares the contract with a fixture parse.
+   */
+  parseQuestionFile(file: File): Promise<ParsedQuestionFile>
+
+  // ---- CPEA workflow (v1.5; app-scoped v1.8 — CPEA and Inquiry) ----
+
+  /**
+   * The borrower index behind the population zone's borrower scope:
+   * name or RXM (ratified search keys — case-insensitive substring, RXM
+   * with or without the prefix), each with its documents on system.
+   * Empty query returns the whole index.
+   */
+  searchBorrowers(query: string): Promise<BorrowerIndexEntry[]>
 
   /**
    * Resolve a population from criteria WITHOUT starting a run: the start
    * screen's scope-preview line. Returns full accounting (included /
    * named exclusions / indeterminate) plus the in-scope document count.
+   * With `criteria.borrower` the population is that one borrower
+   * (included = 1, nothing excluded) and documentCount is its documents.
    */
   resolvePopulation(
     criteria: PopulationCriteria,
   ): Promise<{ population: PopulationAccounting; documentCount: number }>
 
   /**
-   * Start a run. Returns immediately with the runId; the run advances
-   * server-side (mock: derived from elapsed time, so it completes even if
-   * the user leaves) — poll with getRun. `documents` (fileNames) union
-   * with the population's document scope.
+   * Start a run in one application's run store (`app`: CPEA = 'erm',
+   * Inquiry = 'inquiry' — each keeps its own Runs). Exactly one of
+   * `questionSetId` (a set run) or `prompt` (a prompt-only run: ONE
+   * question) is required. Returns immediately with the runId; the run
+   * advances server-side (mock: derived from elapsed time, so it
+   * completes even if the user leaves) — poll with getRun. `documents`
+   * (fileNames) union with the population's document scope.
    */
-  startRun(input: {
-    questionSetId: string
-    prompt?: string
-    criteria: PopulationCriteria
-    documents?: string[]
-  }): Promise<{ runId: string }>
+  startRun(
+    app: PortfolioAppId,
+    input: {
+      questionSetId?: string
+      prompt?: string
+      criteria: PopulationCriteria
+      documents?: string[]
+    },
+  ): Promise<{ runId: string }>
 
-  /** One run, any state — queued/running (with progress), completed, cancelled, failed. */
-  getRun(runId: string): Promise<ErmRun>
+  /** One run of that application, any state — queued/running (with progress), completed, cancelled, failed. */
+  getRun(app: PortfolioAppId, runId: string): Promise<ErmRun>
+
+  /** That application's runs, newest first. Every run ever started is kept and revisitable. */
+  listRuns(app: PortfolioAppId): Promise<ErmRun[]>
+
+  /** Cancel a running run: it becomes `cancelled` and stays in that application's Runs. */
+  cancelRun(app: PortfolioAppId, runId: string): Promise<ErmRun>
+
+  // ---- Vantage (v1.7; questions[] v1.8) ----
 
   /**
-   * Save a question set (CPEA "Add new"): the mock parses no file — a saved
-   * set gets a placeholder question list (count from fixture logic, labeled
-   * honestly). Appends to getQuestionSets and persists.
-   */
-  addQuestionSet(input: {
-    name: string
-    description: string
-    fileName?: string
-  }): Promise<QuestionSet>
-
-  /** Newest first. Every run ever started is kept and revisitable. */
-  listRuns(): Promise<ErmRun[]>
-
-  /** Cancel a running run: it becomes `cancelled` and stays in Runs. */
-  cancelRun(runId: string): Promise<ErmRun>
-
-  // ---- Vantage (v1.7) ----
-
-  /**
-   * Ask a question of uploaded documents (upload only — no repository).
+   * Ask ONE OR MANY questions of uploaded documents (upload only — no
+   * repository). Typed and file questions arrive combined, in order.
    * Returns the runId immediately; the run advances server-side (mock:
-   * derived from elapsed time). One question in, one answer out — a run,
-   * never a chat; a follow-up is a NEW run against the same docset with
-   * no context carried.
+   * derived from elapsed time). The answer is an ordered list of
+   * per-question sections — a run, never a chat; a follow-up is a NEW
+   * single-question run against the same docset with no context carried.
    */
-  askDocuments(question: string, documents: VantageDocument[]): Promise<{ runId: string }>
+  askDocuments(questions: string[], documents: VantageDocument[]): Promise<{ runId: string }>
 
   /** One Vantage run, any state (poll while queued/running). */
   getVantageRun(runId: string): Promise<VantageRun>

@@ -20,12 +20,34 @@
  * shape so stale persisted state is discarded.
  */
 import { fmt } from '@/lib/fmt'
-import { ERM_ANSWERS, ERM_POPULATION, ERM_RUN_SCOPE, ERM_RUNS, QUESTION_SETS } from './ermFixtures'
-import { VANTAGE_DEMO_BLOCKS, VANTAGE_RUNS } from './vantageFixtures'
+import {
+  ERM_ANSWERS,
+  ERM_BORROWERS,
+  ERM_POPULATION,
+  ERM_RUN_SCOPE,
+  ERM_RUNS,
+  QUESTION_SETS,
+} from './ermFixtures'
+import { INQUIRY_RUNS, PROMPT_RUN_ANSWERS } from './inquiryFixtures'
+import {
+  QUESTION_FILES,
+  VANTAGE_ANSWER_POOL,
+  VANTAGE_DEMO_BLOCKS,
+  VANTAGE_QUESTION_SETS,
+  VANTAGE_RUNS,
+} from './vantageFixtures'
 import { ApiError, type SentinelApi } from '../client'
+import { PROMPT_QUESTION_ID } from '../types'
 import type {
   AttentionItem,
+  BorrowerIndexEntry,
+  BorrowerRef,
+  ErmAnswer,
   ErmRun,
+  PopulationAccounting,
+  PortfolioAppId,
+  QuestionSetStore,
+  VantageAnswerSection,
   ErmRunState,
   VantageDocument,
   VantageRun,
@@ -65,6 +87,7 @@ import {
   DEBATES,
   EXPORT_FAILS_ID,
   flagsFor,
+  LEADERSHIP_USER,
   ME,
   VEYLAND,
   VEYLAND_ID,
@@ -97,10 +120,23 @@ export const MESSAGES = {
     'Placeholder question {n} for "{name}" — the uploaded file is not parsed in this build.',
   qsPlaceholderDesc:
     'Saved set "{name}" — placeholder questions (file parsing arrives with the backend).',
+  qsFromFileDescOne: '1 question read from {file}.',
+  qsFromFileDescOther: '{n} questions read from {file}.',
   emptyQuestion: 'Type a question or a search term first.',
+  runNeedsQuestion: 'Type a question first — or choose a question set.',
+  runOneMode: 'A run asks a typed question or a question set, not both.',
+  noQuestionSet: 'No question set with id {id} in this application.',
+  ungrounded: 'The documents on system for this borrower do not ground an answer to this question.',
+  parseWrongType:
+    'Could not read {file}: question files are .xlsx (or .csv), one question per row.',
+  parseEmpty:
+    'Could not read any questions from {file}: the first column of the first sheet is empty.',
+  parsePlaceholder:
+    'Placeholder question {n} from {file} — this build reads only the demo file; parsing arrives with the backend.',
   vantageReading: 'Reading {file} — {meta}…',
   vantageAnswering: 'Answering…',
-  vantageNeedsBoth: 'Bring at least one document and ask one question.',
+  vantageAnsweringMany: 'Answering {n} questions…',
+  vantageNeedsBoth: 'Bring at least one document and ask at least one question.',
   noVantageRun: 'No run with id {id}.',
   alreadyInReview: '{file} is already part of this review.',
   respondEmpty: 'Say what to re-check, correct, or add before sending.',
@@ -142,9 +178,22 @@ export const STORAGE_KEY = 'sentinel.mock.state'
  * REMOVED from the processing seed, reviews/seeds gain workpaperConfig +
  * repository picks,
  * persisted state gains ermQuestionSets);
- * 9 = the Vantage slice (v1.7 — persisted state gains vantageRuns).
+ * 9 = the Vantage slice (v1.7 — persisted state gains vantageRuns);
+ * 10 = demo feedback round (v1.8 — ONE bump for every persisted change:
+ * question sets become per-application stores (`ermQuestionSets` →
+ * `questionSets.{erm,vantage}`), CPEA runs become app-scoped slices
+ * (`ermRuns` → `portfolioRuns.{erm,inquiry}`) whose records may omit
+ * `questionSetId` (prompt-only) and whose criteria may carry `borrower`,
+ * and Vantage runs carry `questions[]` instead of `question`).
  */
-export const STATE_VERSION = 9
+export const STATE_VERSION = 10
+
+/**
+ * Mock-only sign-in switch (v1.8): which fixture user `me()` returns. Unset
+ * (or unknown) = the demo user with every entitlement. The real backend
+ * takes identity from the session; this key does not exist there.
+ */
+export const MOCK_USER_KEY = 'sentinel.mock.user'
 
 /**
  * Policy search fixtures (v1.6): the browse rows (newest revision first)
@@ -215,7 +264,8 @@ interface ProcessingSeed {
 interface PersistedErmRun {
   runId: string
   startedAt: string
-  questionSetId: string
+  /** Absent on a prompt-only (one-question) run. */
+  questionSetId?: string
   prompt?: string
   criteria: PopulationCriteria
   documents: string[]
@@ -228,20 +278,46 @@ interface PersistedState {
   processing: Record<string, ProcessingSeed>
   /** itemId → epoch ms when the re-run lands. */
   reRuns: Record<string, { until: number; text: string }>
-  /** ERM (v1.5): user-started runs, by runId. */
-  ermRuns: Record<string, PersistedErmRun>
-  /** CPEA (v1.6): user-saved question sets, in save order. */
-  ermQuestionSets: QuestionSet[]
-  /** Vantage (v1.7): user-started runs, by runId (meta only — see ermRuns). */
+  /**
+   * CPEA-workflow runs (v1.5; app-scoped v1.8): user-started runs by
+   * runId, ONE SLICE PER APPLICATION — Inquiry's runs never list in CPEA.
+   */
+  portfolioRuns: Record<PortfolioAppId, Record<string, PersistedErmRun>>
+  /** User-saved question sets (v1.6; per-application v1.8), in save order. */
+  questionSets: Record<QuestionSetStore, QuestionSet[]>
+  /** Vantage (v1.7): user-started runs, by runId (meta only — see portfolioRuns). */
   vantageRuns: Record<string, PersistedVantageRun>
 }
 
 interface PersistedVantageRun {
   runId: string
-  question: string
+  /** v1.8: one or many, in the order asked. */
+  questions: string[]
   documents: VantageDocument[]
   startedAt: string
   cancelledAt?: string
+}
+
+const freshState = (): PersistedState => ({
+  version: STATE_VERSION,
+  overrides: {},
+  processing: {},
+  reRuns: {},
+  portfolioRuns: { erm: {}, inquiry: {} },
+  questionSets: { erm: [], vantage: [] },
+  vantageRuns: {},
+})
+
+/** Fixture shelves, per application — each store starts from its own sets only. */
+const FIXTURE_SETS: Record<QuestionSetStore, QuestionSet[]> = {
+  erm: QUESTION_SETS,
+  vantage: VANTAGE_QUESTION_SETS,
+}
+
+/** Fixture runs, per application slice. */
+const FIXTURE_RUNS: Record<PortfolioAppId, ErmRun[]> = {
+  erm: ERM_RUNS,
+  inquiry: INQUIRY_RUNS,
 }
 
 export interface MockOptions {
@@ -280,15 +356,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
   let state: PersistedState = load()
 
   function load(): PersistedState {
-    const fresh: PersistedState = {
-      version: STATE_VERSION,
-      overrides: {},
-      processing: {},
-      reRuns: {},
-      ermRuns: {},
-      ermQuestionSets: [],
-      vantageRuns: {},
-    }
+    const fresh = freshState()
     try {
       const raw = storage?.getItem(STORAGE_KEY)
       if (!raw) return fresh
@@ -324,10 +392,78 @@ export function createMockApi(options: MockOptions = {}): MockApi {
    */
   const ERM_TIMELINE = { resolved: 900, indexed: 2000, computing: 7200, done: 8800 }
 
-  function ermRunOf(runId: string): ErmRun | null {
-    const fixture = ERM_RUNS.find((r) => r.runId === runId)
+  /** The borrower index: the monitored universe, each with its documents on system. */
+  function borrowerIndex(): BorrowerIndexEntry[] {
+    return ERM_BORROWERS.map((b) => ({
+      ...b,
+      documentCount: DOCUMENTS.filter((d) => d.rxm === b.rxm).length,
+    }))
+  }
+
+  /** A borrower's documents on system — ALL of them, in or out of the monitor scope. */
+  const borrowerDocs = (rxm: string) =>
+    DOCUMENTS.filter((d) => d.rxm === rxm).map((d) => d.fileName)
+
+  /**
+   * Population accounting from criteria. A borrower criterion IS the
+   * population: that one borrower, included, nothing excluded — the
+   * accounting still states itself, however trivially. Otherwise the
+   * canonical demo population (the dropdown vocabulary is a deliberate
+   * placeholder), with the criteria echoed so the disclosure reflects what
+   * was asked.
+   */
+  function populationFor(criteria: PopulationCriteria): PopulationAccounting {
+    if (criteria.borrower) {
+      const b: BorrowerRef = { rxm: criteria.borrower.rxm, name: criteria.borrower.name }
+      return { criteria: clone(criteria), included: [b], excluded: [], indeterminate: [] }
+    }
+    const population = clone(ERM_POPULATION)
+    population.criteria = clone(criteria)
+    return population
+  }
+
+  const scopeDocuments = (criteria: PopulationCriteria) =>
+    criteria.borrower ? borrowerDocs(criteria.borrower.rxm) : ERM_RUN_SCOPE
+
+  /** A borrower with no canonical answer gets an honest unsupported one (never a blank). */
+  const ungrounded = (rxm: string, questionId: string): ErmAnswer => ({
+    rxm,
+    questionId,
+    value: '—',
+    grade: 'unsupported',
+    conf: 'low',
+    evidenceRefs: [],
+    limitations: MESSAGES.ungrounded,
+  })
+
+  /**
+   * A completed user-started run materializes the canonical demo payload
+   * for ITS population: a set run gets the canonical per-question store, a
+   * prompt-only run the canonical one-question answers — each restricted
+   * to the included borrowers, in population order.
+   */
+  function answersFor(rec: PersistedErmRun, population: PopulationAccounting): ErmAnswer[] {
+    if (!rec.questionSetId) {
+      return population.included.map((b) => {
+        const a = PROMPT_RUN_ANSWERS.find((x) => x.rxm === b.rxm)
+        return a ? clone(a) : ungrounded(b.rxm, PROMPT_QUESTION_ID)
+      })
+    }
+    // Unscoped set runs are untouched: the canonical store, as since v1.5.
+    const borrower = rec.criteria.borrower
+    if (!borrower) return clone(ERM_ANSWERS)
+    const mine = ERM_ANSWERS.filter((a) => a.rxm === borrower.rxm)
+    if (mine.length > 0) return clone(mine)
+    const setId = rec.questionSetId
+    const fields =
+      [...QUESTION_SETS, ...state.questionSets.erm].find((q) => q.id === setId)?.fields ?? []
+    return fields.map((f) => ungrounded(borrower.rxm, f.id))
+  }
+
+  function ermRunOf(app: PortfolioAppId, runId: string): ErmRun | null {
+    const fixture = FIXTURE_RUNS[app].find((r) => r.runId === runId)
     if (fixture) return clone(fixture)
-    const rec = state.ermRuns[runId]
+    const rec = state.portfolioRuns[app][runId]
     if (!rec) return null
     const elapsed = now() - Date.parse(rec.startedAt)
     const cancelled = !!rec.cancelledAt
@@ -338,23 +474,23 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     else if (elapsed >= ERM_TIMELINE.done || (cancelled && eff >= ERM_TIMELINE.done))
       stateName = 'completed'
     else stateName = elapsed < 250 ? 'queued' : 'running'
-    const population = clone(ERM_POPULATION)
-    population.criteria = { ...rec.criteria }
+    const population = populationFor(rec.criteria)
     const completed = stateName === 'completed'
-    const qTotal =
-      [...QUESTION_SETS, ...state.ermQuestionSets].find((q) => q.id === rec.questionSetId)?.fields
-        .length ?? 17
+    const qTotal = rec.questionSetId
+      ? ([...QUESTION_SETS, ...state.questionSets.erm].find((q) => q.id === rec.questionSetId)
+          ?.fields.length ?? 17)
+      : 1
     const run: ErmRun = {
       runId: rec.runId,
       startedAt: rec.startedAt,
       questionSetId: rec.questionSetId,
       prompt: rec.prompt,
-      criteria: { ...rec.criteria },
+      criteria: clone(rec.criteria),
       state: stateName,
       population,
       documents: [...rec.documents],
       // completed runs materialize the canonical demo payload
-      answers: completed ? clone(ERM_ANSWERS) : [],
+      answers: completed ? answersFor(rec, population) : [],
       cancelledAt: rec.cancelledAt,
       progress:
         stateName === 'running' || stateName === 'queued'
@@ -396,6 +532,23 @@ export function createMockApi(options: MockOptions = {}): MockApi {
    */
   const VANTAGE_READ_MS = 1_100
   const VANTAGE_ANSWER_MS = 1_600
+  /** Each question beyond the first adds a little answering time. */
+  const VANTAGE_PER_EXTRA_Q_MS = 120
+
+  /**
+   * The canned answer, one section per question in order: a one-question
+   * run gets the demo answer exactly as v1.7 did; in a many-question run
+   * the first question gets the demo answer and the rest rotate through
+   * the compact pool (see VANTAGE_ANSWER_POOL).
+   */
+  function vantageSections(questions: string[]): VantageAnswerSection[] {
+    return questions.map((question, i) => ({
+      question,
+      blocks: clone(
+        i === 0 ? VANTAGE_DEMO_BLOCKS : VANTAGE_ANSWER_POOL[(i - 1) % VANTAGE_ANSWER_POOL.length],
+      ),
+    }))
+  }
 
   function vantageRunOf(runId: string): VantageRun | null {
     const fixture = VANTAGE_RUNS.find((r) => r.runId === runId)
@@ -403,7 +556,8 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     const rec = state.vantageRuns[runId]
     if (!rec) return null
     const readTotal = rec.documents.length * VANTAGE_READ_MS
-    const doneAt = readTotal + VANTAGE_ANSWER_MS
+    const doneAt =
+      readTotal + VANTAGE_ANSWER_MS + (rec.questions.length - 1) * VANTAGE_PER_EXTRA_Q_MS
     const cancelled = !!rec.cancelledAt
     const rawElapsed = now() - Date.parse(rec.startedAt)
     const eff = cancelled
@@ -418,20 +572,22 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     const reading = rec.documents[Math.min(docsRead, rec.documents.length - 1)]
     return {
       runId: rec.runId,
-      question: rec.question,
+      questions: [...rec.questions],
       documents: clone(rec.documents),
       state: stateName,
       startedAt: rec.startedAt,
       cancelledAt: rec.cancelledAt,
       // completed runs materialize the canonical demo answer payload
-      blocks: stateName === 'completed' ? clone(VANTAGE_DEMO_BLOCKS) : [],
+      sections: stateName === 'completed' ? vantageSections(rec.questions) : [],
       progress:
         stateName === 'running' || stateName === 'queued'
           ? {
               docsRead,
               answering,
               statusLine: answering
-                ? MESSAGES.vantageAnswering
+                ? rec.questions.length > 1
+                  ? fmt(MESSAGES.vantageAnsweringMany, { n: rec.questions.length })
+                  : MESSAGES.vantageAnswering
                 : fmt(MESSAGES.vantageReading, { file: reading.name, meta: reading.meta }),
             }
           : undefined,
@@ -723,15 +879,7 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
   return {
     reset: () => {
-      state = {
-        version: STATE_VERSION,
-        overrides: {},
-        processing: {},
-        reRuns: {},
-        ermRuns: {},
-        ermQuestionSets: [],
-        vantageRuns: {},
-      }
+      state = freshState()
       try {
         storage?.removeItem(STORAGE_KEY)
       } catch {
@@ -739,7 +887,15 @@ export function createMockApi(options: MockOptions = {}): MockApi {
       }
     },
 
-    me: () => delay(clone(ME)),
+    me: () => {
+      let id: string | null = null
+      try {
+        id = storage?.getItem(MOCK_USER_KEY) ?? null
+      } catch {
+        /* storage unavailable: the demo user */
+      }
+      return delay(clone(id === LEADERSHIP_USER.id ? LEADERSHIP_USER : ME))
+    },
 
     listMyReviews: () => delay(allSummaries().filter((s) => s.ownerId === ME.id)),
 
@@ -1130,31 +1286,79 @@ export function createMockApi(options: MockOptions = {}): MockApi {
 
     // ---- ERM (v1.5) ------------------------------------------------------
 
-    getQuestionSets: () => delay(clone([...QUESTION_SETS, ...state.ermQuestionSets])),
+    // Per-application shelves (v1.8): each store reads its own fixtures
+    // plus its own saved sets — never another application's.
+    getQuestionSets: (store) =>
+      delay(clone([...FIXTURE_SETS[store], ...state.questionSets[store]])),
 
-    addQuestionSet: (input) => {
+    addQuestionSet: (store, input) => {
       const name = input.name.trim()
       if (!name) return fail(MESSAGES.qsNameRequired)
-      // The mock parses no file: a saved set gets a placeholder question
-      // list (5 generic questions), labeled honestly in its description.
-      const id = `qs-user-${(now() % 1e8).toString(36)}`
-      const fields = Array.from({ length: 5 }, (_, i) => ({
-        id: `${id}-q${i + 1}`,
-        label: fmt(MESSAGES.qsPlaceholderLabel, { n: i + 1 }),
-        question: fmt(MESSAGES.qsPlaceholderQuestion, { n: i + 1, name }),
-        outputType: 'text' as const,
-        visible: i < 2,
-        derivedAcceptable: true,
-      }))
+      const id = `${store === 'vantage' ? 'vqs' : 'qs'}-user-${(now() % 1e8).toString(36)}`
+      const read = (input.questions ?? []).map((q) => q.trim()).filter(Boolean)
+      // With already-read questions (a reviewed file) those ARE the set.
+      // Without them the mock parses nothing: a placeholder question list
+      // (5 generic questions), labeled honestly in its description.
+      const fields =
+        read.length > 0
+          ? read.map((question, i) => ({
+              id: `${id}-q${i + 1}`,
+              label: fmt(MESSAGES.qsPlaceholderLabel, { n: i + 1 }),
+              question,
+              outputType: 'text' as const,
+              visible: i < 2,
+              derivedAcceptable: true,
+            }))
+          : Array.from({ length: 5 }, (_, i) => ({
+              id: `${id}-q${i + 1}`,
+              label: fmt(MESSAGES.qsPlaceholderLabel, { n: i + 1 }),
+              question: fmt(MESSAGES.qsPlaceholderQuestion, { n: i + 1, name }),
+              outputType: 'text' as const,
+              visible: i < 2,
+              derivedAcceptable: true,
+            }))
       const set: QuestionSet = {
         id,
         name,
-        description: input.description.trim() || fmt(MESSAGES.qsPlaceholderDesc, { name }),
+        description:
+          input.description.trim() ||
+          (read.length > 0
+            ? fmt(read.length === 1 ? MESSAGES.qsFromFileDescOne : MESSAGES.qsFromFileDescOther, {
+                n: read.length,
+                file: input.fileName ?? name,
+              })
+            : fmt(MESSAGES.qsPlaceholderDesc, { name })),
         fields,
       }
-      state.ermQuestionSets.push(set)
+      state.questionSets[store].push(set)
       save()
       return delay(clone(set))
+    },
+
+    parseQuestionFile: (file) => {
+      // THE CONTRACT the mock declares (parsing is backend work): .xlsx
+      // (or .csv), first sheet, first column, one question per row, blank
+      // cells skipped, row order kept. The mock reads no bytes: the demo
+      // file parses to its fixture questions; any other file gets an
+      // honestly labeled placeholder list.
+      if (!/\.(xlsx|csv)$/i.test(file.name))
+        return fail(fmt(MESSAGES.parseWrongType, { file: file.name }))
+      if (file.size === 0) return fail(fmt(MESSAGES.parseEmpty, { file: file.name }))
+      const known = QUESTION_FILES[file.name.toLowerCase()]
+      const questions =
+        known ??
+        Array.from({ length: 3 }, (_, i) =>
+          fmt(MESSAGES.parsePlaceholder, { n: i + 1, file: file.name }),
+        )
+      return delay({ fileName: file.name, questions: [...questions] })
+    },
+
+    searchBorrowers: (query) => {
+      // Ratified search keys: name or RXM, case-insensitive substring,
+      // RXM with or without the prefix. Empty query = the whole index.
+      const q = query.trim().toLowerCase()
+      const all = borrowerIndex()
+      return delay(q ? all.filter((b) => `${b.name} ${b.rxm}`.toLowerCase().includes(q)) : all)
     },
 
     listPolicyDocs: () => delay(clone(POLICY_DOCS)),
@@ -1167,62 +1371,73 @@ export function createMockApi(options: MockOptions = {}): MockApi {
     },
 
     resolvePopulation: (criteria) => {
-      // The demo resolves ONE population regardless of criteria — the
-      // dropdown vocabulary is a deliberate placeholder (ratified
+      // Unscoped, the demo resolves ONE population regardless of criteria
+      // — the dropdown vocabulary is a deliberate placeholder (ratified
       // 2026-09-18); the criteria are echoed into the accounting so the
-      // disclosure sentence reflects what was asked.
-      const population = clone(ERM_POPULATION)
-      population.criteria = { ...criteria }
-      return delay({ population, documentCount: ERM_RUN_SCOPE.length })
+      // disclosure sentence reflects what was asked. A borrower criterion
+      // (v1.8) resolves to that one borrower and ALL its documents on
+      // system (in or out of the monitor scope).
+      return delay({
+        population: populationFor(criteria),
+        documentCount: scopeDocuments(criteria).length,
+      })
     },
 
-    startRun: (input) => {
-      const runId = `erm-run-${new Date(now()).toISOString().slice(0, 10)}-${(now() % 1e7).toString(36)}`
-      state.ermRuns[runId] = {
+    startRun: (app, input) => {
+      const prompt = input.prompt?.trim() ?? ''
+      if (input.questionSetId && prompt) return fail(MESSAGES.runOneMode)
+      if (!input.questionSetId && !prompt) return fail(MESSAGES.runNeedsQuestion)
+      // Only CPEA keeps a shelf; Inquiry has question sets switched off.
+      const shelf = app === 'erm' ? [...QUESTION_SETS, ...state.questionSets.erm] : []
+      if (input.questionSetId && !shelf.some((q) => q.id === input.questionSetId))
+        return fail(fmt(MESSAGES.noQuestionSet, { id: input.questionSetId }))
+      const runId = `${app}-run-${new Date(now()).toISOString().slice(0, 10)}-${(now() % 1e7).toString(36)}`
+      state.portfolioRuns[app][runId] = {
         runId,
         startedAt: new Date(now()).toISOString(),
         questionSetId: input.questionSetId,
-        prompt: input.prompt,
-        criteria: { ...input.criteria },
+        prompt: prompt || undefined,
+        criteria: clone(input.criteria),
         // population scope and explicit documents union into one run
-        documents: [...new Set([...ERM_RUN_SCOPE, ...(input.documents ?? [])])],
+        documents: [...new Set([...scopeDocuments(input.criteria), ...(input.documents ?? [])])],
       }
       save()
       return delay({ runId })
     },
 
-    getRun: (runId) => {
-      const run = ermRunOf(runId)
+    getRun: (app, runId) => {
+      const run = ermRunOf(app, runId)
       if (!run) return fail(fmt(MESSAGES.noRun, { id: runId }))
       return delay(run)
     },
 
-    listRuns: () => {
-      const started = Object.keys(state.ermRuns).map((id) => ermRunOf(id)!)
-      const all = [...started, ...clone(ERM_RUNS)]
+    listRuns: (app) => {
+      const started = Object.keys(state.portfolioRuns[app]).map((id) => ermRunOf(app, id)!)
+      const all = [...started, ...clone(FIXTURE_RUNS[app])]
       all.sort((a, b) => b.startedAt.localeCompare(a.startedAt))
       return delay(all)
     },
 
-    cancelRun: (runId) => {
-      const rec = state.ermRuns[runId]
+    cancelRun: (app, runId) => {
+      const rec = state.portfolioRuns[app][runId]
       if (!rec) return fail(fmt(MESSAGES.noRun, { id: runId }))
-      const run = ermRunOf(runId)!
+      const run = ermRunOf(app, runId)!
       if (run.state === 'running' || run.state === 'queued') {
         rec.cancelledAt = new Date(now()).toISOString()
         save()
       }
-      return delay(ermRunOf(runId)!)
+      return delay(ermRunOf(app, runId)!)
     },
 
-    // ---- Vantage (v1.7) --------------------------------------------------
+    // ---- Vantage (v1.7; questions[] v1.8) ----------------------------------
 
-    askDocuments: (question, documents) => {
-      if (!question.trim() || documents.length === 0) return fail(MESSAGES.vantageNeedsBoth)
+    askDocuments: (questions, documents) => {
+      const asked = questions.map((q) => q.trim()).filter(Boolean)
+      if (asked.length === 0 || documents.length === 0) return fail(MESSAGES.vantageNeedsBoth)
       const runId = `vantage-run-${new Date(now()).toISOString().slice(0, 10)}-${(now() % 1e7).toString(36)}`
       state.vantageRuns[runId] = {
         runId,
-        question: question.trim(),
+        questions: asked,
         documents: clone(documents),
         startedAt: new Date(now()).toISOString(),
       }

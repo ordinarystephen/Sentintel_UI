@@ -1,7 +1,14 @@
 /**
  * The answer surface: restated serif question, docset chips, the block
- * renderer, and the follow-up bar — which starts a NEW run against the
- * same docset; no context carried, and the note says so.
+ * renderer, and the follow-up bar — which starts a NEW single-question run
+ * against the same docset; no context carried, and the note says so.
+ *
+ * v1.8: a run carries one or many questions and its answer is an ordered
+ * list of { question, blocks } sections. With ONE question the surface is
+ * exactly v1.7's (the question is the page heading; guarded by the golden
+ * in v17Regression.test). With many, the anatomy repeats per question: a
+ * serif question heading (Q n of N), then that question's blocks — the
+ * block contract unchanged, applied per section.
  */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -26,10 +33,11 @@ export function VantageAnswerView({ run }: { run: VantageRun }) {
   const navigate = useNavigate()
   const m = useVantageMutations()
   const [followup, setFollowup] = useState('')
+  const single = run.questions.length === 1
 
   async function askFollowup() {
     if (!followup.trim()) return
-    const { runId } = await m.ask.mutateAsync({ question: followup, documents: run.documents })
+    const { runId } = await m.ask.mutateAsync({ questions: [followup], documents: run.documents })
     setFollowup('')
     navigate(`/vantage/runs/${runId}`)
   }
@@ -49,9 +57,9 @@ export function VantageAnswerView({ run }: { run: VantageRun }) {
       </div>
 
       <div>
-        <p className="micro mb-1.5">{s.eyebrow}</p>
+        <p className="micro mb-1.5">{single ? s.eyebrow : s.eyebrowMany}</p>
         <h1 className="mb-2.5 max-w-[44ch] font-display text-[1.25rem] leading-[1.35] font-semibold tracking-[-0.01em]">
-          {run.question}
+          {single ? run.questions[0] : fmt(s.titleMany, { n: run.questions.length })}
         </h1>
       </div>
       <div className="mb-[26px] flex flex-wrap gap-1.5">
@@ -72,8 +80,27 @@ export function VantageAnswerView({ run }: { run: VantageRun }) {
         <p className="max-w-[62ch] rounded-[10px] border border-rule bg-bg-subtle px-4 py-3 text-ui-sm text-muted">
           {s.cancelledNote}
         </p>
+      ) : single ? (
+        <BlockRenderer blocks={run.sections[0]?.blocks ?? []} />
       ) : (
-        <BlockRenderer blocks={run.blocks} />
+        run.sections.map((sec, i) => (
+          <section
+            key={i}
+            aria-labelledby={`${run.runId}-q${i + 1}`}
+            className="mb-[26px] border-t border-rule pt-[18px]"
+          >
+            <p className="mb-1 font-mono text-micro normal-case tracking-normal text-faint">
+              {fmt(s.sectionIndex, { n: i + 1, total: run.sections.length })}
+            </p>
+            <h2
+              id={`${run.runId}-q${i + 1}`}
+              className="mb-3.5 max-w-[52ch] font-display text-[1.0625rem] leading-[1.4] font-semibold"
+            >
+              {sec.question}
+            </h2>
+            <BlockRenderer blocks={sec.blocks} />
+          </section>
+        ))
       )}
 
       <div className="mt-[30px] max-w-[640px]">

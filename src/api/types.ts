@@ -129,6 +129,31 @@ export interface QuestionSet {
 }
 
 /**
+ * Which application's set shelf (v1.8). Sets are PER-APPLICATION: a set
+ * saved in one application never appears in another's store.
+ */
+export type QuestionSetStore = 'erm' | 'vantage'
+
+/**
+ * A question file read back for review before anything runs (v1.8). THE
+ * FILE CONTRACT: .xlsx, first sheet, first column, one question per row;
+ * blank cells skipped; row order kept. Parsing is the backend's job.
+ */
+export interface ParsedQuestionFile {
+  fileName: string
+  questions: string[]
+}
+
+/** Input to addQuestionSet — `questions` present when saving a parsed file. */
+export interface AddQuestionSetInput {
+  name: string
+  description: string
+  fileName?: string
+  /** Already-read questions (the one-off intake's parse): the set's fields, in order. */
+  questions?: string[]
+}
+
+/**
  * Per-answer grade — the decision table (ratified 2026-09-18):
  * `stated` only with an entailing quote attached (evidenceRefs non-empty),
  * `derived` only with `inferredFrom` naming stated inputs, else
@@ -170,12 +195,29 @@ export interface BorrowerRef {
   name: string
 }
 
+/** One entry in the borrower index (the scope typeahead): name, RXM, documents on system. */
+export interface BorrowerIndexEntry extends BorrowerRef {
+  documentCount: number
+}
+
 export interface PopulationCriteria {
   portfolio: string
   subPortfolio: string
   region: string
   asOf: string
+  /**
+   * Borrower scope (v1.8): when present the population IS this one
+   * borrower — the four dropdown criteria stand down (carried, not
+   * applied) and the accounting names the borrower as the criterion.
+   */
+  borrower?: BorrowerRef
 }
+
+/** The applications that run CPEA's workflow; each keeps its own runs. */
+export type PortfolioAppId = 'erm' | 'inquiry'
+
+/** The one question id of a prompt-only (single-question) run's answers. */
+export const PROMPT_QUESTION_ID = 'prompt'
 
 /** Population accounting — exclusions are named, never silent. */
 export interface PopulationAccounting {
@@ -283,13 +325,27 @@ export interface VantageRunProgress {
   statusLine: string
 }
 
-/** A run is a frozen revisitable record; every state kept. */
+/**
+ * One question's answer (v1.8): the question, then its typed blocks. The
+ * block contract applies per section, unchanged.
+ */
+export interface VantageAnswerSection {
+  question: string
+  blocks: VantageBlock[]
+}
+
+/**
+ * A run is a frozen revisitable record; every state kept. v1.8: a run
+ * carries ONE OR MANY questions (typed + file questions combine) and its
+ * answer is an ordered list of per-question sections, in question order.
+ */
 export interface VantageRun {
   runId: string
-  question: string
+  questions: string[]
   documents: VantageDocument[]
   state: VantageRunState
-  blocks: VantageBlock[]
+  /** Empty until completed; one section per question, same order. */
+  sections: VantageAnswerSection[]
   startedAt: string
   cancelledAt?: string
   progress?: VantageRunProgress
@@ -314,7 +370,12 @@ export interface ErmRunProgress {
 export interface ErmRun {
   runId: string
   startedAt: string
-  questionSetId: string
+  /**
+   * A question-set run names its set. A prompt-only run (v1.8) has none:
+   * it asks exactly one question — `prompt` — and its answers carry
+   * `questionId: PROMPT_QUESTION_ID`.
+   */
+  questionSetId?: string
   prompt?: string
   criteria: PopulationCriteria
   state: ErmRunState
