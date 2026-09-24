@@ -135,10 +135,12 @@ export const strings = {
         full: 'P&C',
         description: 'Generic document extraction and insights.',
       },
-      /* Added 2026-09-24 (demo feedback round) — wordsmithing later. */
+      /* Added 2026-09-24 (demo feedback round) — wordsmithing later. No
+         `full`: Inquiry has no expansion or business-line label, and the
+         audience label was cut (hygiene sweep) — the description says who
+         it's for. */
       inquiry: {
         short: 'Inquiry',
-        full: 'Senior leadership',
         description: 'One-off questions of the portfolio, for senior leadership.',
       },
     },

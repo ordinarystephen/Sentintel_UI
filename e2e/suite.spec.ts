@@ -30,7 +30,10 @@ test('first visit: / shows the landing; Open enters CRR and records last-used', 
   await expect(nav.getByText('In design')).toHaveCount(0)
   await expect(nav.getByRole('link')).toHaveCount(4)
   await expect(nav.getByRole('link').nth(3)).toContainText('Inquiry')
-  await expect(nav.getByRole('link').nth(3)).toContainText('Senior leadership')
+  // hygiene sweep: no audience label beside Inquiry (the others keep their
+  // full-name expansions)
+  await expect(nav.getByRole('link').nth(3)).not.toContainText('Senior leadership')
+  await expect(nav.getByRole('link').nth(0)).toContainText('Credit Risk Review')
   await expect(nav.getByRole('link').nth(3)).toContainText(
     'One-off questions of the portfolio, for senior leadership.',
   )
@@ -99,7 +102,7 @@ test('the Inquiry card and the switcher both enter Inquiry; it records last-used
   await page.goto('/apps')
   await page
     .getByRole('navigation', { name: 'Applications' })
-    .getByRole('link', { name: /Inquiry.*Senior leadership.*Open/s })
+    .getByRole('link', { name: /^Inquiry\s*One-off questions of the portfolio.*Open/s })
     .click()
   await expect(
     page.getByRole('heading', { level: 1, name: 'Ask a question of the portfolio' }),
@@ -111,7 +114,11 @@ test('the Inquiry card and the switcher both enter Inquiry; it records last-used
   // the switcher lists all four entitled apps, none disabled
   await brand.click()
   const menu = page.getByRole('menu')
-  await expect(menu.getByRole('menuitem', { name: /Inquiry.*Senior leadership/ })).toBeVisible()
+  // the Inquiry entry is just "Inquiry"; CRR keeps its full-name expansion
+  const inquiryItem = menu.getByRole('menuitem', { name: /^Inquiry\b/ })
+  await expect(inquiryItem).toBeVisible()
+  await expect(inquiryItem).not.toContainText('Senior leadership')
+  await expect(menu.getByRole('menuitem', { name: /CRR.*Credit Risk Review/ })).toBeVisible()
   await expect(menu.locator('[role="menuitem"][aria-disabled="true"]')).toHaveCount(0)
   await menu.getByRole('menuitem', { name: /Vantage/ }).click()
   await expect(page).toHaveURL(/\/vantage$/)

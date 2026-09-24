@@ -29,7 +29,14 @@ export interface AppConfig {
 export interface SentinelApp {
   id: AppId
   short: string
-  full: string
+  /**
+   * A secondary label beside the short name: the name spelled out (CRR →
+   * Credit Risk Review, CPEA) or its business line (Vantage · P&C). Never an
+   * audience tag — absent means the short name stands alone, and nothing
+   * renders in its place (hygiene sweep: Inquiry's "Senior leadership" label
+   * was cut, 2026-09-24).
+   */
+  full?: string
   description: string
   status: 'active' | 'design'
   /** Route home for active apps; design-status apps have nowhere to go. */
@@ -74,7 +81,6 @@ export const APPS: readonly SentinelApp[] = [
   {
     id: 'inquiry',
     short: strings.suite.apps.inquiry.short,
-    full: strings.suite.apps.inquiry.full,
     description: strings.suite.apps.inquiry.description,
     status: 'active',
     home: '/inquiry',

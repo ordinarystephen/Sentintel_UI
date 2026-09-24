@@ -41,6 +41,8 @@ function ArrowIcon({ className }: { className?: string }) {
 
 function CardBody({ app }: { app: SentinelApp }) {
   const fullLead = app.landingTitle === 'full'
+  // No full name (Inquiry): the serif name stands alone — no empty aside.
+  const aside = fullLead ? app.short : app.full
   return (
     <div className="min-w-0 flex-1">
       <div
@@ -50,9 +52,11 @@ function CardBody({ app }: { app: SentinelApp }) {
         )}
       >
         {fullLead ? app.full : app.short}
-        <span className="font-body text-[0.75rem] font-normal tracking-[0.02em] text-faint">
-          {fullLead ? app.short : app.full}
-        </span>
+        {aside && (
+          <span className="font-body text-[0.75rem] font-normal tracking-[0.02em] text-faint">
+            {aside}
+          </span>
+        )}
       </div>
       <p className="mt-1 max-w-[56ch] text-ui-sm text-muted">{app.description}</p>
     </div>

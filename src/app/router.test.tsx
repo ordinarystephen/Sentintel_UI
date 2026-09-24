@@ -24,10 +24,11 @@ describe('suite entry (entitlement routing)', () => {
       'href',
       '/vantage',
     )
-    expect(screen.getByRole('link', { name: /Inquiry.*Senior leadership.*Open/s })).toHaveAttribute(
-      'href',
-      '/inquiry',
-    )
+    // Inquiry: the serif name alone over its description — no label (hygiene sweep)
+    expect(
+      screen.getByRole('link', { name: /^Inquiry\s*One-off questions of the portfolio.*Open/s }),
+    ).toHaveAttribute('href', '/inquiry')
+    expect(screen.queryByText('Senior leadership')).toBeNull()
     expect(screen.queryByText('In design')).toBeNull()
     expect(screen.getAllByRole('link')).toHaveLength(4)
   })

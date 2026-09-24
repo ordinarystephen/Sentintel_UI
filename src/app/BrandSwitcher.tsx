@@ -123,9 +123,11 @@ export function BrandSwitcher({ current }: { current: AppId }) {
                 className="flex w-full items-baseline gap-2 px-3.5 py-[7px] text-left text-ui hover:bg-bg-hover"
               >
                 <span className="font-semibold">{a.short}</span>
-                <span className="min-w-0 flex-1 truncate text-dense text-faint">{a.full}</span>
+                {a.full && (
+                  <span className="min-w-0 flex-1 truncate text-dense text-faint">{a.full}</span>
+                )}
                 {a.id === current && (
-                  <span aria-label={s.currentApp} className="text-dense text-ink">
+                  <span aria-label={s.currentApp} className="ml-auto text-dense text-ink">
                     ✓
                   </span>
                 )}
@@ -138,8 +140,8 @@ export function BrandSwitcher({ current }: { current: AppId }) {
                 className="flex w-full items-baseline gap-2 px-3.5 py-[7px] text-ui text-faint"
               >
                 <span className="font-semibold">{a.short}</span>
-                <span className="min-w-0 flex-1 truncate text-dense">{a.full}</span>
-                <span className="text-micro normal-case tracking-normal">{s.inDesign}</span>
+                {a.full && <span className="min-w-0 flex-1 truncate text-dense">{a.full}</span>}
+                <span className="ml-auto text-micro normal-case tracking-normal">{s.inDesign}</span>
               </div>
             ),
           )}
