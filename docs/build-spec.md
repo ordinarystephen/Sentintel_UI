@@ -1,13 +1,13 @@
-# Sentinel UI — Greenfield Build Spec for Claude Code
+# Sentinel UI — Greenfield Build Spec for the Build Agent
 
-Author: Steve (design direction) with Claude. Date: 2026-08-28.
+Author: the product owner (design direction) with the design agent. Date: 2026-08-28.
 This is the implementation brief for building the Sentinel front end **from scratch in a new, standalone repository**. The finished repo will be handed to a development team to take over and wire to the real backend, so everything here is written for that handoff: conventional tooling, a typed API seam, mock data that makes the whole app runnable without any backend, and documentation a new developer can start from cold. Read this document fully before writing code.
 
 ## 0. Inputs and source of truth
 
-When sources conflict, this order wins: (1) Steve's direct instruction, (2) this spec, (3) the mockup.
+When sources conflict, this order wins: (1) the product owner's direct instruction, (2) this spec, (3) the mockup.
 
-1. **`design/sentinel-mvp-concept.html`** — the interactive mockup (Steve is placing it in the repo). Open it in a browser. It is the source of truth for layout, tokens (all four themes, verbatim), exact copy, spacing, and interaction feel. The pink numbered pins are design rationale — toggle with the "Design notes" button. The pins and crit chrome (top banner, bottom pill nav, pins) are **mockup-only**; never implement them in the product.
+1. **`design/sentinel-mvp-concept.html`** — the interactive mockup (the product owner is placing it in the repo). Open it in a browser. It is the source of truth for layout, tokens (all four themes, verbatim), exact copy, spacing, and interaction feel. The pink numbered pins are design rationale — toggle with the "Design notes" button. The pins and crit chrome (top banner, bottom pill nav, pins) are **mockup-only**; never implement them in the product.
 2. **This spec** — behaviors, semantics, the API contract, phasing, and acceptance criteria a static mockup can't carry.
 3. **`docs/sentinel-ui-decisions.md`** — the running keep/cut ledger (copy it into the repo's `docs/`); the "why" behind decisions.
 
@@ -38,7 +38,7 @@ Non-negotiable domain rules:
 ```
 sentinel-ui/
 ├── design/
-│   └── sentinel-mvp-concept.html      # the mockup (Steve provides)
+│   └── sentinel-mvp-concept.html      # the mockup (the product owner provides)
 ├── docs/
 │   ├── build-spec.md                  # this file
 │   ├── sentinel-ui-decisions.md       # decision ledger copy
@@ -63,7 +63,7 @@ sentinel-ui/
 └── (vite/ts/tailwind/eslint configs, CI workflow)
 ```
 
-`src/strings.ts` matters: left-nav names ("My reviews", "All reviews") and right-rail tab names ("Why", "Respond", "Debate", "Prior") are placeholders Steve intends to rename. Every user-facing instance must read from this file.
+`src/strings.ts` matters: left-nav names ("My reviews", "All reviews") and right-rail tab names ("Why", "Respond", "Debate", "Prior") are placeholders the product owner intends to rename. Every user-facing instance must read from this file.
 
 ## 3. Design system
 
@@ -139,7 +139,7 @@ Canvas, top to bottom:
 
 **Right context rail** (fixed ~312px, collapsible via the sticky-bar toggle, review route only): follows the selected workpaper item (click to select; selection = subtle fill + accent inset stripe; exactly one selected; default = the first flagged item). Header: "Context" + `§N Item Name`. Four tabs (names from `strings.ts`):
 - **Why**: "How this got here" — resolution chain as steps (template concept → match method/source page → flags raised), then "Applied policies & standards" — cited cards (mono policy ID, one-line requirement, view link).
-- **Respond**: free-text direction + "Send & re-run" (scope: the selected item — confirm with Steve, §9), "Mark verified"; then "Clear from workpaper": Not applicable / Incorrect. Clearing strikes the item in place on screen with a rationale chip ("cleared — not applicable · struck on screen, omitted from the exported review") and an undo; reason + actor recorded; **the exported document simply renders without cleared content** — no strikethrough or tombstone in the DOCX.
+- **Respond**: free-text direction + "Send & re-run" (scope: the selected item — confirm with the product owner, §9), "Mark verified"; then "Clear from workpaper": Not applicable / Incorrect. Clearing strikes the item in place on screen with a rationale chip ("cleared — not applicable · struck on screen, omitted from the exported review") and an undo; reason + actor recorded; **the exported document simply renders without cleared content** — no strikethrough or tombstone in the DOCX.
 - **Debate**: advocate and dissent cards (stance-colored headers green/red, position text, mono citations line) + the advisory footnote ("Positions are advisory. The analyst's disposition decides."). Both positions persist to the review record.
 - **Prior**: "Since the [date] review" — key-value delta rows (`5.6x → 5.9x`, worsening values in warn color), link to the prior review. Rendered only when the borrower has a prior review; hide the tab otherwise. Compares **between reviews** (distinct from the story's within-run timeline).
 
@@ -175,7 +175,7 @@ Rules: no `fetch` anywhere outside `src/api/`; all times ISO-8601 from the API, 
 
 ## 7. Mock data and demo mode
 
-`src/api/mock/` makes the whole app run with `npm run dev` and no backend — this is what Steve demos and what the dev team explores first.
+`src/api/mock/` makes the whole app run with `npm run dev` and no backend — this is what the product owner demos and what the dev team explores first.
 
 - Fixtures seeded from the mockup's content: **Veyland US Holdco (current, 4 open items, section 2 flagged WACC `conf 41%`, prior review 2026-02-14 → Prior tab populated)**, Ambervale Foods Group, Seldwyn Marine Finance, Northgale Health Partners (complete, owned by "you"), Farrowdale Logistics and Verloway AgriChem (other owners, read-only, one WM for the LOB filter), plus enough generated rows to make search/filter/count lines credible (~40 reviews). Document search fixtures include the "revolver availability" hits from the mockup.
 - `createReview` simulates processing with timers (phase updates over ~15s, borrower detected midway → rename event) and then serves a copy of the Veyland fixture. `cancelReview` works.
@@ -190,7 +190,7 @@ Rules: no `fetch` anywhere outside `src/api/`; all times ISO-8601 from the API, 
 - The export is always the clean rendered document: cleared content omitted, no working-state artifacts; flagged values carry the same REVIEW REQUIRED banner the screen showed.
 - "You" comes from `me()`; the mock returns a fixed user. Real auth is the dev team's integration (document the assumption in `api-handoff.md`).
 
-## 9. Open questions — ask Steve before wiring
+## 9. Open questions — ask the product owner before wiring
 
 1. "Send & re-run" scope: the single item, the subsection, or the whole section? What does the analyst's text get appended to?
 2. Cleared-content reasons: the two buttons alone, or button + required note field?
