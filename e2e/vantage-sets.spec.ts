@@ -329,3 +329,27 @@ test('the mode radiogroup is keyboard-operable: one Tab stop, arrows switch', as
   )
   await expect(page.getByRole('button', { name: /Exposure limits sweep/ })).toBeVisible()
 })
+
+test('Add new never saves invented placeholders: one file at a time; a failed read blocks Save', async ({
+  page,
+}) => {
+  await fresh(page)
+  await page.getByRole('radio', { name: 'Question set' }).click()
+  await page.getByRole('button', { name: /Add new/ }).click()
+  const modal = page.getByRole('dialog', { name: 'Add a question set' })
+  const input = modal.getByLabel('Upload a question file').last()
+  await modal.getByLabel('Title').fill('Kept watchlist')
+  // a file that cannot be read: named, amber — and Save stays off
+  await input.setInputFiles({ name: 'empty.csv', mimeType: 'text/csv', buffer: Buffer.alloc(0) })
+  await expect(modal.getByRole('alert')).toContainText(
+    'Could not read any questions from empty.csv',
+  )
+  await expect(modal.getByRole('button', { name: 'Save' })).toBeDisabled()
+  // a readable file replaces it — one file listed, its read shown
+  await input.setInputFiles(WATCHLIST)
+  await expect(modal.getByText('14 questions read from Watchlist_Qs.xlsx')).toBeVisible()
+  const rows = modal.getByRole('list', { name: 'Question file' }).getByRole('listitem')
+  await expect(rows).toHaveCount(1)
+  await expect(rows.first()).toContainText('Watchlist_Qs.xlsx')
+  await expect(modal.getByRole('button', { name: 'Save' })).toBeEnabled()
+})

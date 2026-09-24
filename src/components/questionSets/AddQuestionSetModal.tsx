@@ -74,9 +74,11 @@ export function AddQuestionSetModal({
 
   function addFiles(list: FileList | File[]) {
     const files = Array.from(list)
-    upload.addFiles(files)
-    // the latest accepted file is the set's file — read it back now
+    // the latest accepted file is the set's file — ONE at a time, so the
+    // file listed is always the file whose read is shown
     const file = files.filter((f) => gateFile(f, isQuestionFile) === null).pop()
+    if (file) for (const f of upload.files) upload.removeFile(f)
+    upload.addFiles(files.filter((f) => f === file || gateFile(f, isQuestionFile) !== null))
     if (!file) return
     latest.current = file
     setError(null)
@@ -228,7 +230,9 @@ export function AddQuestionSetModal({
             !title.trim() ||
             parse.isPending ||
             m.addQuestionSet.isPending ||
-            (read !== null && read.questions.length === 0)
+            (read !== null && read.questions.length === 0) ||
+            // a listed file with no successful read must never save as invented placeholders
+            (upload.files.length > 0 && read === null)
           }
           onClick={saveSet}
         >

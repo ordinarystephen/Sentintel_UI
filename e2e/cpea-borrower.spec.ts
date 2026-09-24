@@ -286,3 +286,22 @@ test('switching applications never carries a typed question or a borrower scope'
   await expect(page.getByTestId('borrower-chip')).toHaveCount(0)
   await expect(page.getByTestId('scope-line')).toContainText('resolves to 6 borrowers')
 })
+
+test('a waiting Enter is cancelled by Escape or by leaving the field — nothing commits later', async ({
+  page,
+}) => {
+  await fresh(page)
+  const search = page.getByRole('combobox', { name: 'Borrower search' })
+  // fresh text: its results are still in flight when Enter lands
+  await search.fill('amb')
+  await search.press('Enter')
+  await search.press('Escape')
+  await page.waitForTimeout(800)
+  await expect(page.getByTestId('borrower-chip')).toHaveCount(0)
+  await search.fill('torv')
+  await search.press('Enter')
+  await search.press('Tab')
+  await page.waitForTimeout(800)
+  await expect(page.getByTestId('borrower-chip')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Clear borrower' })).toHaveCount(0)
+})

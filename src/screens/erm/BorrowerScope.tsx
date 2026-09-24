@@ -38,12 +38,10 @@ export function BorrowerScope({
     () => (debounced ? (results.data ?? []) : []),
     [debounced, results.data],
   )
-  // the list on screen answers the text in the box — not an earlier query
-  const settled =
-    debounced === query.trim() &&
-    !!results.data &&
-    !results.isPlaceholderData &&
-    !results.isFetching
+  // the list on screen answers the text in the box — not an earlier query.
+  // Keyed on the QUERY, not the fetch state: a background refetch of the
+  // same text still answers that text, so its highlighted option is valid.
+  const settled = debounced === query.trim() && !!results.data && !results.isPlaceholderData
   const [enterPending, setEnterPending] = useState(false)
   const inputId = useId()
   const listId = useId()
@@ -62,8 +60,8 @@ export function BorrowerScope({
   const expanded = showList && options.length > 0
 
   const pick = useCallback(
-    (b: BorrowerIndexEntry) => {
-      focusNext.current = 'clear'
+    (b: BorrowerIndexEntry, moveFocus = true) => {
+      if (moveFocus) focusNext.current = 'clear'
       setEnterPending(false)
       setOpen(false)
       setQuery('')
@@ -72,12 +70,15 @@ export function BorrowerScope({
     [onChange],
   )
 
-  // Enter pressed before the current text's results landed: honour it now
+  // Enter pressed before the current text's results landed: honour it now —
+  // the highlighted option, and focus moves only if the user is still here
+  // (blur and Escape cancel the wait, so a late commit never surprises)
   useEffect(() => {
     if (!enterPending || !settled) return
-    if (options[0]) pick(options[0])
+    const b = options[active] ?? options[0]
+    if (b) pick(b, document.activeElement === inputRef.current)
     else setEnterPending(false)
-  }, [enterPending, settled, options, pick])
+  }, [enterPending, settled, options, active, pick])
 
   function clear() {
     focusNext.current = 'input'
@@ -128,7 +129,10 @@ export function BorrowerScope({
           setEnterPending(false)
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
+        onBlur={() => {
+          setOpen(false)
+          setEnterPending(false)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault()
@@ -144,9 +148,10 @@ export function BorrowerScope({
             e.preventDefault()
             if (settled && showList && options[active]) pick(options[active])
             else if (!settled) setEnterPending(true)
-          } else if (e.key === 'Escape' && showList) {
+          } else if (e.key === 'Escape' && (showList || enterPending)) {
             e.preventDefault()
             setOpen(false)
+            setEnterPending(false)
           }
         }}
         className="w-full rounded-lg border border-rule-strong bg-bg px-[11px] py-2 text-[0.8125rem]"
